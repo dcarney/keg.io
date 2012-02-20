@@ -3,3 +3,4 @@
 /lib/node-sqlite
 keg.io.tmproj
 /node_modules
+/conf/configuration.json
