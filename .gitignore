@@ -1,4 +1,5 @@
 /kegerator.db.old
-/kegerator.db                
+/kegerator.db
 /lib/node-sqlite
 keg.io.tmproj
+/node_modules

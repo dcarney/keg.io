@@ -1,0 +1,48 @@
+{
+  "name": "keg.io",
+  "preferGlobal": "false",
+  "version": "2.0.0",
+  "author": "crc <github@crc.io>",
+  "description": "a technology-laden kegerator",
+  "contributors": [
+    {
+      "name": "crc",
+      "email": "github@crc.io"
+    }
+  ],
+  "bin": {
+    "keg.io": "./keg.io"
+  },
+  "scripts": {
+    "start": "node server.js conf/configuration.json"
+  },
+  "main": "./lib/keg.io/keg.io.js",
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/vnc/keg.io.git"
+  },
+  "keywords": [
+    "keg",
+    "kegerator",
+    "beer"
+  ],
+  "dependencies" : {
+    "coffee-script": "1.1.3",
+    "choreographer": "0.2.3a",
+    "log4js": "0.4.1",
+    "node-static": "0.5.9",
+    "optparse": "1.0.3",
+    "socket.io": "0.8.7",
+    "sqlite3": "2.1.1",
+    "twitter": "0.1.17"
+  },
+  "noAnalyze": true,
+  "devDependencies": {
+  },
+  "bundleDependencies": [
+  ],
+  "license": "MIT",
+  "engine": {
+    "node": ">=0.6"
+  }
+}
