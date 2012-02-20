@@ -1,0 +1,84 @@
+#! /usr/bin/env coffee
+
+fs = require 'fs'
+path = require 'path'
+sqlite3 = require 'sqlite3'
+async = require 'async'
+OptParse   = require 'optparse'
+
+db_file = '' # the sqlite3 file to delete/rebuild
+
+switches = [
+  [ "-h", "--help",             'Display the help information' ],
+  [ "-f", "--config-file PATH", 'Rebuild the specified database' ]
+]
+
+Parser = new OptParse.OptionParser(switches)
+Parser.banner = "Usage rebuild [options]"
+
+Parser.on "config-file", (opt, value) ->
+  # Load our commented JSON configuration file, and echo it
+  #    strip out C-style comments (/*  */)
+  config = JSON.parse(fs.readFileSync(value).toString().replace(new RegExp("\\/\\*(.|\\r|\\n)*?\\*\\/", "g"), ""))
+  db_file = config.db_name
+
+Parser.on "help", (opt, value) ->
+  console.log Parser.toString()
+  process.exit 0
+
+Parser.parse process.argv
+
+class KegDb
+
+  rebuild_cmds = [
+    "CREATE TABLE pour(rfid varchar(10), keg_id int, pour_date date, volume_ounces int);",
+    "CREATE TABLE user(rfid varchar(10), first_name varchar(64),
+                       last_name varchar(64), nickname varchar(255),
+                       email varchar(255), twitter_handle varchar(255));",
+    "CREATE TABLE keg(keg_id int, beer varchar(64), brewery varchar(64),
+                      beer_style varchar(255), description varchar(256),
+                      tapped_date datetime, volume_gallons real, active boolean,
+                      image_path varchar(255));",
+    "CREATE TABLE temperature(temperature int, temperature_date date);",
+    "CREATE TABLE coaster(coaster_id int, name varchar(64),
+                          description varchar(255), image_path varchar(255));",
+    "CREATE TABLE user_coaster(rfid varchar(10), coaster_id int, earned_date date);"
+  ]
+
+  populate_cmds = [
+    "INSERT INTO keg(keg_id, beer, brewery, beer_style, description,
+                     tapped_date, volume_gallons, active, image_path)
+    VALUES(1, 'Manny''s', 'Georgetown Brewery', 'Pale Ale',
+          'A solid pale ale, brewed in Seattle least-douchey neighborhood.',
+          '2011-03-12T01:23:45Z', 15.5, 'false', 'images/MannysPint3.gif');"
+  ]
+
+  constructor: (path) ->
+    @db = new sqlite3.Database(path, (error) ->
+      if error?
+        console.log 'Error opening db. Please check your configuration.'
+        throw error)
+
+  exec_sql: (sql, cb) =>
+    @db.run(sql, (error) ->
+      if error?
+        console.log "SQL Error: #{error} -> #{sql}"
+      else if cb?
+        cb(this && (this.lastID > 0)))
+
+  rebuild: (cb) =>
+    async.forEach rebuild_cmds, this.exec_sql, (err) =>
+      console.log "\ttables created"
+      async.forEach populate_cmds, this.exec_sql, (err) ->
+        console.log "\tinitial data populated"
+        cb()
+        # if any of the saves produced an error, err would equal that error
+
+
+path.exists db_file, (exists) ->
+  fs.unlinkSync db_file if exists # delete the db file
+  console.log 'rebuilding db...'
+  db = new KegDb(db_file)
+  db.rebuild () ->
+    console.log '...done'
+
