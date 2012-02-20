@@ -7,14 +7,29 @@
   "contributors": [
     {
       "name": "crc",
-      "email": "github@crc.io"
+      "email": "github@crc.io",
+      "web": "https://github.com/crcastle"
+    },
+    {
+      "name": "dcarney",
+      "email": "dcarney@gmail.com",
+      "web": "https://github.com/dcarney"
+    },
+    {
+      "name": "c4",
+      "web": "https://github.com/c4"
+    }
+    {
+      "name": "garrettpatterson",
+      "web": "https://github.com/garrettpatterson"
     }
   ],
   "bin": {
     "keg.io": "./keg.io"
   },
   "scripts": {
-    "start": "node server.js conf/configuration.json"
+    "start": "node server.js conf/configuration.json",
+    "rebuild": ""
   },
   "main": "./lib/keg.io/keg.io.js",
   "repository": {
@@ -38,6 +53,7 @@
   },
   "noAnalyze": true,
   "devDependencies": {
+    "node-insepctor": "0.1.10"
   },
   "bundleDependencies": [
   ],
