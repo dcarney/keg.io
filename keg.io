@@ -71,6 +71,7 @@ for k, v of keg_config
 
 # Load access/secret keys from disk:
 keys = JSON.parse(fs.readFileSync('conf/keys.json').toString())
+console.log keys
 
 keg = new keg_io.Keg()
 keg.init(logger,
