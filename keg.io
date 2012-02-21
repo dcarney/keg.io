@@ -69,6 +69,9 @@ logger = log4js.getLogger();
 for k, v of keg_config
 	logger.debug "#{k}:#{v}"
 
+# Load access/secret keys from disk:
+keys = JSON.parse(fs.readFileSync('conf/keys.json').toString())
+
 keg = new keg_io.Keg()
 keg.init(logger,
 		 		 keg_config.device,
@@ -114,7 +117,8 @@ server = connect.createServer()
 server.use connect.logger()												# log requests
 server.use connect.query() 												# parse query string
 server.use middleware.path()											# parse url path
-server.use middleware.verify()										# verify req signature
+server.use '/api', middleware.accessKey()					# parse the accessKey
+server.use '/api', middleware.verify(keys)				# verify req signature
 server.use connect.static(__dirname + '/static') 	# static file handling
 server.use connect.router(router)									# routing
 server.listen keg_config.http_port
