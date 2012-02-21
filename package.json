@@ -47,6 +47,7 @@
     "log4js": "0.4.1",
     "node-static": "0.5.9",
     "optparse": "1.0.3",
+    "querystring": "0.1.0",
     "socket.io": "0.8.7",
     "sqlite3": "2.1.1",
     "twitter": "0.1.17",
