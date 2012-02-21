@@ -1,0 +1,104 @@
+#! /usr/bin/env coffee
+
+## About
+# **keg.io** is a techonology-laden kegerator, developed by VNC employees, to
+# satisfy their nerdiest beer-drinking needs.  It's built on node.js, and utilizes
+# an arduino microcontroller for interfacing with the actual keg HW and sensors.
+#
+#  It's got several cool features, including:
+#
+#  * Gravatar support
+#  * Twitter integration
+#
+# **keg.io** accepts two types of clients: web browser and kegerator.
+#
+# A web browser client connects to keg.io to view its primary GUI.
+# A kegerator client connects to keg.io to send and receive sensor information.
+#
+# Keg.io can accept multiple connections from both web browsers and kegerators.
+
+fs         = require 'fs'
+http       = require 'http'
+OptParse   = require 'optparse'
+
+switches = [
+  [ "-h", "--help",         'Display the help information' ],
+  [ "-f", "--config-file PATH",	'Run with the specified configuration file' ],
+  [ "-d", "--dev-mode",		"Run in 'development' mode: code supplies fake arduino client data to itself"],
+  [ '-c', '--clean-mode',	"Run in 'clean' mode: code constantly sends 'open' " +
+							'msg to arduino, allowing for easy flushing of ' +
+							'kegerator lines' ],
+  [ "-v", "--version",      'Displays the version of keg.io']
+]
+
+Parser = new OptParse.OptionParser(switches)
+Parser.banner = "Usage keg.io [options]"
+
+keg_config = null
+Parser.on "config-file", (opt, value) ->
+	# Load our commented JSON configuration file, and echo it
+	#    strip out C-style comments (/*  */)
+	keg_config = JSON.parse(fs.readFileSync(value).toString().replace(new RegExp("\\/\\*(.|\\r|\\n)*?\\*\\/", "g"), ""))
+
+Parser.on "help", (opt, value) ->
+  console.log Parser.toString()
+  process.exit 0
+
+Parser.on "version", (opt, value) ->
+  Options.version = true
+
+Parser.parse process.argv
+
+# Setup dependencies
+sys 				= require 'util'
+url 				= require 'url'
+querystring = require 'querystring'
+io 					= require 'socket.io'
+static 			= require 'node-static'
+keg_io 			= require './lib/keg.io/keg.io'
+log4js 			= require 'log4js'
+connect 		= require 'connect'
+verify      = require './lib/keg.io/verify'
+
+# Setup our logging
+# We're using [**log4js**](http://log4js.berlios.de/) for all of our logging
+# The logging verbosity (particularly to the console for debugging) can be changed via the
+# **conf/log4js.json** configuration file, using standard log4js log levels:
+#
+#  OFF < FATAL < ERROR < WARN < INFO < DEBUG < TRACE < ALL
+
+logger = log4js.getLogger();
+
+for k, v of keg_config
+	logger.debug "#{k}:#{v}"
+
+keg = new keg_io.Keg()
+keg.init(logger,
+		 		 keg_config.device,
+				 keg_config.db_name,
+				 keg_config.twitter_enabled,
+				 keg_config.twitter_consumer_key,
+				 keg_config.twitter_consumer_secret,
+				 keg_config.twitter_access_token_key,
+				 keg_config.twitter_access_token_secret,
+				 keg_config.admin_ui_password,
+				 keg_config.high_temp_threshold)
+
+router = (app) =>
+  app.get('/user/:id', (req, res, next) ->
+    res.writeHead(200, {'Content-Type': 'text/plain'})
+    res.end(req.params.id))
+
+  app.get('/admin/:id', (req, res, next) ->
+    res.writeHead(200, {'Content-Type': 'text/plain'})
+    res.end("ADMIN!" + req.params.id + req.params.sig))
+
+
+server = connect.createServer()
+server.use(connect.query())
+server.use(verify())
+server.use(connect.logger());
+server.use(connect.static(__dirname + '/static'))
+server.use(connect.router(router))
+
+server.listen(keg_config.http_port)
