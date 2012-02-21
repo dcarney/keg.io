@@ -5,10 +5,9 @@ url = require 'url'
 module.exports.verify = () ->
   (req, res, next) ->
     SECRET = 's3cr3t'
-    path = if req.path? then req.path.toLowerCase() else ''
-    to_sign = "#{req.method.toUpperCase()} http://#{req.headers.host}#{path}"
-
     if req.query? && req.query.signature?
+      path = if req.path? then req.path.toLowerCase() else ''
+      to_sign = "#{req.method.toUpperCase()} http://#{req.headers.host}#{path}"
       valid = signedRequest.isValidSignature(req.query.signature, to_sign, SECRET)
       unless valid
         console.log 'INVALID REQUEST SIGNATURE!'
