@@ -50,7 +50,8 @@
     "querystring": "0.1.0",
     "socket.io": "0.8.7",
     "sqlite3": "2.1.1",
-    "twitter": "0.1.17"
+    "twitter": "0.1.17",
+    "signed-request": "git://github.com/crcastle/nodejs-signed-request.git"
   },
   "noAnalyze": true,
   "devDependencies": {
