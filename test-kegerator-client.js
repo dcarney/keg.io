@@ -52,7 +52,7 @@ var KEGERATOR_ID = '1111';
 var SECRET = 's3cr3t'; //password with which to sign requests. should *never* be transferred over the wire.
 
 var fermata = require('fermata'), // used to make easy REST HTTP requests
-		signedRequest = require('signed-request'); // used to sign each HTTP request
+		signedRequest = require('string-signer'); // used to sign each HTTP request
 
 // create and register a kegio fermata plugin that takes care of the request signing
 fermata.registerPlugin('kegio', function(transport, host, kegeratorId, secret) {
