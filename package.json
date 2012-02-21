@@ -2,12 +2,12 @@
   "name": "keg.io",
   "preferGlobal": "false",
   "version": "2.0.0",
-  "author": "crc <github@crc.io>",
+  "author": "Chris Castle <crcastle@gmail.com>",
   "description": "a technology-laden kegerator",
   "contributors": [
     {
       "name": "crc",
-      "email": "github@crc.io",
+      "email": "crcastle@gmail.com",
       "web": "https://github.com/crcastle"
     },
     {
@@ -55,7 +55,8 @@
   },
   "noAnalyze": true,
   "devDependencies": {
-    "node-inspector": "0.1.10"
+    "node-inspector": "0.1.10",
+    "fermata": "0.8.3"
   },
   "bundleDependencies": [
   ],
