@@ -17,9 +17,20 @@
 #
 # Keg.io can accept multiple connections from both web browsers and kegerators.
 
+# Setup dependencies
 fs         = require 'fs'
 http       = require 'http'
 OptParse   = require 'optparse'
+sys 				= require 'util'
+url 				= require 'url'
+querystring = require 'querystring'
+io 					= require 'socket.io'
+static 			= require 'node-static'
+keg_io 			= require './lib/keg.io/keg.io'
+log4js 			= require 'log4js'
+connect 		= require 'connect'
+middleware  = require './lib/keg.io/middleware'
+url					= require 'url'
 
 switches = [
   [ "-h", "--help",         'Display the help information' ],
@@ -49,24 +60,10 @@ Parser.on "version", (opt, value) ->
 
 Parser.parse process.argv
 
-# Setup dependencies
-sys 				= require 'util'
-url 				= require 'url'
-querystring = require 'querystring'
-io 					= require 'socket.io'
-static 			= require 'node-static'
-keg_io 			= require './lib/keg.io/keg.io'
-log4js 			= require 'log4js'
-connect 		= require 'connect'
-verify      = require './lib/keg.io/verify'
-
-# Setup our logging
-# We're using [**log4js**](http://log4js.berlios.de/) for all of our logging
 # The logging verbosity (particularly to the console for debugging) can be changed via the
 # **conf/log4js.json** configuration file, using standard log4js log levels:
 #
 #  OFF < FATAL < ERROR < WARN < INFO < DEBUG < TRACE < ALL
-
 logger = log4js.getLogger();
 
 for k, v of keg_config
@@ -93,12 +90,12 @@ router = (app) =>
     res.writeHead(200, {'Content-Type': 'text/plain'})
     res.end("ADMIN!" + req.params.id + req.params.sig))
 
-
+# create the http server, load up our middleware stack, start listening
 server = connect.createServer()
-server.use(connect.query())
-server.use(verify())
-server.use(connect.logger());
-server.use(connect.static(__dirname + '/static'))
-server.use(connect.router(router))
-
-server.listen(keg_config.http_port)
+server.use connect.logger()												# log requests
+server.use connect.query() 												# parse query string
+server.use middleware.path()											# parse url path
+server.use middleware.verify()										# verify req signature
+server.use connect.static(__dirname + '/static') 	# static file handling
+server.use connect.router(router)									# routing
+server.listen keg_config.http_port
