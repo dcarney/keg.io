@@ -49,14 +49,16 @@
 
 var HOST = 'localhost';
 var KEGERATOR_ID = '1111';
+var PORT = '8081';
 var SECRET = 's3cr3t'; //password with which to sign requests. should *never* be transferred over the wire.
 
 var fermata = require('fermata'), // used to make easy REST HTTP requests
 		signedRequest = require('signed-request'); // used to sign each HTTP request
 
 // create and register a kegio fermata plugin that takes care of the request signing
-fermata.registerPlugin('kegio', function(transport, host, kegeratorId, secret) {
-	this.base = 'http://'+ host + '/api/kegerator/' + kegeratorId;
+fermata.registerPlugin('kegio', function(transport, host, port, kegeratorId, secret) {
+	port = (port == '80' ? '' : ':' + port);
+	this.base = 'http://'+ host + port + '/api/kegerator/' + kegeratorId;
   transport = transport.using('statusCheck').using('autoConvert', "application/json");
 
   return function (req, callback) { // req = {base, method, path, query, headers, data}
@@ -72,7 +74,7 @@ fermata.registerPlugin('kegio', function(transport, host, kegeratorId, secret) {
 });
 
 // define API endpoint using above-defined kegio fermata plugin
-var kegioAPI = fermata.kegio(HOST, KEGERATOR_ID, SECRET);
+var kegioAPI = fermata.kegio(HOST, PORT, KEGERATOR_ID, SECRET);
 
 // create FakeKegerator object
 FakeKegerator = function() {};
