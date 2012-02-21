@@ -90,6 +90,25 @@ router = (app) =>
     res.writeHead(200, {'Content-Type': 'text/plain'})
     res.end("ADMIN!" + req.params.id + req.params.sig))
 
+  app.get('/socketPort.json', (req, res, next) ->
+	  res.writeHead(200, {'Content-Type': 'text/plain'})
+	  res.end(keg_config.socket_client_connect_port))
+
+  app.get('/currentTemperature.json', (req, res, next) ->
+	  res.writeHead(200, {'Content-Type': 'text/plain'})
+	  res.end(keg_config.socket_client_connect_port))
+
+  app.get('/temperatureHistory.json', (req, res, next) ->
+  	keg.getTemperatureTrend((result) ->
+	  	res.writeHead(200, {'Content-Type': 'text/plain'})
+	  	res.end(result)))
+
+  app.get('/lastDrinker.json', (req, res, next) ->
+    keg.getLastDrinker((result) ->
+        res.writeHead(200, {'Content-Type': 'text/plain'})
+        res.end(JSON.stringify({name: 'pour', value: result}))))
+
+
 # create the http server, load up our middleware stack, start listening
 server = connect.createServer()
 server.use connect.logger()												# log requests
