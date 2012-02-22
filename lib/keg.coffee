@@ -4,14 +4,14 @@
 # which the keg.io server code interacts. This object encapsulates and maintains
 # the necessary ojbects for working with the DB and Twitter functionality.
 #
-fs        = require 'fs'
-sys       = require 'util'
-util      = require if process.binding('natives').util then 'util' else 'sys'
-keg_db    = require './keg.db'
-keg_tweet = require './keg.tweet'
-crypto    = require 'crypto'
-socketio  = require 'socket.io'
-http      = require 'http'
+fs          = require 'fs'
+sys         = require 'util'
+util        = require if process.binding('natives').util then 'util' else 'sys'
+keg_db      = require './keg.db'
+KegTwitter  = require './keg.twitter'
+crypto      = require 'crypto'
+socketio    = require 'socket.io'
+http        = require 'http'
 
 class Keg
   constructor: (logger, config) ->
@@ -32,7 +32,8 @@ class Keg
     if config.twitter.enabled
       # Initialize the Twitter module, passing in all the necessary config
       # values (that represent our API keys)
-      @kegTwit = new keg_tweet.KegTwit(@logger, config.twitter)
+      @kegTwit = new KegTwitter(@logger, config.twitter)
+      @kegTwit.tweet 'Hello world...'
 
   formatPourTrend: (rows, callback) ->
     formattedData = []
