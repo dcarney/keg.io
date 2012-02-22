@@ -26,7 +26,7 @@ url 				= require 'url'
 querystring = require 'querystring'
 io 					= require 'socket.io'
 static 			= require 'node-static'
-keg_io 			= require './lib/keg.io'
+Keg 			  = require './lib/keg.io.new'
 log4js 			= require 'log4js'
 connect 		= require 'connect'
 middleware  = require './lib/middleware'
@@ -71,17 +71,7 @@ for k, v of keg_config
 # Load access/secret keys from disk:
 keys = JSON.parse(fs.readFileSync('conf/keys.json').toString())
 
-keg = new keg_io.Keg()
-keg.init(logger,
-		 		 keg_config.device,
-				 keg_config.db_name,
-				 keg_config.twitter_enabled,
-				 keg_config.twitter_consumer_key,
-				 keg_config.twitter_consumer_secret,
-				 keg_config.twitter_access_token_key,
-				 keg_config.twitter_access_token_secret,
-				 keg_config.admin_ui_password,
-				 keg_config.high_temp_threshold)
+keg = new Keg(logger, keg_config)
 
 # routes for UI clients (aka jQuery)
 ui_router = (app) =>
