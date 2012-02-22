@@ -47,6 +47,9 @@
 	- 404: Unknown resource requested.  Either the kegerator ID was incorrect or an invalid ACTION was specified.
  *****************************/
 
+// this allows us to require coffeescript files as if they were .js files
+require('coffee-script');
+
 var HOST = 'localhost';
 var KEGERATOR_ID = '1111';
 var PORT = '8081';
