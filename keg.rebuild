@@ -74,10 +74,9 @@ class KegDb
         cb()
         # if any of the saves produced an error, err would equal that error
 
-
 path.exists db_file, (exists) ->
   fs.unlinkSync db_file if exists # delete the db file
-  console.log 'rebuilding db...'
+  console.log "rebuilding db at #{db_file}..."
   db = new KegDb(db_file)
   db.rebuild () ->
     console.log '...done'
