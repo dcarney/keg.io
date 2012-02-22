@@ -17,7 +17,7 @@
 
 - Create an initial database for keg.io to use.  (This same command can be used for to rebuild the database at any time in the future)
 
-		# keg.rebuild
+		# keg.rebuild -f conf/configuration.json
 
 ## Running:
 - Run the node server:
