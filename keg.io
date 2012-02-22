@@ -83,32 +83,68 @@ keg.init(logger,
 				 keg_config.admin_ui_password,
 				 keg_config.high_temp_threshold)
 
-router = (app) =>
-  app.get('/user/:id', (req, res, next) ->
-    res.writeHead(200, {'Content-Type': 'text/plain'})
-    res.end(req.params.id))
+# routes for UI clients (aka jQuery)
+ui_router = (app) =>
+  app.get '/user/:id', (req, res, next) ->
+    res.writeHead 200, {'Content-Type': 'text/plain'}
+    res.end req.params.id
 
-  app.get('/admin/:id', (req, res, next) ->
-    res.writeHead(200, {'Content-Type': 'text/plain'})
-    res.end("ADMIN!" + req.params.id + req.params.sig))
+  app.get '/socketPort.json', (req, res, next) ->
+    res.writeHead 200, {'Content-Type': 'text/plain'}
+    res.end keg_config.socket_client_connect_port
 
-  app.get('/socketPort.json', (req, res, next) ->
-    res.writeHead(200, {'Content-Type': 'text/plain'})
-    res.end(keg_config.socket_client_connect_port))
+  app.get '/currentTemperature.json', (req, res, next) ->
+    res.writeHead 200, {'Content-Type': 'text/plain'}
+    res.end keg_config.socket_client_connect_port
 
-  app.get('/currentTemperature.json', (req, res, next) ->
-    res.writeHead(200, {'Content-Type': 'text/plain'})
-    res.end(keg_config.socket_client_connect_port))
+  app.get '/temperatureHistory.json', (req, res, next) ->
+    keg.getTemperatureTrend (result) ->
+      res.writeHead 200, {'Content-Type': 'text/plain'}
+      res.end result
 
-  app.get('/temperatureHistory.json', (req, res, next) ->
-    keg.getTemperatureTrend((result) ->
-      res.writeHead(200, {'Content-Type': 'text/plain'})
-      res.end(result)))
+  app.get '/lastDrinker.json', (req, res, next) ->
+    keg.getLastDrinker (result) ->
+      res.writeHead 200, {'Content-Type': 'text/plain'}
+      res.end JSON.stringify({name: 'pour', value: result})
 
-  app.get('/lastDrinker.json', (req, res, next) ->
-    keg.getLastDrinker((result) ->
-      res.writeHead(200, {'Content-Type': 'text/plain'})
-      res.end(JSON.stringify({name: 'pour', value: result}))))
+  app.get '/currentPercentRemaining.json', (req, res, next) ->
+    keg.getPercentRemaining (percent) ->
+      res.writeHead 200, {'Content-Type': 'text/plain'}
+      res.end JSON.stringify({ name: 'remaining', value: percent + "" })
+
+  app.get '/pourHistory.json', (req, res, next) ->
+    keg.getPourTrend (result) ->
+      res.writeHead 200, {'Content-Type': 'text/plain'}
+      res.end result
+
+  app.get '/pourHistoryAllTime.json', (req, res, next) ->
+    keg.getPourTrendAllTime (result) ->
+      res.writeHead 200, {'Content-Type': 'text/plain'}
+      res.end result
+
+# routes for API clients (aka kegerators)
+api_router = (app) =>
+
+  # verify an RFID card
+  app.get '/kegerator/:accessKey/scan/:rfid', (req, res, next) ->
+    res.writeHead 200, {'Content-Type': 'text/plain'}
+    res.end req.params.rfid
+
+  # send the current flow rate
+  app.put '/kegerator/:accessKey/flow/:rate', (req, res, next) ->
+    res.writeHead 200, {'Content-Type': 'text/plain'}
+    res.end req.params.rate
+
+  # report that the flow for this card ID is done (special case of the above)
+  app.put '/kegerator/:accessKey/flow/end', (req, res, next) ->
+    res.writeHead 200, {'Content-Type': 'text/plain'}
+    res.end 'FLOW IS DONE!'
+
+  # send the current temperature:
+  # :temp indicates the current keg temperature, in F
+  app.put '/kegerator/:accessKey/temp/:temp', (req, res, next) ->
+    res.writeHead 200, {'Content-Type': 'application/json'}
+    res.end JSON.stringify({ temp: req.params.temp })
 
 # create the http server, load up our middleware stack, start listening
 server = connect.createServer()
@@ -118,5 +154,6 @@ server.use middleware.path()											# parse url path
 server.use '/api', middleware.accessKey()					# parse the accessKey
 server.use '/api', middleware.verify(keys)				# verify req signature
 server.use connect.static(__dirname + '/static') 	# static file handling
-server.use connect.router(router)									# routing
+server.use connect.router(ui_router)									# UI routing
+server.use '/api', connect.router(api_router)     # API routing
 server.listen keg_config.http_port
