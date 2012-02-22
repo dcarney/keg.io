@@ -48,9 +48,24 @@ class KegDb
   populate_cmds = [
     "INSERT INTO keg(keg_id, beer, brewery, beer_style, description,
                      tapped_date, volume_gallons, active, image_path)
-    VALUES(1, 'Manny''s', 'Georgetown Brewery', 'Pale Ale',
-          'A solid pale ale, brewed in Seattle least-douchey neighborhood.',
-          '2011-03-12T01:23:45Z', 15.5, 'false', 'images/MannysPint3.gif');"
+     VALUES(1, 'Manny''s', 'Georgetown Brewery', 'Pale Ale',
+            'A solid pale ale, brewed in Seattle least-douchey neighborhood.',
+            '2011-03-12T01:23:45Z', 15.5, 'true', 'images/MannysPint3.gif');",
+
+    "INSERT INTO user(rfid, first_name, last_name, nickname, email, twitter_handle)
+     VALUES('44004C234A', 'Dylan', 'Carney', 'Beardo', 'dcarney@gmail.com', '@_dcarney_');",
+    "INSERT INTO user(rfid, first_name, last_name, nickname, email, twitter_handle)
+     VALUES('44004C3A1A', 'Chris', 'Castle', '', 'crcastle@gmail.com', '@crc');",
+    "INSERT INTO user(rfid, first_name, last_name, nickname, email)
+     VALUES('4400561A0A', 'Carl', 'Krauss', '', '');",
+    "INSERT INTO user(rfid, first_name, last_name, nickname, email, twitter_handle)
+     VALUES('440055F873', 'Garrett', 'Patterson', '',
+            'garrett.patterson@vivaki.com', '@thegarrettp');",
+
+    "INSERT INTO pour(rfid, keg_id, pour_date, volume_ounces)
+     VALUES ('44004C234A', 1, '2011-03-19T16:34:17Z', 16);",
+    "INSERT INTO pour(rfid, keg_id, pour_date, volume_ounces)
+     VALUES ('44004C3A1A', 1, '2011-03-19T16:38:17Z', 32);"
   ]
 
   constructor: (path) ->
@@ -74,10 +89,9 @@ class KegDb
         cb()
         # if any of the saves produced an error, err would equal that error
 
-
 path.exists db_file, (exists) ->
   fs.unlinkSync db_file if exists # delete the db file
-  console.log 'rebuilding db...'
+  console.log "rebuilding db at #{db_file}..."
   db = new KegDb(db_file)
   db.rebuild () ->
     console.log '...done'
