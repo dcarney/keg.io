@@ -112,6 +112,11 @@ ui_router = (app) =>
       res.writeHead 200, {'Content-Type': 'text/plain'}
       res.end result
 
+  app.get '/recentHistory.json', (req, res, next) ->
+    keg.getRecentHistory (result) ->
+      res.writeHead 200, {'Content-Type': 'text/plain'}
+      res.end JSON.stringify(result)
+
 # routes for API clients (aka kegerators)
 api_router = (app) =>
 
