@@ -26,11 +26,10 @@ url 				= require 'url'
 querystring = require 'querystring'
 io 					= require 'socket.io'
 static 			= require 'node-static'
-keg_io 			= require './lib/keg.io/keg.io'
+keg_io 			= require './lib/keg.io'
 log4js 			= require 'log4js'
 connect 		= require 'connect'
-middleware  = require './lib/keg.io/middleware'
-url					= require 'url'
+middleware  = require './lib/middleware'
 
 switches = [
   [ "-h", "--help",         'Display the help information' ],
@@ -71,7 +70,6 @@ for k, v of keg_config
 
 # Load access/secret keys from disk:
 keys = JSON.parse(fs.readFileSync('conf/keys.json').toString())
-console.log keys
 
 keg = new keg_io.Keg()
 keg.init(logger,
@@ -95,23 +93,22 @@ router = (app) =>
     res.end("ADMIN!" + req.params.id + req.params.sig))
 
   app.get('/socketPort.json', (req, res, next) ->
-	  res.writeHead(200, {'Content-Type': 'text/plain'})
-	  res.end(keg_config.socket_client_connect_port))
+    res.writeHead(200, {'Content-Type': 'text/plain'})
+    res.end(keg_config.socket_client_connect_port))
 
   app.get('/currentTemperature.json', (req, res, next) ->
-	  res.writeHead(200, {'Content-Type': 'text/plain'})
-	  res.end(keg_config.socket_client_connect_port))
+    res.writeHead(200, {'Content-Type': 'text/plain'})
+    res.end(keg_config.socket_client_connect_port))
 
   app.get('/temperatureHistory.json', (req, res, next) ->
-  	keg.getTemperatureTrend((result) ->
-	  	res.writeHead(200, {'Content-Type': 'text/plain'})
-	  	res.end(result)))
+    keg.getTemperatureTrend((result) ->
+      res.writeHead(200, {'Content-Type': 'text/plain'})
+      res.end(result)))
 
   app.get('/lastDrinker.json', (req, res, next) ->
     keg.getLastDrinker((result) ->
-        res.writeHead(200, {'Content-Type': 'text/plain'})
-        res.end(JSON.stringify({name: 'pour', value: result}))))
-
+      res.writeHead(200, {'Content-Type': 'text/plain'})
+      res.end(JSON.stringify({name: 'pour', value: result}))))
 
 # create the http server, load up our middleware stack, start listening
 server = connect.createServer()
