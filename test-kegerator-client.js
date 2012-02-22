@@ -60,7 +60,7 @@ var fermata = require('fermata'), // used to make easy REST HTTP requests
 fermata.registerPlugin('kegio', function(transport, host, port, kegeratorId, secret) {
 	port = (port == '80' ? '' : ':' + port);
 	this.base = 'http://'+ host + port + '/api/kegerator/' + kegeratorId;
-     transport = transport.using('statusCheck').using('autoConvert', "application/json");
+    transport = transport.using('statusCheck').using('autoConvert', "application/json");
 
   return function (req, callback) { // req = {base, method, path, query, headers, data}
     var requestToSign = payload.getPayload(req.method,
@@ -101,7 +101,7 @@ FakeKegerator.prototype.fakeFlow = function(flowsLeft)
 			// send API request
 			kegioAPI.flow(randomFlow).put(function(err, result) {
 				if (!err) {
-					//console.log('flow send: ' + randomFlow);
+					console.log('flow sent: ' + randomFlow + ', server responded with: ' + result);
 				} else {
 					console.log('ERROR: error sending flow request: ' + result.data );
 				}
