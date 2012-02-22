@@ -53,19 +53,20 @@ var PORT = '8081';
 var SECRET = 's3cr3t'; //password with which to sign requests. should *never* be transferred over the wire.
 
 var fermata = require('fermata'), // used to make easy REST HTTP requests
-		signedRequest = require('string-signer'); // used to sign each HTTP request
+	signedRequest = require('string-signer'), // used to sign each HTTP request
+	payload = require('./lib/payload');
 
 // create and register a kegio fermata plugin that takes care of the request signing
 fermata.registerPlugin('kegio', function(transport, host, port, kegeratorId, secret) {
 	port = (port == '80' ? '' : ':' + port);
 	this.base = 'http://'+ host + port + '/api/kegerator/' + kegeratorId;
-  transport = transport.using('statusCheck').using('autoConvert', "application/json");
+     transport = transport.using('statusCheck').using('autoConvert', "application/json");
 
   return function (req, callback) { // req = {base, method, path, query, headers, data}
-		var requestToSign = req.method.toUpperCase() + ' ' +
-												req.base.toLowerCase() +
-												(req.path ? req.path.join("/").toLowerCase() : '') +
-												(req.data ? '?' + req.data.toLowerCase() : '');
+    var requestToSign = payload.getPayload(req.method,
+                                            host + port,
+                                             '/api/kegerator/' + kegeratorId + (req.path ? req.path.join("/") : ''),
+                                            req.data);
     var sig = signedRequest.getSignature(requestToSign, secret);
     req.query = { signature: sig };
     req.headers['Content-Type'] = "application/x-www-form-urlencoded";
@@ -102,7 +103,7 @@ FakeKegerator.prototype.fakeFlow = function(flowsLeft)
 				if (!err) {
 					//console.log('flow send: ' + randomFlow);
 				} else {
-					//console.log('ERROR: error sending flow request: ' + randomFlow);
+					console.log('ERROR: error sending flow request: ' + result.data );
 				}
 			});
 
@@ -117,7 +118,7 @@ FakeKegerator.prototype.fakeFlow = function(flowsLeft)
 			if (!err) {
 				//console.log('flow ended');
 			} else {
-				//console.log('ERROR: error sending flow end request');
+				console.log('ERROR: error sending flow end request: ' + result.data );
 			}
 		});
 	}
@@ -161,7 +162,7 @@ FakeKegerator.prototype.fakePour = function()
 			if (!err) {
 				//console.log('scan user: ' + userRFID);
 			} else {
-				//console.log('ERROR: error sending scan request for user: ' + userRFID);
+				console.log('ERROR: error sending scan request for user: ' + userRFID + ' ' + result.data);
 			}
 		});
 

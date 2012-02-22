@@ -1,5 +1,7 @@
-signedRequest = require 'signed-request' # used to sign each HTTP request
+signer = require 'string-signer' # used to sign each HTTP request
 url = require 'url'
+sys = require 'util'
+payload    = require './payload'
 
 # verify the request's signature, based on our signing scheme and a secret key
 module.exports.verify = (keys = {}) ->
@@ -9,13 +11,11 @@ module.exports.verify = (keys = {}) ->
         throw Error('Request is missing an accessKey') unless req.accessKey?
         secret = keys[req.accessKey]
         throw Error("Unknown accessKey: #{req.accessKey}") unless secret?
-        path = if req.path? then req.path.toLowerCase() else ''
-        to_sign = "#{req.method.toUpperCase()} http://#{req.headers.host}#{path}"
-        valid = signedRequest.isValidSignature(req.query.signature, to_sign, SECRET)
+        to_sign = payload.getRequestPayload req
+        valid = signer.isValidSignature(req.query.signature, to_sign, secret)
         throw Error('Invalid request signature') unless valid
         next()
       catch err
-        console.log err.message
         # return a 400, with the appropriate message
         res.writeHead(400, {'Content-Type': 'text/plain'})
         res.end(err.message)
@@ -33,7 +33,6 @@ module.exports.path = () ->
 #     the access key is '1111'
 module.exports.accessKey = () ->
   (req, res, next) ->
-    console.log "ACCEESSSSSSKEY!!!!"
-    match = /\/api\/kegerator\/([0-9]+)\//i.exec(req.url)
+    match = /\/kegerator\/([0-9]+)\//i.exec(req.url)
     req.accessKey = match[1] if match
     next()
