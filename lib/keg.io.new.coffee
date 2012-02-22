@@ -26,7 +26,6 @@ class Keg
     @adminUiPassword = config.adminUiPassword;
     @highTempThreshold = config.highTempThreshold;
 
-    console.log "ATTEMPTING TO OPEN DB AT:#{config.db_name}"
     @kegDb = new keg_db.KegDb
     @kegDb.initialize(@logger, config.db_name);
 
@@ -50,5 +49,12 @@ class Keg
         @kegDb.getPourTotalsByUserByKeg rows[0].keg_id, (rows) =>
           @formatPourTrend(rows, callback)
 
+  getPourTrendAllTime: (callback) ->
+    @kegDb.getPourTotalsByUser (rows) =>
+      @formatPourTrend(rows, callback)
+
+  getRecentHistory: (callback) ->
+    @kegDb.getRecentHistory (rows) ->
+      callback JSON.stringify(rows)
 
 module.exports = Keg
