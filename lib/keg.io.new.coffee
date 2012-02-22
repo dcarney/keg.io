@@ -42,6 +42,12 @@ class Keg
     data = JSON.stringify({ name: 'pourHistory', value: formattedData });
     callback(data)
 
+  hashEmail: (email, callback) ->
+    md5Hash = ''
+    if email? && email.length > 0
+      md5Hash = crypto.createHash('md5').update(email).digest("hex")
+    callback md5Hash
+
   getPourTrend: (callback) ->
     #self = this
     @kegDb.getActiveKeg (rows) =>
@@ -56,5 +62,24 @@ class Keg
   getRecentHistory: (callback) ->
     @kegDb.getRecentHistory (rows) ->
       callback JSON.stringify(rows)
+
+  getLastDrinker: (callback) ->
+    @kegDb.getLastDrinker (rows) =>
+      callback null unless rows? && rows.length > 0
+      #Hash the email, then send an event to the UI with the relevant data
+      @hashEmail rows[0].email, (hash) ->
+        callback(JSON.stringify(
+            {
+              'first_name': rows[0].first_name,
+              'last_name': rows[0].last_name,
+              'nickname': rows[0].nickname,
+              'hash': hash,
+              'email': rows[0].email,
+              'usertag': rows[0].rfid,
+              'twitter_handle': rows[0].twitter_handle,
+              'pouring': false,
+              'member_since': rows[0].member_since,
+              'num_pours': rows[0].num_pours
+              }))
 
 module.exports = Keg
