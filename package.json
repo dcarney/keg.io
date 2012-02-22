@@ -51,7 +51,7 @@
     "socket.io": "0.8.7",
     "sqlite3": "2.1.1",
     "twitter": "0.1.17",
-    "string-signer": "git://github.com/crcastle/nodejs-string-signer.git"
+    "string-signer": "https://github.com/crcastle/nodejs-string-signer/tarball/master"
   },
   "noAnalyze": true,
   "devDependencies": {
