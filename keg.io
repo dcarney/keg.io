@@ -1,22 +1,5 @@
 #! /usr/bin/env coffee
 
-## About
-# **keg.io** is a techonology-laden kegerator, developed by VNC employees, to
-# satisfy their nerdiest beer-drinking needs.  It's built on node.js, and utilizes
-# an arduino microcontroller for interfacing with the actual keg HW and sensors.
-#
-#  It's got several cool features, including:
-#
-#  * Gravatar support
-#  * Twitter integration
-#
-# **keg.io** accepts two types of clients: web browser and kegerator.
-#
-# A web browser client connects to keg.io to view its primary GUI.
-# A kegerator client connects to keg.io to send and receive sensor information.
-#
-# Keg.io can accept multiple connections from both web browsers and kegerators.
-
 # Setup dependencies
 fs         = require 'fs'
 http       = require 'http'
@@ -26,7 +9,7 @@ url 				= require 'url'
 querystring = require 'querystring'
 io 					= require 'socket.io'
 static 			= require 'node-static'
-Keg 			  = require './lib/keg.io.new'
+Keg 			  = require './lib/keg'
 log4js 			= require 'log4js'
 connect 		= require 'connect'
 middleware  = require './lib/middleware'
@@ -117,15 +100,71 @@ ui_router = (app) =>
       res.writeHead 200, {'Content-Type': 'text/plain'}
       res.end JSON.stringify(result)
 
-# routes for API clients (aka kegerators)
+# ## API routes
+# 'API' routes are routes designed for keg.io clients (kegerators, soda machines,
+# etc.) to call to interact with the central keg.io server.  All of these routes
+# require a signed request, utilizing the access key and secret key that are
+# registered with the central keg.io server.
+#
+#
+
+# ## Signing a request
+# - Assemble the 'payload' to be signed:  The payload consists of the following
+#   items, concatenated into a single string:
+#
+#        - Request method, in uppercase (Ex: PUT)
+#        - one (1) whitespace character (Ex. ' ')
+#        - the hostname to be used for the request, in lowercase (Ex: keg.io)
+#        - the path of the request, in lowercase (Ex: /some/path)
+#        - the querystring (for GET requests) or form data (for PUT/POST
+#          requests), in lowercase, prefixed with a question mark (?) character.
+#          If no querystring or form data is being sent, then no question mark
+#          is used.
+# - Sign the assembled payload, using the secret key assigned to you by keg.io.
+#   The signature is calculated using
+#   [HMAC SHA256](http://en.wikipedia.org/wiki/HMAC).
+#
+# - Base64 encode the resulting signature
+# - Append the signature to the querystring/data using the key 'signature'
+#
+# #### Example:
+# - Payload: 'PUT keg.io/some/path?param1=foo&param2=bar'
+# - Secret: 'somesupersecretstring'
+# - Signature: bcSEesMJCZLUEtskEtdpgXfMeyc-zjO9Uw22FIJwJKQ
+# - Request: PUT to http://keg.io/some/path?param1=foo&param2=bar&signature=
+#
+# All routes that require signature verification return HTTP 400 if the
+# request verfication fails.
 api_router = (app) =>
 
-  # verify an RFID card
+  ### API: verify an RFID card
+  #   `GET /kegerator/ACCESS_KEY/scan/RFID?signature=....`
+  #
+  #    Where **ACCESS_KEY** is an access key registered with the keg.io server
+  #    and **RFID** is a the RFID of a valid keg.io user
+  #
+  # Requests to this route return 200 if the RFID is valid, and 401 if the RFID
+  # is unknown to keg.io
+  #
+  # #### Examples:
+  # ##### Authenticate the RFID value 23657ABF5 from kegerator 1111:
+  #     GET http://keg.io/kegerator/1111/scan/23657ABF5?signature=....
+  #
+  ###
   app.get '/kegerator/:accessKey/scan/:rfid', (req, res, next) ->
     res.writeHead 200, {'Content-Type': 'text/plain'}
     res.end req.params.rfid
 
-  # send the current flow rate
+  ### API: send the current flow rate
+  #   `PUT /kegerator/ACCESS_KEY/flow/RATE`
+  #
+  #    Where **ACCESS_KEY** is an access key registered with the keg.io server
+  #    and **RATE** is a the current flow rate of the kegerator in liters/min
+  #
+  # #### Examples:
+  # ##### Authenticate the RFID value 23657ABF5 from kegerator 1111:
+  #     PUT http://keg.io/kegerator/1111/flow/12
+  ###
   app.put '/kegerator/:accessKey/flow/:rate', (req, res, next) ->
     res.writeHead 200, {'Content-Type': 'text/plain'}
     res.end req.params.rate
