@@ -128,16 +128,17 @@ ui_router = (app) =>
 # - Append the signature to the querystring/data using the key 'signature'
 #
 # #### Example:
-# - Payload: 'PUT keg.io/some/path?param1=foo&param2=bar'
-# - Secret: 'somesupersecretstring'
-# - Signature: bcSEesMJCZLUEtskEtdpgXfMeyc-zjO9Uw22FIJwJKQ
-# - Request: PUT to http://keg.io/some/path?param1=foo&param2=bar&signature=
+#
+# - Payload: 'PUT localhost/api/kegerator/1111/temp/39'
+# - Secret: 's3cr3t'
+# - Signature: 84f58081ca143ae50f2ead68571da2d6d718f273d8893f2415ee3a70c8c1a20d
+# - Request: PUT to http://localhost/api/kegerator/1111/temp/39?signature=84f58081ca143ae50f2ead68571da2d6d718f273d8893f2415ee3a70c8c1a20d
 #
 # All routes that require signature verification return HTTP 400 if the
 # request verfication fails.
 api_router = (app) =>
 
-  ### API: verify an RFID card
+  # ## API: verify an RFID card
   #   `GET /kegerator/ACCESS_KEY/scan/RFID?signature=....`
   #
   #    Where **ACCESS_KEY** is an access key registered with the keg.io server
@@ -150,32 +151,40 @@ api_router = (app) =>
   # ##### Authenticate the RFID value 23657ABF5 from kegerator 1111:
   #     GET http://keg.io/kegerator/1111/scan/23657ABF5?signature=....
   #
-  ###
   app.get '/kegerator/:accessKey/scan/:rfid', (req, res, next) ->
     res.writeHead 200, {'Content-Type': 'text/plain'}
     res.end req.params.rfid
 
-  ### API: send the current flow rate
+  # ## API: report the current flow rate
   #   `PUT /kegerator/ACCESS_KEY/flow/RATE`
   #
   #    Where **ACCESS_KEY** is an access key registered with the keg.io server
   #    and **RATE** is a the current flow rate of the kegerator in liters/min
   #
   # #### Examples:
-  # ##### Authenticate the RFID value 23657ABF5 from kegerator 1111:
+  # ##### Report a flow of 12 liters/min on kegerator 1111:
   #     PUT http://keg.io/kegerator/1111/flow/12
-  ###
   app.put '/kegerator/:accessKey/flow/:rate', (req, res, next) ->
     res.writeHead 200, {'Content-Type': 'text/plain'}
     res.end req.params.rate
 
-  # report that the flow for this card ID is done (special case of the above)
+  # ## API: report an end to the current flow
+  #   `PUT /kegerator/ACCESS_KEY/flow/end`
+  #
+  #    Where **ACCESS_KEY** is an access key registered with the keg.io server
+  #
+  # Reports that the flow for the most recent RFID has completed on this
+  # kegerator
   app.put '/kegerator/:accessKey/flow/end', (req, res, next) ->
     res.writeHead 200, {'Content-Type': 'text/plain'}
     res.end 'FLOW IS DONE!'
 
-  # send the current temperature:
-  # :temp indicates the current keg temperature, in F
+  # ## API: report the current kegerator temperature
+  #   `PUT /kegerator/ACCESS_KEY/temp/TEMP`
+  #
+  #    Where **ACCESS_KEY** is an access key registered with the keg.io server
+  #    and **TEMP** is an integer representing the current keg temperature in F.
+  #
   app.put '/kegerator/:accessKey/temp/:temp', (req, res, next) ->
     res.writeHead 200, {'Content-Type': 'application/json'}
     res.end JSON.stringify({ temp: req.params.temp })
