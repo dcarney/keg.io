@@ -5,3 +5,4 @@ keg.io.tmproj
 /node_modules
 /conf/configuration.json
 /conf/keys.json
+/lib/keg.io

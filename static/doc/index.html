@@ -77,7 +77,7 @@ This file should not be checked in, or made publicly accessible in any way.</p>
 </ul></section><section class=" h5 misc_info"><h5>Misc. Info:</h5>
 
 <ul>
-<li>HTML documentation for the 'important' keg.io code can be found in the docs/ directory.</li>
+<li>HTML documentation for the 'important' keg.io code can be found in the doc/ directory.</li>
 </ul></section><section class="api h2 api_routes"><h2 class="api" id="api_routes">API routes <span class="type"></span>
 </h2>
 <p>'API' routes are routes designed for keg.io clients (kegerators, soda machines,
@@ -112,16 +112,16 @@ The signature is calculated using
 <section class=" h4 example"><h4>Example:</h4>
 
 <ul>
-<li>Payload: 'PUT keg.io/some/path?param1=foo&amp;param2=bar'</li>
-<li>Secret: 'somesupersecretstring'</li>
-<li>Signature: bcSEesMJCZLUEtskEtdpgXfMeyc-zjO9Uw22FIJwJKQ</li>
-<li>Request: PUT to http://keg.io/some/path?param1=foo&amp;param2=bar&amp;signature=</li>
+<li>Payload: 'PUT localhost/api/kegerator/1111/temp/39'</li>
+<li>Secret: 's3cr3t'</li>
+<li>Signature: 84f58081ca143ae50f2ead68571da2d6d718f273d8893f2415ee3a70c8c1a20d</li>
+<li>Request: PUT to http://localhost/api/kegerator/1111/temp/39?signature=84f58081ca143ae50f2ead68571da2d6d718f273d8893f2415ee3a70c8c1a20d</li>
 </ul>
 <p>All routes that require signature verification return HTTP 400 if the
 request verfication fails.</p>
 
-</section></section><section class="api h1 api_verify_an_rfid_card"><h1 class="api" id="api_verify_an_rfid_card">API: verify an RFID card <span class="type"></span>
-</h1>
+</section></section><section class="api h2 api_verify_an_rfid_card"><h2 class="api" id="api_verify_an_rfid_card">API: verify an RFID card <span class="type"></span>
+</h2>
 <p><code>GET /kegerator/ACCESS_KEY/scan/RFID?signature=....</code></p>
 
 <p>Where <strong>ACCESS_KEY</strong> is an access key registered with the keg.io server
@@ -137,8 +137,8 @@ is unknown to keg.io</p>
 <pre class=" lang- prettyprint"><code>GET http://keg.io/kegerator/1111/scan/23657ABF5?signature=....
 </code></pre>
 
-</section></section></section><section class="api h1 api_send_the_current_flow_rate"><h1 class="api" id="api_send_the_current_flow_rate">API: send the current flow rate <span class="type"></span>
-</h1>
+</section></section></section><section class="api h2 api_report_the_current_flow_rate"><h2 class="api" id="api_report_the_current_flow_rate">API: report the current flow rate <span class="type"></span>
+</h2>
 <p><code>PUT /kegerator/ACCESS_KEY/flow/RATE</code></p>
 
 <p>Where <strong>ACCESS_KEY</strong> is an access key registered with the keg.io server
@@ -146,18 +146,39 @@ is unknown to keg.io</p>
 
 <section class=" h4 examples"><h4>Examples:</h4>
 
-<section class=" h5 authenticate_the_rfid_value_23657abf5_from_kegerator_1111"><h5>Authenticate the RFID value 23657ABF5 from kegerator 1111:</h5>
+<section class=" h5 report_a_flow_of_12_liters_min_on_kegerator_1111"><h5>Report a flow of 12 liters/min on kegerator 1111:</h5>
 
 <pre class=" lang- prettyprint"><code>PUT http://keg.io/kegerator/1111/flow/12
-</code></pre></section></section></section><aside id="toc"><h1>keg.io</h1>
+</code></pre>
+
+</section></section></section><section class="api h2 api_report_an_end_to_the_current_flow"><h2 class="api" id="api_report_an_end_to_the_current_flow">API: report an end to the current flow <span class="type"></span>
+</h2>
+<p><code>PUT /kegerator/ACCESS_KEY/flow/end</code></p>
+
+<p>Where <strong>ACCESS_KEY</strong> is an access key registered with the keg.io server</p>
+
+<p>Reports that the flow for the most recent RFID has completed on this
+kegerator</p>
+
+</section><section class="api h2 api_report_the_current_kegerator_temperature"><h2 class="api" id="api_report_the_current_kegerator_temperature">API: report the current kegerator temperature <span class="type"></span>
+</h2>
+<p><code>PUT /kegerator/ACCESS_KEY/temp/TEMP</code></p>
+
+<p>Where <strong>ACCESS_KEY</strong> is an access key registered with the keg.io server
+   and <strong>TEMP</strong> is an integer representing the current keg temperature in F.</p></section><aside id="toc"><h1>keg.io</h1>
 <nav class="level-2"><h3><a href="#api_routes">API routes <span class="type"></span>
 </a></h3>
 <ul></ul></nav><nav class="level-2"><h3><a href="#signing_a_request">Signing a request <span class="type"></span>
 </a></h3>
-<ul></ul></nav><h2><a href="#api_verify_an_rfid_card">API: verify an RFID card <span class="type"></span>
-</a></h2>
-<h2><a href="#api_send_the_current_flow_rate">API: send the current flow rate <span class="type"></span>
-</a></h2></aside></div>
+<ul></ul></nav><nav class="level-2"><h3><a href="#api_verify_an_rfid_card">API: verify an RFID card <span class="type"></span>
+</a></h3>
+<ul></ul></nav><nav class="level-2"><h3><a href="#api_report_the_current_flow_rate">API: report the current flow rate <span class="type"></span>
+</a></h3>
+<ul></ul></nav><nav class="level-2"><h3><a href="#api_report_an_end_to_the_current_flow">API: report an end to the current flow <span class="type"></span>
+</a></h3>
+<ul></ul></nav><nav class="level-2"><h3><a href="#api_report_the_current_kegerator_temperature">API: report the current kegerator temperature <span class="type"></span>
+</a></h3>
+<ul></ul></nav></aside></div>
   <script type='text/javascript' src='http://cachedcommons.org/cache/prettify/1.0.0/javascripts/prettify-min.js'></script>
   <script>prettyPrint();</script>
 </body>
