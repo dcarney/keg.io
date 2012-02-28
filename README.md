@@ -1,6 +1,21 @@
-# keg.io
+# **keg.io**
+is a techonology-laden kegerator, developed by VNC employees, to
+satisfy their nerdiest beer-drinking needs.  It's built on node.js, and utilizes
+an arduino microcontroller for interfacing with the actual keg HW and sensors.
 
-## (Initial) Setup:
+It's got several cool features, including:
+
+ * Gravatar support
+ * Twitter integration
+
+**keg.io** accepts two types of clients: web browser and kegerator.
+
+A web browser client connects to keg.io to view its primary GUI.
+A kegerator client connects to keg.io to send and receive sensor information.
+
+Keg.io can accept multiple connections from both web browsers and kegerators.
+
+##### (Initial) Setup:
 
 - This assumes you've already installed a working copy of node.js, that is relatively recent (>= v0.6), along with npm, the node.js package manager.  See the [node js site](http://nodejs.org/) for more info on installing node.js and npm.
 
@@ -15,7 +30,7 @@
   This file should not be checked in, or made publicly accessible in any way.
 
         # cp conf/configuration-sample.json conf/configuration.json
-	# vi conf/configuration.json
+	    # vi conf/configuration.json
         # cp conf/keys-sample.json conf/keys.json
         # vi conf/keys.json
 
@@ -23,7 +38,7 @@
 
 		# keg.rebuild -f conf/configuration.json
 
-## Running:
+##### Running:
 - Run the node server:
 
 		# npm start
@@ -34,5 +49,5 @@
 
 - Connect a client UI by opening a browser and navigating to the proper IP/port, per the server's config.
 
-## Misc. Info:
-- Docco HTML documentation for the 'important' keg.io code can be found in the docs/ directory.
+##### Misc. Info:
+- HTML documentation for the 'important' keg.io code can be found in the doc/ directory.
