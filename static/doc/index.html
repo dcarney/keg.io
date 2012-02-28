@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <title>keg.io</title>
+    <link href="style.css" rel="stylesheet" />
+    <link href='http://fonts.googleapis.com/css?family=Shanti:400|PT+Sans:700,700italic' rel='stylesheet' type='text/css'>
+    
+</head>
+<body class='toc'>
+  
+  <div id='all'>
+
+<hgroup class="header"><h1 id="keg_io"><strong>keg.io</strong></h1></hgroup><p class=" brief">is a techonology-laden kegerator, developed by VNC employees, to
+satisfy their nerdiest beer-drinking needs.  It's built on node.js, and utilizes
+an arduino microcontroller for interfacing with the actual keg HW and sensors.</p>
+
+<p>It's got several cool features, including:</p>
+
+<ul>
+<li>Gravatar support</li>
+<li>Twitter integration</li>
+</ul>
+<p><strong>keg.io</strong> accepts two types of clients: web browser and kegerator.</p>
+
+<p>A web browser client connects to keg.io to view its primary GUI.
+A kegerator client connects to keg.io to send and receive sensor information.</p>
+
+<p>Keg.io can accept multiple connections from both web browsers and kegerators.</p>
+
+<section class=" h5 initial_setup"><h5>(Initial) Setup:</h5>
+
+<ul>
+<li><p>This assumes you've already installed a working copy of node.js, that is relatively recent (&gt;= v0.6), along with npm, the node.js package manager.  See the <a href="http://nodejs.org/">node js site</a> for more info on installing node.js and npm.</p></li>
+<li>
+<p>Get the code and install all deps:</p>
+
+<pre class=" lang- prettyprint"><code># git clone https://github.com/vnc/keg.io.git
+# cd keg.io
+# npm install
+</code></pre>
+</li>
+<li>
+<p>Copy the sample config and key files, and set any necessary configuration options in the resulting files.
+The keys.json file contains a mapping of all the access and secret keys for authorized kegerator clients.
+This file should not be checked in, or made publicly accessible in any way.</p>
+
+<pre class=" lang- prettyprint"><code># cp conf/configuration-sample.json conf/configuration.json
+# vi conf/configuration.json
+# cp conf/keys-sample.json conf/keys.json
+# vi conf/keys.json
+</code></pre>
+</li>
+<li>
+<p>Create an initial database for keg.io to use.  (This same command can be used for to rebuild the database at any time in the future)</p>
+
+<pre class=" lang- prettyprint"><code># keg.rebuild -f conf/configuration.json
+</code></pre>
+</li>
+</ul></section><section class=" h5 running"><h5>Running:</h5>
+
+<ul>
+<li>
+<p>Run the node server:</p>
+
+<pre class=" lang- prettyprint"><code># npm start
+</code></pre>
+
+<p><strong>OR</strong></p>
+
+<pre class=" lang- prettyprint"><code># keg.io -f conf/configuration.json
+</code></pre>
+
+<p>(Depending on the port/HW/OS you're running on, you may need sudo privs to get node to open the configured port)</p>
+</li>
+<li><p>Connect a client UI by opening a browser and navigating to the proper IP/port, per the server's config.</p></li>
+</ul></section><section class=" h5 misc_info"><h5>Misc. Info:</h5>
+
+<ul>
+<li>HTML documentation for the 'important' keg.io code can be found in the docs/ directory.</li>
+</ul></section><section class="api h2 api_routes"><h2 class="api" id="api_routes">API routes <span class="type"></span>
+</h2>
+<p>'API' routes are routes designed for keg.io clients (kegerators, soda machines,
+etc.) to call to interact with the central keg.io server.  All of these routes
+require a signed request, utilizing the access key and secret key that are
+registered with the central keg.io server.</p>
+
+</section><section class="api h2 signing_a_request"><h2 class="api" id="signing_a_request">Signing a request <span class="type"></span>
+</h2>
+<ul>
+<li>
+<p>Assemble the 'payload' to be signed:  The payload consists of the following
+items, concatenated into a single string:</p>
+
+<ul>
+<li>Request method, in uppercase (Ex: PUT)</li>
+<li>one (1) whitespace character (Ex. ' ')</li>
+<li>the hostname to be used for the request, in lowercase (Ex: keg.io)</li>
+<li>the path of the request, in lowercase (Ex: /some/path)</li>
+<li>the querystring (for GET requests) or form data (for PUT/POST
+ requests), in lowercase, prefixed with a question mark (?) character.
+ If no querystring or form data is being sent, then no question mark
+ is used.</li>
+</ul>
+</li>
+<li><p>Sign the assembled payload, using the secret key assigned to you by keg.io.
+The signature is calculated using
+<a href="http://en.wikipedia.org/wiki/HMAC">HMAC SHA256</a>.</p></li>
+<li><p>Base64 encode the resulting signature</p></li>
+<li><p>Append the signature to the querystring/data using the key 'signature'</p></li>
+</ul>
+<section class=" h4 example"><h4>Example:</h4>
+
+<ul>
+<li>Payload: 'PUT keg.io/some/path?param1=foo&amp;param2=bar'</li>
+<li>Secret: 'somesupersecretstring'</li>
+<li>Signature: bcSEesMJCZLUEtskEtdpgXfMeyc-zjO9Uw22FIJwJKQ</li>
+<li>Request: PUT to http://keg.io/some/path?param1=foo&amp;param2=bar&amp;signature=</li>
+</ul>
+<p>All routes that require signature verification return HTTP 400 if the
+request verfication fails.</p>
+
+</section></section><section class="api h1 api_verify_an_rfid_card"><h1 class="api" id="api_verify_an_rfid_card">API: verify an RFID card <span class="type"></span>
+</h1>
+<p><code>GET /kegerator/ACCESS_KEY/scan/RFID?signature=....</code></p>
+
+<p>Where <strong>ACCESS_KEY</strong> is an access key registered with the keg.io server
+   and <strong>RFID</strong> is a the RFID of a valid keg.io user</p>
+
+<p>Requests to this route return 200 if the RFID is valid, and 401 if the RFID
+is unknown to keg.io</p>
+
+<section class=" h4 examples"><h4>Examples:</h4>
+
+<section class=" h5 authenticate_the_rfid_value_23657abf5_from_kegerator_1111"><h5>Authenticate the RFID value 23657ABF5 from kegerator 1111:</h5>
+
+<pre class=" lang- prettyprint"><code>GET http://keg.io/kegerator/1111/scan/23657ABF5?signature=....
+</code></pre>
+
+</section></section></section><section class="api h1 api_send_the_current_flow_rate"><h1 class="api" id="api_send_the_current_flow_rate">API: send the current flow rate <span class="type"></span>
+</h1>
+<p><code>PUT /kegerator/ACCESS_KEY/flow/RATE</code></p>
+
+<p>Where <strong>ACCESS_KEY</strong> is an access key registered with the keg.io server
+   and <strong>RATE</strong> is a the current flow rate of the kegerator in liters/min</p>
+
+<section class=" h4 examples"><h4>Examples:</h4>
+
+<section class=" h5 authenticate_the_rfid_value_23657abf5_from_kegerator_1111"><h5>Authenticate the RFID value 23657ABF5 from kegerator 1111:</h5>
+
+<pre class=" lang- prettyprint"><code>PUT http://keg.io/kegerator/1111/flow/12
+</code></pre></section></section></section><aside id="toc"><h1>keg.io</h1>
+<nav class="level-2"><h3><a href="#api_routes">API routes <span class="type"></span>
+</a></h3>
+<ul></ul></nav><nav class="level-2"><h3><a href="#signing_a_request">Signing a request <span class="type"></span>
+</a></h3>
+<ul></ul></nav><h2><a href="#api_verify_an_rfid_card">API: verify an RFID card <span class="type"></span>
+</a></h2>
+<h2><a href="#api_send_the_current_flow_rate">API: send the current flow rate <span class="type"></span>
+</a></h2></aside></div>
+  <script type='text/javascript' src='http://cachedcommons.org/cache/prettify/1.0.0/javascripts/prettify-min.js'></script>
+  <script>prettyPrint();</script>
+</body>
+</html>
