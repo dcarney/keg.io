@@ -6,99 +6,147 @@ http       = require 'http'
 OptParse   = require 'optparse'
 sys 				= require 'util'
 url 				= require 'url'
+path        = require 'path'
 querystring = require 'querystring'
 io 					= require 'socket.io'
-static 			= require 'node-static'
 Keg 			  = require './lib/keg'
 log4js 			= require 'log4js'
 connect 		= require 'connect'
 middleware  = require './lib/middleware'
+express     = require 'express'
 
 switches = [
   [ "-h", "--help",         'Display the help information' ],
   [ "-f", "--config-file PATH",	'Run with the specified configuration file' ],
-  [ "-d", "--dev-mode",		"Run in 'development' mode: code supplies fake arduino client data to itself"],
-  [ '-c', '--clean-mode',	"Run in 'clean' mode: code constantly sends 'open' " +
-							'msg to arduino, allowing for easy flushing of ' +
-							'kegerator lines' ],
+  [ '-r', '--rebuild', 'rebuilds the DB, creating a backup of the current DB'],
   [ "-v", "--version",      'Displays the version of keg.io']
 ]
+
+Options =
+  rebuild: false
 
 Parser = new OptParse.OptionParser(switches)
 Parser.banner = "Usage keg.io [options]"
 
-keg_config = null
+Config = null
 Parser.on "config-file", (opt, value) ->
-	# Load our commented JSON configuration file, and echo it
-	#    strip out C-style comments (/*  */)
-	keg_config = JSON.parse(fs.readFileSync(value).toString().replace(new RegExp("\\/\\*(.|\\r|\\n)*?\\*\\/", "g"), ""))
+  # Load our commented JSON configuration file, stripping out C-style comments
+  Config = JSON.parse(fs.readFileSync(value).toString().replace(new RegExp("\\/\\*(.|\\r|\\n)*?\\*\\/", "g"), ""))
 
-Parser.on "help", (opt, value) ->
+Parser.on 'help', (opt, value) ->
+  # output the usage info and exit
   console.log Parser.toString()
   process.exit 0
 
-Parser.on "version", (opt, value) ->
-  Options.version = true
+Parser.on 'version', (opt, value) ->
+  # output the version info from package.json and exit
+  package_path = __dirname + "/package.json"
+
+  fs.readFile package_path, (err,data) ->
+    if err
+      console.error "Could not open package file : %s", err
+      process.exit 1
+
+    content = JSON.parse(data.toString('ascii'))
+    console.log content['version']
+    process.exit 0
+
+Parser.on 'rebuild', (opt, value) ->
+  Options.rebuild = true
 
 Parser.parse process.argv
+
+# defaults, used if no config file is given
+unless Config?
+  Config =
+    socket_listen_port: 8081
+    socket_client_connect_port: 8081
+    http_port: 8081
+    db_path: 'db/kegerator.db'
+    high_temp_threshold: 60
+    twitter: { enabled: false }
 
 # The logging verbosity (particularly to the console for debugging) can be changed via the
 # **conf/log4js.json** configuration file, using standard log4js log levels:
 #
 #  OFF < FATAL < ERROR < WARN < INFO < DEBUG < TRACE < ALL
-logger = log4js.getLogger();
-
-for k, v of keg_config
-	logger.debug "#{k}:#{v}"
+logger = log4js.getLogger()
+for k, v of Config
+  logger.debug "#{k}:#{v}"
 
 # Load access/secret keys from disk:
 keys = JSON.parse(fs.readFileSync('conf/keys.json').toString())
 
-keg = new Keg(logger, keg_config)
+keg = new Keg(logger, Config)
 
-# routes for UI clients (aka jQuery)
-ui_router = (app) =>
-  app.get '/user/:id', (req, res, next) ->
-    res.writeHead 200, {'Content-Type': 'text/plain'}
-    res.end req.params.id
+rebuild = () ->
+  keg.rebuildDb (err) ->
+    if err
+      console.log "ERROR: #{err}" if err
+      process.exit 1
+    process.exit 0
 
-  app.get '/socketPort.json', (req, res, next) ->
-    res.writeHead 200, {'Content-Type': 'text/plain'}
-    res.end keg_config.socket_client_connect_port
+if Options.rebuild
+  # copy the DB file as .bak, build a new DB
+  path.exists Config.db_path, (exists) ->
+    if exists
+      input = fs.createReadStream Config.db_path
+      output = fs.createWriteStream Config.db_path + '.bak'
+      sys.pump input, output, (err) ->
+        rebuild()
+    else
+      rebuild()
 
-  app.get '/currentTemperature.json', (req, res, next) ->
-    res.writeHead 200, {'Content-Type': 'text/plain'}
-    res.end keg_config.socket_client_connect_port
+server = express.createServer()
 
-  app.get '/temperatureHistory.json', (req, res, next) ->
-    keg.getTemperatureTrend (result) ->
-      res.writeHead 200, {'Content-Type': 'text/plain'}
-      res.end result
+# ## UI routes
+# 'UI' routes are routes designed for keg.io UI clients (eg. web pages) to
+# call to interact with the central keg.io server.  The UI routes should respect
+# the 'Accepts' header to determine the format of the response, while preferring
+# JSON.
+#
 
-  app.get '/lastDrinker.json', (req, res, next) ->
-    keg.getLastDrinker (result) ->
-      res.writeHead 200, {'Content-Type': 'text/plain'}
-      res.end JSON.stringify({name: 'pour', value: result})
+# ## UI: get the port to use for web socket connections
+#   `GET /config/socketPort`
+#
+server.get '/config/socketPort', (req, res, next) ->
+  console.log Config.socket_client_connect_port
+  res.send Config.socket_client_connect_port.toString(), 200
 
-  app.get '/currentPercentRemaining.json', (req, res, next) ->
-    keg.getPercentRemaining (percent) ->
-      res.writeHead 200, {'Content-Type': 'text/plain'}
-      res.end JSON.stringify({ name: 'remaining', value: percent + "" })
+# ## UI: get information about the last N number of record temperatures for the
+# given kegerator
+#   `GET /ACCESS_KEY/temperature/recent/N`
+#
+#    Where **ACCESS_KEY** is the access key of the desired kegerator
+#     and **N** is the number of temperatures to retrieve
+#
+server.get '/:accessKey/temperature/recent/:num', (req, res, next) ->
+  keg.recentTemperatures req.params.accessKey, req.params.num, (result) ->
+    res.send result, 200
 
-  app.get '/pourHistory.json', (req, res, next) ->
-    keg.getPourTrend (result) ->
-      res.writeHead 200, {'Content-Type': 'text/plain'}
-      res.end result
+# ## UI: get information about the last drinker for the given kegerator
+#   `GET /ACCESS_KEY/users/last`
+#
+#    Where **ACCESS_KEY** is the access key of the desired kegerator
+#
+server.get '/:accessKey/users/last', (req, res, next) ->
+  res.header('Content-Type', 'application/json')
+  keg.lastDrinker req.params.accessKey, (result) ->
+    res.send result, 200
 
-  app.get '/pourHistoryAllTime.json', (req, res, next) ->
-    keg.getPourTrendAllTime (result) ->
-      res.writeHead 200, {'Content-Type': 'text/plain'}
-      res.end result
-
-  app.get '/recentHistory.json', (req, res, next) ->
-    keg.getRecentHistory (result) ->
-      res.writeHead 200, {'Content-Type': 'text/plain'}
-      res.end JSON.stringify(result)
+# ## UI: get information about the last N number of pours for the given
+# kegerator
+#   `GET /ACCESS_KEY/pours/recent/N`
+#
+#    Where **ACCESS_KEY** is the access key of the desired kegerator
+#     and **N** is the number of pours to retrieve
+#
+# #### Examples:
+# ##### Retrieve the last 10 pours for kegerator 1111:
+#     GET /1111/recentPours/10
+server.get '/:accessKey/pours/recent/:num', (req, res, next) ->
+  keg.recentPours req.params.accessKey, req.params.num, (result) ->
+    res.send result, 200
 
 # ## API routes
 # 'API' routes are routes designed for keg.io clients (kegerators, soda machines,
@@ -106,9 +154,9 @@ ui_router = (app) =>
 # require a signed request, utilizing the access key and secret key that are
 # registered with the central keg.io server.
 #
+# Responses for API routes have a content type of 'text/plain'
 #
-
-# ## Signing a request
+# ### Signing a request
 # - Assemble the 'payload' to be signed:  The payload consists of the following
 #   items, concatenated into a single string:
 #
@@ -134,69 +182,68 @@ ui_router = (app) =>
 # - Signature: 84f58081ca143ae50f2ead68571da2d6d718f273d8893f2415ee3a70c8c1a20d
 # - Request: PUT to http://localhost/api/kegerator/1111/temp/39?signature=84f58081ca143ae50f2ead68571da2d6d718f273d8893f2415ee3a70c8c1a20d
 #
-# All routes that require signature verification return HTTP 400 if the
-# request verfication fails.
-api_router = (app) =>
+#
+# API routes adhere to the following HTTP response code conventions:
+# - 200: Request was received and processed successfully
+# - 400: Bad request syntax, or signature verfification failed
+# - 401: Unauthorized.  Unknown access key.
+api_middlewares = [middleware.accessKey(), middleware.verify(keys)]
 
-  # ## API: verify an RFID card
-  #   `GET /kegerator/ACCESS_KEY/scan/RFID?signature=....`
-  #
-  #    Where **ACCESS_KEY** is an access key registered with the keg.io server
-  #    and **RFID** is a the RFID of a valid keg.io user
-  #
-  # Requests to this route return 200 if the RFID is valid, and 401 if the RFID
-  # is unknown to keg.io
-  #
-  # #### Examples:
-  # ##### Authenticate the RFID value 23657ABF5 from kegerator 1111:
-  #     GET http://keg.io/kegerator/1111/scan/23657ABF5?signature=....
-  #
-  app.get '/kegerator/:accessKey/scan/:rfid', (req, res, next) ->
-    res.writeHead 200, {'Content-Type': 'text/plain'}
-    res.end req.params.rfid
+# ## API: verify an RFID card
+#   `GET /kegerator/ACCESS_KEY/scan/RFID?signature=....`
+#
+#    Where **ACCESS_KEY** is an access key registered with the keg.io server
+#    and **RFID** is a the RFID of a valid keg.io user
+#
+# Requests to this route return 200 if the RFID is valid, and 401 if the RFID
+# is unknown to keg.io
+#
+# #### Examples:
+# ##### Authenticate the RFID value 23657ABF5 from kegerator 1111:
+#     GET http://keg.io/kegerator/1111/scan/23657ABF5?signature=....
+#
+server.get '/api/kegerator/:accessKey/scan/:rfid', api_middlewares, (req, res, next) ->
+  res.writeHead 200, {'Content-Type': 'text/plain'}
+  res.end req.params.rfid
 
-  # ## API: report the current flow rate
-  #   `PUT /kegerator/ACCESS_KEY/flow/RATE`
-  #
-  #    Where **ACCESS_KEY** is an access key registered with the keg.io server
-  #    and **RATE** is a the current flow rate of the kegerator in liters/min
-  #
-  # #### Examples:
-  # ##### Report a flow of 12 liters/min on kegerator 1111:
-  #     PUT http://keg.io/kegerator/1111/flow/12
-  app.put '/kegerator/:accessKey/flow/:rate', (req, res, next) ->
+# ## API: report the current flow rate
+#   `PUT /kegerator/ACCESS_KEY/flow/RATE`
+#
+#    Where **ACCESS_KEY** is an access key registered with the keg.io server
+#    and **RATE** is a the current flow rate of the kegerator in liters/min
+#
+# #### Examples:
+# ##### Report a flow of 12 liters/min on kegerator 1111:
+#     PUT http://keg.io/kegerator/1111/flow/12
+server.put '/api/kegerator/:accessKey/flow/:rate', api_middlewares, (req, res, next) ->
     res.writeHead 200, {'Content-Type': 'text/plain'}
     res.end req.params.rate
 
-  # ## API: report an end to the current flow
-  #   `PUT /kegerator/ACCESS_KEY/flow/end`
-  #
-  #    Where **ACCESS_KEY** is an access key registered with the keg.io server
-  #
-  # Reports that the flow for the most recent RFID has completed on this
-  # kegerator
-  app.put '/kegerator/:accessKey/flow/end', (req, res, next) ->
-    res.writeHead 200, {'Content-Type': 'text/plain'}
-    res.end 'FLOW IS DONE!'
+# ## API: report an end to the current flow
+#   `PUT /kegerator/ACCESS_KEY/flow/end`
+#
+#    Where **ACCESS_KEY** is an access key registered with the keg.io server
+#
+# Reports that the flow for the most recent RFID has completed on this
+# kegerator
+server.put '/api/kegerator/:accessKey/flow/end', api_middlewares, (req, res, next) ->
+  res.writeHead 200, {'Content-Type': 'text/plain'}
+  res.end 'FLOW IS DONE!'
 
-  # ## API: report the current kegerator temperature
-  #   `PUT /kegerator/ACCESS_KEY/temp/TEMP`
-  #
-  #    Where **ACCESS_KEY** is an access key registered with the keg.io server
-  #    and **TEMP** is an integer representing the current keg temperature in F.
-  #
-  app.put '/kegerator/:accessKey/temp/:temp', (req, res, next) ->
-    res.writeHead 200, {'Content-Type': 'application/json'}
-    res.end JSON.stringify({ temp: req.params.temp })
+# ## API: report the current kegerator temperature
+#   `PUT /kegerator/ACCESS_KEY/temp/TEMP`
+#
+#    Where **ACCESS_KEY** is an access key registered with the keg.io server
+#    and **TEMP** is an integer representing the current keg temperature in F.
+#
+server.put '/api/kegerator/:accessKey/temp/:temp', api_middlewares, (req, res, next) ->
+  res.writeHead 200, {'Content-Type': 'application/json'}
+  res.end JSON.stringify({ temp: req.params.temp })
 
 # create the http server, load up our middleware stack, start listening
-server = connect.createServer()
-server.use connect.logger()												# log requests
+server.use connect.logger('short')
 server.use connect.query() 												# parse query string
 server.use middleware.path()											# parse url path
-server.use '/api', middleware.accessKey()					# parse the accessKey
-server.use '/api', middleware.verify(keys)				# verify req signature
 server.use connect.static(__dirname + '/static') 	# static file handling
-server.use connect.router(ui_router)									# UI routing
-server.use '/api', connect.router(api_router)     # API routing
-server.listen keg_config.http_port
+server.use server.router                          # UI and API routing
+server.listen Config.http_port

@@ -9,9 +9,10 @@ sys         = require 'util'
 util        = require if process.binding('natives').util then 'util' else 'sys'
 keg_db      = require './keg.db'
 KegTwitter  = require './keg.twitter'
-crypto      = require 'crypto'
 socketio    = require 'socket.io'
 http        = require 'http'
+Sequelize   = require 'sequelize'
+new_db      = require './keg.db.coffee'
 
 class Keg
   constructor: (logger, config) ->
@@ -26,14 +27,68 @@ class Keg
     @adminUiPassword = config.adminUiPassword;
     @highTempThreshold = config.highTempThreshold;
 
-    @kegDb = new keg_db.KegDb
-    @kegDb.initialize(@logger, config.db_name);
+    #@kegDb = new keg_db.KegDb
+    #@kegDb.initialize(@logger, config.db_path);
 
-    if config.twitter.enabled
+    @sequelize = new Sequelize '', '', '', {
+      dialect: 'sqlite',
+      storage: config.db_path,
+      logging: false,
+    }
+
+    # wrap all of our model imports into a "namespace"
+    @models =
+      Kegerator: @sequelize.import "#{__dirname}/models/kegerator.coffee"
+      Keg: @sequelize.import "#{__dirname}/models/keg.coffee"
+      User: @sequelize.import "#{__dirname}/models/user.coffee"
+      Pour: @sequelize.import "#{__dirname}/models/pour.coffee"
+      Temperature: @sequelize.import "#{__dirname}/models/temperature.coffee"
+
+    ###
+    { attributes:
+     [ 'rfid',
+       'first_name',
+       'last_name',
+       ... ],
+    ...
+    ...
+    rfid: '440055F873',
+    first_name: 'Garrett',
+    last_name: 'Patterson',
+    ...
+    ###
+    @models.mapAttribValues = (model) ->
+       (model[attr_name] for attr_name in model.attributes)
+
+    @models.mapAttribs = (model) ->
+      result = {}
+      for attr_name in model.attributes
+        result[attr_name] = model[attr_name]
+      result
+
+    # associations
+    @models.Kegerator.hasMany(@models.Keg, {foreignKey: 'kegerator_id'})
+    @models.Kegerator.hasMany(@models.Temperature, {foreignKey: 'kegerator_id'})
+    @models.Keg.hasMany(@models.Pour, {foreignKey: 'keg_id'})
+    @models.User.hasMany(@models.Pour, {foreignKey: 'user_id'})
+
+    if config? && config.twitter? && config.twitter.enabled
       # Initialize the Twitter module, passing in all the necessary config
       # values (that represent our API keys)
       @kegTwit = new KegTwitter(@logger, config.twitter)
       @kegTwit.tweet 'Hello world...'
+
+  rebuildDb: (cb) ->
+    console.log 'Rebuilding the keg.io DB...'
+    @sequelize.sync({force: true}).success () =>
+      console.log '...DB rebuild complete'
+      console.log 'Populating the keg.io DB...'
+      new_db.populate @models, (err) ->
+        throw err if err
+        console.log '...DB population complete'
+        cb()
+      .error (error) ->
+        cb(error)
 
   formatPourTrend: (rows, callback) ->
     formattedData = []
@@ -42,12 +97,6 @@ class Keg
         formattedData.push( [row.first_name + " " + row.last_name, row.volume ] )
     data = JSON.stringify({ name: 'pourHistory', value: formattedData });
     callback(data)
-
-  hashEmail: (email, callback) ->
-    md5Hash = ''
-    if email? && email.length > 0
-      md5Hash = crypto.createHash('md5').update(email).digest("hex")
-    callback md5Hash
 
   getPourTrend: (callback) ->
     #self = this
@@ -63,6 +112,34 @@ class Keg
   getRecentHistory: (callback) ->
     @kegDb.getRecentHistory (rows) ->
       callback JSON.stringify(rows)
+
+  recentTemperatures: (access_key, num_temps, cb) ->
+    @models.Kegerator.find({where: {access_key: access_key}}).success (kegerator) =>
+      sql = "SELECT * FROM temperatures t
+             WHERE kegerator_id=#{kegerator.access_key}
+             ORDER BY created_at DESC LIMIT #{num_temps};"
+      @sequelize.query(sql, @models.Temperature).on 'success', (temps) =>
+        cb(@models.mapAttribs(temp) for temp in temps)
+
+  recentPours: (access_key, num_pours, cb) ->
+    @models.Kegerator.find({where: {access_key: access_key}}).success (kegerator) =>
+      sql = "SELECT * FROM `pours` p " +
+            "INNER JOIN `kegs` k on p.keg_id = k.id " +
+            "INNER JOIN `kegerators` ke ON ke.access_key = k.kegerator_id " +
+            "WHERE ke.access_key=#{kegerator.access_key} " +
+            "ORDER BY p.pour_date DESC LIMIT #{num_pours};"
+      @sequelize.query(sql, @models.Pour).on 'success', (pours) =>
+        cb(@models.mapAttribs(pour) for pour in pours)
+
+  lastDrinker: (access_key, cb) ->
+    @recentPours access_key, 1, (pours) =>
+      cb '' unless pours && pours.length == 1
+      @models.User.find({where: {rfid: pours[0].rfid}}).success (user) =>
+        result = @models.mapAttribs user
+        user.emailHash (hash) ->
+          result['hash'] = hash
+          cb result
+
 
   getLastDrinker: (callback) ->
     @kegDb.getLastDrinker (rows) =>

@@ -34,17 +34,19 @@ Keg.io can accept multiple connections from both web browsers and kegerators.
         # cp conf/keys-sample.json conf/keys.json
         # vi conf/keys.json
 
-- Create an initial database for keg.io to use.  (This same command can be used for to rebuild the database at any time in the future)
+- Create an initial database (with some 'seed' data) for keg.io to use.  (This same command can be used for to rebuild the database at any time in the future)
 
-		# keg.rebuild -f conf/configuration.json
+		# keg.io --rebuild
 
 ##### Running:
-- Run the node server:
+- Run the keg.io server with default configuration settings:
 
-		# npm start
-	**OR**
+		# keg.io
+
+- Run the keg.io server with custom configuration settings:
 
 		# keg.io -f conf/configuration.json
+
   (Depending on the port/HW/OS you're running on, you may need sudo privs to get node to open the configured port)
 
 - Connect a client UI by opening a browser and navigating to the proper IP/port, per the server's config.

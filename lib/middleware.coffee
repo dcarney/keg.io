@@ -6,12 +6,13 @@ payload    = require './payload'
 # verify the request's signature, based on our signing scheme and a secret key
 module.exports.verify = (keys = {}) ->
   (req, res, next) ->
-    if req.query? && req.query.signature? # onluy check requests with a sig
       try
+        throw Error('Request must must be signed') unless req.query? && req.query.signature?
         throw Error('Request is missing an accessKey') unless req.accessKey?
         secret = keys[req.accessKey]
         throw Error("Unknown accessKey: #{req.accessKey}") unless secret?
         to_sign = payload.getRequestPayload req
+        console.log to_sign
         valid = signer.isValidSignature(req.query.signature, to_sign, secret)
         throw Error('Invalid request signature') unless valid
         next()
@@ -19,8 +20,6 @@ module.exports.verify = (keys = {}) ->
         # return a 400, with the appropriate message
         res.writeHead(400, {'Content-Type': 'text/plain'})
         res.end(err.message)
-    else
-      next()
 
 # set a 'path' property on the req object (used by verify())
 module.exports.path = () ->
