@@ -52,41 +52,86 @@ This file should not be checked in, or made publicly accessible in any way.</p>
 </code></pre>
 </li>
 <li>
-<p>Create an initial database for keg.io to use.  (This same command can be used for to rebuild the database at any time in the future)</p>
+<p>Create an initial database (with some 'seed' data) for keg.io to use.  (This same command can be used for to rebuild the database at any time in the future)</p>
 
-<pre class=" lang- prettyprint"><code># keg.rebuild -f conf/configuration.json
+<pre class=" lang- prettyprint"><code># keg.io --rebuild
 </code></pre>
 </li>
 </ul></section><section class=" h5 running"><h5>Running:</h5>
 
 <ul>
 <li>
-<p>Run the node server:</p>
+<p>Run the keg.io server with default configuration settings:</p>
 
-<pre class=" lang- prettyprint"><code># npm start
+<pre class=" lang- prettyprint"><code># keg.io
 </code></pre>
-
-<p><strong>OR</strong></p>
+</li>
+<li>
+<p>Run the keg.io server with custom configuration settings:</p>
 
 <pre class=" lang- prettyprint"><code># keg.io -f conf/configuration.json
 </code></pre>
-
-<p>(Depending on the port/HW/OS you're running on, you may need sudo privs to get node to open the configured port)</p>
 </li>
-<li><p>Connect a client UI by opening a browser and navigating to the proper IP/port, per the server's config.</p></li>
+</ul>
+<p>(Depending on the port/HW/OS you're running on, you may need sudo privs to get node to open the configured port)</p>
+
+<ul>
+<li>Connect a client UI by opening a browser and navigating to the proper IP/port, per the server's config.</li>
 </ul></section><section class=" h5 misc_info"><h5>Misc. Info:</h5>
 
 <ul>
 <li>HTML documentation for the 'important' keg.io code can be found in the doc/ directory.</li>
-</ul></section><section class="api h2 api_routes"><h2 class="api" id="api_routes">API routes <span class="type"></span>
+</ul></section><section class="api h2 ui_routes"><h2 class="api" id="ui_routes">UI routes <span class="type"></span>
+</h2>
+<p>'UI' routes are routes designed for keg.io UI clients (eg. web pages) to
+call to interact with the central keg.io server.  The UI routes should respect
+the 'Accepts' header to determine the format of the response, while preferring
+JSON.</p>
+
+</section><section class="api h2 ui_get_the_port_to_use_for_web_socket_connections"><h2 class="api" id="ui_get_the_port_to_use_for_web_socket_connections">UI: get the port to use for web socket connections <span class="type"></span>
+</h2>
+<p><code>GET /config/socketPort</code></p>
+
+</section><section class="api h2 ui_get_information_about_the_last_n_number_of_record_temperatures_for_the"><h2 class="api" id="ui_get_information_about_the_last_n_number_of_record_temperatures_for_the">UI: get information about the last N number of record temperatures for the <span class="type"></span>
+</h2>
+<p>given kegerator
+  <code>GET /ACCESS_KEY/temperature/recent/N</code></p>
+
+<p>Where <strong>ACCESS_KEY</strong> is the access key of the desired kegerator
+    and <strong>N</strong> is the number of temperatures to retrieve</p>
+
+</section><section class="api h2 ui_get_information_about_the_last_drinker_for_the_given_kegerator"><h2 class="api" id="ui_get_information_about_the_last_drinker_for_the_given_kegerator">UI: get information about the last drinker for the given kegerator <span class="type"></span>
+</h2>
+<p><code>GET /ACCESS_KEY/users/last</code></p>
+
+<p>Where <strong>ACCESS_KEY</strong> is the access key of the desired kegerator</p>
+
+</section><section class="api h2 ui_get_information_about_the_last_n_number_of_pours_for_the_given"><h2 class="api" id="ui_get_information_about_the_last_n_number_of_pours_for_the_given">UI: get information about the last N number of pours for the given <span class="type"></span>
+</h2>
+<p>kegerator
+  <code>GET /ACCESS_KEY/pours/recent/N</code></p>
+
+<p>Where <strong>ACCESS_KEY</strong> is the access key of the desired kegerator
+    and <strong>N</strong> is the number of pours to retrieve</p>
+
+<section class=" h4 examples"><h4>Examples:</h4>
+
+<section class=" h5 retrieve_the_last_10_pours_for_kegerator_1111"><h5>Retrieve the last 10 pours for kegerator 1111:</h5>
+
+<pre class=" lang- prettyprint"><code>GET /1111/recentPours/10
+</code></pre>
+
+</section></section></section><section class="api h2 api_routes"><h2 class="api" id="api_routes">API routes <span class="type"></span>
 </h2>
 <p>'API' routes are routes designed for keg.io clients (kegerators, soda machines,
 etc.) to call to interact with the central keg.io server.  All of these routes
 require a signed request, utilizing the access key and secret key that are
 registered with the central keg.io server.</p>
 
-</section><section class="api h2 signing_a_request"><h2 class="api" id="signing_a_request">Signing a request <span class="type"></span>
-</h2>
+<p>Responses for API routes have a content type of 'text/plain'</p>
+
+<section class=" h3 signing_a_request"><h3 id="signing_a_request">Signing a request</h3>
+
 <ul>
 <li>
 <p>Assemble the 'payload' to be signed:  The payload consists of the following
@@ -117,10 +162,12 @@ The signature is calculated using
 <li>Signature: 84f58081ca143ae50f2ead68571da2d6d718f273d8893f2415ee3a70c8c1a20d</li>
 <li>Request: PUT to http://localhost/api/kegerator/1111/temp/39?signature=84f58081ca143ae50f2ead68571da2d6d718f273d8893f2415ee3a70c8c1a20d</li>
 </ul>
-<p>All routes that require signature verification return HTTP 400 if the
-request verfication fails.</p>
+<p>API routes adhere to the following HTTP response code conventions:
+- 200: Request was received and processed successfully
+- 400: Bad request syntax, or signature verfification failed
+- 401: Unauthorized.  Unknown access key.</p>
 
-</section></section><section class="api h2 api_verify_an_rfid_card"><h2 class="api" id="api_verify_an_rfid_card">API: verify an RFID card <span class="type"></span>
+</section></section></section><section class="api h2 api_verify_an_rfid_card"><h2 class="api" id="api_verify_an_rfid_card">API: verify an RFID card <span class="type"></span>
 </h2>
 <p><code>GET /kegerator/ACCESS_KEY/scan/RFID?signature=....</code></p>
 
@@ -166,11 +213,21 @@ kegerator</p>
 
 <p>Where <strong>ACCESS_KEY</strong> is an access key registered with the keg.io server
    and <strong>TEMP</strong> is an integer representing the current keg temperature in F.</p></section><aside id="toc"><h1>keg.io</h1>
-<nav class="level-2"><h3><a href="#api_routes">API routes <span class="type"></span>
+<nav class="level-2"><h3><a href="#ui_routes">UI routes <span class="type"></span>
 </a></h3>
-<ul></ul></nav><nav class="level-2"><h3><a href="#signing_a_request">Signing a request <span class="type"></span>
+<ul></ul></nav><nav class="level-2"><h3><a href="#ui_get_the_port_to_use_for_web_socket_connections">UI: get the port to use for web socket connections <span class="type"></span>
 </a></h3>
-<ul></ul></nav><nav class="level-2"><h3><a href="#api_verify_an_rfid_card">API: verify an RFID card <span class="type"></span>
+<ul></ul></nav><nav class="level-2"><h3><a href="#ui_get_information_about_the_last_n_number_of_record_temperatures_for_the">UI: get information about the last N number of record temperatures for the <span class="type"></span>
+</a></h3>
+<ul></ul></nav><nav class="level-2"><h3><a href="#ui_get_information_about_the_last_drinker_for_the_given_kegerator">UI: get information about the last drinker for the given kegerator <span class="type"></span>
+</a></h3>
+<ul></ul></nav><nav class="level-2"><h3><a href="#ui_get_information_about_the_last_n_number_of_pours_for_the_given">UI: get information about the last N number of pours for the given <span class="type"></span>
+</a></h3>
+<ul></ul></nav><nav class="level-2"><h3><a href="#api_routes">API routes <span class="type"></span>
+</a></h3>
+<ul>
+<li><a href="#signing_a_request">Signing a request</a></li>
+</ul></nav><nav class="level-2"><h3><a href="#api_verify_an_rfid_card">API: verify an RFID card <span class="type"></span>
 </a></h3>
 <ul></ul></nav><nav class="level-2"><h3><a href="#api_report_the_current_flow_rate">API: report the current flow rate <span class="type"></span>
 </a></h3>
