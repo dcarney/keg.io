@@ -17,7 +17,7 @@
 	"http_port": "8081",
 
     /* Sqlite3 DB path */
-	"db_name": "db/kegerator.db",
+	"db_path": "db/kegerator.db",
 
     "twitter": {
     	/* To tweet, or not to tweet */
