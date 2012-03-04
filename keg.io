@@ -113,30 +113,28 @@ server.get '/config/socketPort', (req, res, next) ->
   console.log Config.socket_client_connect_port
   res.send Config.socket_client_connect_port.toString(), 200
 
-# ## UI: get information about the last N number of record temperatures for the
-# given kegerator
-#   `GET /ACCESS_KEY/temperature/recent/N`
+# ## UI: get the last N temperatures
+#   `GET /kegerators/ACCESS_KEY/temperature/recent/N`
 #
 #    Where **ACCESS_KEY** is the access key of the desired kegerator
 #     and **N** is the number of temperatures to retrieve
 #
-server.get '/:accessKey/temperature/recent/:num', (req, res, next) ->
+server.get '/kegerators/:accessKey/temperature/recent/:num', (req, res, next) ->
   keg.recentTemperatures req.params.accessKey, req.params.num, (result) ->
     res.send result, 200
 
-# ## UI: get information about the last drinker for the given kegerator
-#   `GET /ACCESS_KEY/users/last`
+# ## UI: get the last drinker for the given kegerator
+#   `GET /kegerators/ACCESS_KEY/users/last`
 #
 #    Where **ACCESS_KEY** is the access key of the desired kegerator
 #
-server.get '/:accessKey/users/last', (req, res, next) ->
+server.get '/kegerators/:accessKey/users/last', (req, res, next) ->
   res.header('Content-Type', 'application/json')
   keg.lastDrinker req.params.accessKey, (result) ->
     res.send result, 200
 
-# ## UI: get information about the last N number of pours for the given
-# kegerator
-#   `GET /ACCESS_KEY/pours/recent/N`
+# ## UI: get the last N pours
+#   `GET /kegerators/ACCESS_KEY/pours/recent/N`
 #
 #    Where **ACCESS_KEY** is the access key of the desired kegerator
 #     and **N** is the number of pours to retrieve
@@ -144,8 +142,27 @@ server.get '/:accessKey/users/last', (req, res, next) ->
 # #### Examples:
 # ##### Retrieve the last 10 pours for kegerator 1111:
 #     GET /1111/recentPours/10
-server.get '/:accessKey/pours/recent/:num', (req, res, next) ->
+#
+server.get '/kegerators/:accessKey/pours/recent/:num', (req, res, next) ->
   keg.recentPours req.params.accessKey, req.params.num, (result) ->
+    res.send result, 200
+
+# ## UI: get the last N kegs
+#   `GET /kegerators/ACCESS_KEY/kegs/last`
+#
+#    Where **ACCESS_KEY** is the access key of the desired kegerator
+#
+server.get '/kegerators/:accessKey/kegs/recent/:num', (req, res, next) ->
+  keg.recentKegs req.params.accessKey, req.params.num, (result) ->
+    res.send result, 200
+
+# ## UI: get a user's coasters
+#   `GET /users/RFID/coasters`
+#
+#    Where **RFID** is the rfid assigned to the desired user
+#
+server.get '/users/:rfid/coasters', (req, res, next) ->
+  keg.userCoasters req.params.rfid, (result) ->
     res.send result, 200
 
 # ## API routes
@@ -241,6 +258,7 @@ server.put '/api/kegerator/:accessKey/temp/:temp', api_middlewares, (req, res, n
   res.end JSON.stringify({ temp: req.params.temp })
 
 # create the http server, load up our middleware stack, start listening
+server.use connect.favicon(__dirname + '/static/favicon.ico', {maxAge: 2592000000})
 server.use connect.logger('short')
 server.use connect.query() 												# parse query string
 server.use middleware.path()											# parse url path

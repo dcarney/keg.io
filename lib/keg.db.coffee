@@ -84,6 +84,18 @@ module.exports.populate = (models, cb) ->
     kegerator_id: 1111
     })
 
+  welcome = models.Coaster.build({
+    name: 'Welcome'
+    description: 'Pour a beer with keg.io!'
+    image_path: 'images/coasters/firstbeer.png'
+    })
+
+  early_bird = models.Coaster.build({
+    name: 'Early Bird'
+    description: 'Pour a beer before noon.'
+    image_path: 'images/coasters/earlybird.png'
+    })
+
   chainer.add(mannys.save())
          .add(vnc_kegerator.save())
          .add(dc.save())
@@ -94,6 +106,8 @@ module.exports.populate = (models, cb) ->
          .add(pour2.save())
          .add(temp1.save())
          .add(temp2.save())
+         .add(welcome.save())
+         .add(early_bird.save())
 
   chainer.run()
     .success () ->

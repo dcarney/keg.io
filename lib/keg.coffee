@@ -43,6 +43,7 @@ class Keg
       User: @sequelize.import "#{__dirname}/models/user.coffee"
       Pour: @sequelize.import "#{__dirname}/models/pour.coffee"
       Temperature: @sequelize.import "#{__dirname}/models/temperature.coffee"
+      Coaster: @sequelize.import "#{__dirname}/models/coaster.coffee"
 
     ###
     { attributes:
@@ -71,6 +72,7 @@ class Keg
     @models.Kegerator.hasMany(@models.Temperature, {foreignKey: 'kegerator_id'})
     @models.Keg.hasMany(@models.Pour, {foreignKey: 'keg_id'})
     @models.User.hasMany(@models.Pour, {foreignKey: 'user_id'})
+    @models.User.hasMany(@models.Coaster)
 
     if config? && config.twitter? && config.twitter.enabled
       # Initialize the Twitter module, passing in all the necessary config
@@ -140,6 +142,16 @@ class Keg
           result['hash'] = hash
           cb result
 
+  recentKegs: (access_key, num_kegs, cb) ->
+    @models.Kegerator.find({where: {access_key: access_key}}).success (kegerator) =>
+      @models.Keg.find({where: {kegerator_id: kegerator.access_key}, limit: num_kegs, order: 'tapped_date DESC'}).success (keg) =>
+        result = @models.mapAttribs keg
+        cb result
+
+  userCoasters: (rfid, cb) ->
+    @models.User.find({where: {rfid: rfid}}).success (user) =>
+      user.getCoasters().on 'success', (coasters) =>
+        cb(@models.mapAttribs(coaster) for coaster in coasters)
 
   getLastDrinker: (callback) ->
     @kegDb.getLastDrinker (rows) =>
