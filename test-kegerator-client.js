@@ -3,21 +3,23 @@
 	Communication protocol spec between keg.io server and kegerator client
 	All communication is one-way.  Requests are initiated by kegerator client.
 
-	URL Format: http://keg.io/api/kegerator/KEGERATOR_ID/ACTION/VALUE?signature=920457haujnfjalkdfnbvljnv08af
+	URL Format: http://keg.io/api/kegerator/KEGERATOR_ID/ACTION/VALUE?signature=REQUEST_SIGNATURE
 		- KEGERATOR_ID: 4-digit kegerator ID
 		- ACTION: one of "scan", "flow", or "temp"
 		- VALUE:
 			- an rfid when ACTION=scan
 			- an integer or the special keyword "end" when ACTION=flow
 			- an integer when ACTION=temp
-		- signature is the HMAC-SHA-256 signature of the request
+		- REQUEST_SIGNATURE: the HMAC-SHA-256 signature of the request (in hex)
 
 	Example:
-	http://keg.io/api/kegerator/1111/scan/afcdef09d43?signature=920457haujnfjalkdfnbvljnv08af
+	http://keg.io/api/kegerator/1111/scan/afcdef09d43?signature=79732c5ca659b29acd04967431d2843b6b958de308d974cc2f45cb09aaa7b08a
 
 	Signing the request:
-		- The signature is computed by HMAC-SHA-256 signing the HTTP verb followed by the full request URL:
-		- For example the signature for "GET http://keg.io/api/1111/scan/afcdef09d43" with secret 's3cr3t' is 'bcSEesMJCZLUEtskEtdpgXfMeyc-zjO9Uw22FIJwJKQ'
+		- The signature is computed by HMAC-SHA-256 signing the HTTP verb followed by the full request URL
+		- The signature is a hex value
+		- For example the signature for "GET http://keg.io/api/kegerator/1111/scan/afcdef09d43" with secret 's3cr3t' is '79732c5ca659b29acd04967431d2843b6b958de308d974cc2f45cb09aaa7b08a'
+		- This library is used by the server to verify signatures https://github.com/crcastle/nodejs-string-signer
 
 	Request Details:
 
