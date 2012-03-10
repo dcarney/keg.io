@@ -99,6 +99,7 @@ if Options.rebuild
 
 server = express.createServer()
 
+
 # ## UI routes
 # 'UI' routes are routes designed for keg.io UI clients (eg. web pages) to
 # call to interact with the central keg.io server.  The UI routes should respect
@@ -232,6 +233,11 @@ server.get '/users/:rfid/coasters', (req, res, next) ->
 # - 401: Unauthorized.  Unknown access key.
 api_middlewares = [middleware.accessKey(), middleware.verify(keys)]
 
+# helper method to format API responses for kegerator clients
+respond = (res, actionText, responseText) ->
+  res.writeHead 200, {'Content-Type': 'application/json'}
+  res.end JSON.stringify({ action: actionText, response: responseText })
+
 # ## API: verify an RFID card
 #   `GET /api/kegerator/ACCESS_KEY/scan/RFID?signature=....`
 #
@@ -246,8 +252,7 @@ api_middlewares = [middleware.accessKey(), middleware.verify(keys)]
 #     GET http://keg.io/kegerator/1111/scan/23657ABF5?signature=....
 #
 server.get '/api/kegerator/:accessKey/scan/:rfid', api_middlewares, (req, res, next) ->
-  res.writeHead 200, {'Content-Type': 'text/plain'}
-  res.end req.params.rfid
+  respond res, 'scan', req.params.rfid
 
 # ## API: report the current flow rate
 #   `PUT /api/kegerator/ACCESS_KEY/flow/RATE`
@@ -259,8 +264,7 @@ server.get '/api/kegerator/:accessKey/scan/:rfid', api_middlewares, (req, res, n
 # ##### Report a flow of 12 liters/min on kegerator 1111:
 #     PUT http://keg.io/kegerator/1111/flow/12
 server.put '/api/kegerator/:accessKey/flow/:rate', api_middlewares, (req, res, next) ->
-    res.writeHead 200, {'Content-Type': 'text/plain'}
-    res.end req.params.rate
+    respond res, 'flow', req.params.rate
 
 # ## API: report an end to the current flow
 #   `PUT /api/kegerator/ACCESS_KEY/flow/end`
@@ -270,8 +274,7 @@ server.put '/api/kegerator/:accessKey/flow/:rate', api_middlewares, (req, res, n
 # Reports that the flow for the most recent RFID has completed on this
 # kegerator
 server.put '/api/kegerator/:accessKey/flow/end', api_middlewares, (req, res, next) ->
-  res.writeHead 200, {'Content-Type': 'text/plain'}
-  res.end 'FLOW IS DONE!'
+  respond res, 'flow', 'end'
 
 # ## API: report the current kegerator temperature
 #   `PUT /api/kegerator/ACCESS_KEY/temp/TEMP`
@@ -280,8 +283,7 @@ server.put '/api/kegerator/:accessKey/flow/end', api_middlewares, (req, res, nex
 #    and **TEMP** is an integer representing the current keg temperature in F.
 #
 server.put '/api/kegerator/:accessKey/temp/:temp', api_middlewares, (req, res, next) ->
-  res.writeHead 200, {'Content-Type': 'application/json'}
-  res.end JSON.stringify({ temp: req.params.temp })
+  respond res, 'temp', req.params.temp
 
 # create the http server, load up our middleware stack, start listening
 server.use connect.favicon(__dirname + '/static/favicon.ico', {maxAge: 2592000000})
