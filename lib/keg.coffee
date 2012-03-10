@@ -61,10 +61,12 @@ class Keg
     @models.mapAttribValues = (model) ->
        (model[attr_name] for attr_name in model.attributes)
 
-    @models.mapAttribs = (model) ->
+    # map all the attributes of the object, except those contained
+    # in 'excludes'
+    @models.mapAttribs = (model, excludes = []) ->
       result = {}
       for attr_name in model.attributes
-        result[attr_name] = model[attr_name]
+        result[attr_name] = model[attr_name] unless excludes.indexOf(attr_name) > -1
       result
 
     # associations
@@ -158,7 +160,10 @@ class Keg
           result['hash'] = hash
           cb result
 
-
+  users: (rfid, cb) ->
+    query = if rfid? then {where: {rfid: rfid}} else {}
+    @models.User.findAll(query).success (users) =>
+      cb(@models.mapAttribs(user, ['email']) for user in users)
 
   userCoasters: (rfid, cb) ->
     @models.User.find({where: {rfid: rfid}}).success (user) =>

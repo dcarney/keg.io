@@ -169,6 +169,15 @@ server.get '/kegerators/:accessKey/kegs', (req, res, next) ->
   keg.recentKegs req.params.accessKey, req.query['recent'], (result) ->
     res.send result, 200
 
+# ## UI: get info about a user
+#   `GET /users/RFID/`
+#
+#    Where **RFID** is the rfid assigned to the desired user
+#
+server.get '/users/:rfid?', (req, res, next) ->
+  keg.users req.params.rfid, (result) ->
+    res.send result, 200
+
 # ## UI: get a user's coasters
 #   `GET /users/RFID/coasters`
 #
