@@ -30,7 +30,7 @@ Keg.io can accept multiple connections from both web browsers and kegerators.
   This file should not be checked in, or made publicly accessible in any way.
 
         # cp conf/configuration-sample.json conf/configuration.json
-	    # vi conf/configuration.json
+	      # vi conf/configuration.json
         # cp conf/keys-sample.json conf/keys.json
         # vi conf/keys.json
 

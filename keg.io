@@ -120,7 +120,7 @@ server.get '/config/socketPort', (req, res, next) ->
 #    Where **ACCESS_KEY** is the access key of the desired kegerator
 #
 # Optional params: recent=N
-#   WHERE **N** is the number of temperatures to retrieve, in reverse
+#   where **N** is the number of temperatures to retrieve, in reverse
 #   chronological order
 #
 server.get '/kegerators/:accessKey/temperatures', (req, res, next) ->
@@ -133,7 +133,7 @@ server.get '/kegerators/:accessKey/temperatures', (req, res, next) ->
 #    Where **ACCESS_KEY** is the access key of the desired kegerator
 #
 # Optional params: recent=N
-#   WHERE **N** is the number of recent pours to retrieve users from
+#   where **N** is the number of recent pours to retrieve users from
 #
 server.get '/kegerators/:accessKey/users', (req, res, next) ->
   res.header('Content-Type', 'application/json')
@@ -147,7 +147,7 @@ server.get '/kegerators/:accessKey/users', (req, res, next) ->
 #     and **N** is the number of pours to retrieve
 #
 # Optional params: recent=N
-#   WHERE **N** is the number of recent pours to retrieve users from
+#   where **N** is the number of recent pours to retrieve users from
 #
 # #### Examples:
 # ##### Retrieve the last 10 pours for kegerator 1111:
@@ -163,11 +163,24 @@ server.get '/kegerators/:accessKey/pours', (req, res, next) ->
 #    Where **ACCESS_KEY** is the access key of the desired kegerator
 #
 # Optional params: recent=N
-#   WHERE **N** is the number of temperatures to retrieve, in reverse
+#   where **N** is the number of temperatures to retrieve, in reverse
 #   chronological order
 #
 server.get '/kegerators/:accessKey/kegs', (req, res, next) ->
   keg.recentKegs req.params.accessKey, req.query['recent'], (result) ->
+    res.send result, 200
+
+# ## UI: get info about all users
+#   `GET /users`
+#
+
+# ## UI: get info about a user
+#   `GET /users/RFID/`
+#
+#    Where **RFID** is the rfid assigned to the desired user
+#
+server.get '/users/:rfid?', (req, res, next) ->
+  keg.users req.params.rfid, (result) ->
     res.send result, 200
 
 # ## UI: get a user's coasters
