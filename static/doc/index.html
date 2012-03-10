@@ -46,7 +46,7 @@ The keys.json file contains a mapping of all the access and secret keys for auth
 This file should not be checked in, or made publicly accessible in any way.</p>
 
 <pre class=" lang- prettyprint"><code># cp conf/configuration-sample.json conf/configuration.json
-# vi conf/configuration.json
+  # vi conf/configuration.json
 # cp conf/keys-sample.json conf/keys.json
 # vi conf/keys.json
 </code></pre>
@@ -99,7 +99,7 @@ JSON.</p>
 <p>Where <strong>ACCESS_KEY</strong> is the access key of the desired kegerator</p>
 
 <p>Optional params: recent=N
-  WHERE <strong>N</strong> is the number of temperatures to retrieve, in reverse
+  where <strong>N</strong> is the number of temperatures to retrieve, in reverse
   chronological order</p>
 
 </section><section class="api h2 ui_get_users_for_a_kegerator_based_on_recent_pours"><h2 class="api" id="ui_get_users_for_a_kegerator_based_on_recent_pours">UI: get users for a kegerator, based on recent pours <span class="type"></span>
@@ -109,7 +109,7 @@ JSON.</p>
 <p>Where <strong>ACCESS_KEY</strong> is the access key of the desired kegerator</p>
 
 <p>Optional params: recent=N
-  WHERE <strong>N</strong> is the number of recent pours to retrieve users from</p>
+  where <strong>N</strong> is the number of recent pours to retrieve users from</p>
 
 </section><section class="api h2 ui_get_pours_for_a_kegerator"><h2 class="api" id="ui_get_pours_for_a_kegerator">UI: get pours for a kegerator <span class="type"></span>
 </h2>
@@ -119,7 +119,7 @@ JSON.</p>
     and <strong>N</strong> is the number of pours to retrieve</p>
 
 <p>Optional params: recent=N
-  WHERE <strong>N</strong> is the number of recent pours to retrieve users from</p>
+  where <strong>N</strong> is the number of recent pours to retrieve users from</p>
 
 <section class=" h4 examples"><h4>Examples:</h4>
 
@@ -135,8 +135,18 @@ JSON.</p>
 <p>Where <strong>ACCESS_KEY</strong> is the access key of the desired kegerator</p>
 
 <p>Optional params: recent=N
-  WHERE <strong>N</strong> is the number of temperatures to retrieve, in reverse
+  where <strong>N</strong> is the number of temperatures to retrieve, in reverse
   chronological order</p>
+
+</section><section class="api h2 ui_get_info_about_all_users"><h2 class="api" id="ui_get_info_about_all_users">UI: get info about all users <span class="type"></span>
+</h2>
+<p><code>GET /users</code></p>
+
+</section><section class="api h2 ui_get_info_about_a_user"><h2 class="api" id="ui_get_info_about_a_user">UI: get info about a user <span class="type"></span>
+</h2>
+<p><code>GET /users/RFID/</code></p>
+
+<p>Where <strong>RFID</strong> is the rfid assigned to the desired user</p>
 
 </section><section class="api h2 ui_get_a_user_s_coasters"><h2 class="api" id="ui_get_a_user_s_coasters">UI: get a user's coasters <span class="type"></span>
 </h2>
@@ -247,6 +257,10 @@ kegerator</p>
 <ul></ul></nav><nav class="level-2"><h3><a href="#ui_get_pours_for_a_kegerator">UI: get pours for a kegerator <span class="type"></span>
 </a></h3>
 <ul></ul></nav><nav class="level-2"><h3><a href="#ui_get_kegs_for_a_kegerator">UI: get kegs for a kegerator <span class="type"></span>
+</a></h3>
+<ul></ul></nav><nav class="level-2"><h3><a href="#ui_get_info_about_all_users">UI: get info about all users <span class="type"></span>
+</a></h3>
+<ul></ul></nav><nav class="level-2"><h3><a href="#ui_get_info_about_a_user">UI: get info about a user <span class="type"></span>
 </a></h3>
 <ul></ul></nav><nav class="level-2"><h3><a href="#ui_get_a_user_s_coasters">UI: get a user's coasters <span class="type"></span>
 </a></h3>
