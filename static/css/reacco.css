@@ -1,0 +1,10 @@
+/* make the TOC wider than reacco's default */
+body.toc 
+{
+  margin-left: 300px; 
+}   
+
+aside#toc 
+{
+  width: 280px;                      
+}
