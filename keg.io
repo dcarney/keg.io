@@ -136,7 +136,6 @@ server.get '/kegerators/:accessKey/temperatures', (req, res, next) ->
 #   where **N** is the number of recent pours to retrieve users from
 #
 server.get '/kegerators/:accessKey/users', (req, res, next) ->
-  res.header('Content-Type', 'application/json')
   keg.recentUsers req.params.accessKey, req.query['recent'], (result) ->
     res.send result, 200
 
@@ -175,7 +174,7 @@ server.get '/kegerators/:accessKey/kegs', (req, res, next) ->
 #
 
 # ## UI: get info about a user
-#   `GET /users/RFID/`
+#   `GET /users/RFID`
 #
 #    Where **RFID** is the rfid assigned to the desired user
 #
@@ -190,6 +189,19 @@ server.get '/users/:rfid?', (req, res, next) ->
 #
 server.get '/users/:rfid/coasters', (req, res, next) ->
   keg.userCoasters req.params.rfid, (result) ->
+    res.send result, 200
+
+# ## UI: get info about all coasters
+#   `GET /coasters`
+#
+
+# ## UI: get info about a coaster
+#   `GET /coasters/ID`
+#
+#    Where **ID** is the ID of the desired coaster
+#
+server.get '/coasters/:id?', (req, res, next) ->
+  keg.coasters req.params.id, (result) ->
     res.send result, 200
 
 # ## API routes
