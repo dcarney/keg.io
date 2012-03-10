@@ -121,7 +121,7 @@ FakeKegerator.prototype.fakeFlow = function(flowsLeft)
 		// send API request
 		kegioAPI.flow.end.put(function(err, result) {
 			if (!err) {
-				console.log('flow ended');
+				console.log('flow ended, server responded with: ' + result);
 			} else {
 				console.log('ERROR: error sending flow end request: ' + result.data );
 			}
@@ -165,7 +165,7 @@ FakeKegerator.prototype.fakePour = function()
 		// send API request
 		kegioAPI.scan(userRFID).get(function(err, result) {
 			if (!err) {
-				console.log('scan user: ' + userRFID);
+				console.log('scan user: ' + userRFID + ', server responded with: ' + result);
 			} else {
 				console.log('ERROR: error sending scan request for user: ' + userRFID + ' ' + result.data);
 			}
@@ -188,7 +188,7 @@ FakeKegerator.prototype.fakeTemp = function()
 		// send API request
 		kegioAPI.temp(randomTemp).put(function(err, result) {
 			if (!err) {
-				console.log('temp send: ' + randomTemp);
+				console.log('temp send: ' + randomTemp + ', server responded with: ' + result);
 			} else {
 				console.log('ERROR: error sending temp request: ' + randomTemp);
 			}
