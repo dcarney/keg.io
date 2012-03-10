@@ -33,7 +33,7 @@ class Keg
     @sequelize = new Sequelize '', '', '', {
       dialect: 'sqlite',
       storage: config.db_path,
-      logging: false,
+      logging: false
     }
 
     # wrap all of our model imports into a "namespace"
@@ -73,6 +73,7 @@ class Keg
     @models.Keg.hasMany(@models.Pour, {foreignKey: 'keg_id'})
     @models.User.hasMany(@models.Pour, {foreignKey: 'user_id'})
     @models.User.hasMany(@models.Coaster)
+    @models.Coaster.hasMany(@models.User)
 
     if config? && config.twitter? && config.twitter.enabled
       # Initialize the Twitter module, passing in all the necessary config
@@ -117,19 +118,34 @@ class Keg
 
   recentTemperatures: (access_key, num_temps, cb) ->
     @models.Kegerator.find({where: {access_key: access_key}}).success (kegerator) =>
-      sql = "SELECT * FROM temperatures t
-             WHERE kegerator_id=#{kegerator.access_key}
-             ORDER BY created_at DESC LIMIT #{num_temps};"
-      @sequelize.query(sql, @models.Temperature).on 'success', (temps) =>
+      query = {where: {kegerator_id: kegerator.access_key}}
+      query.limit = num_temps if num_temps?
+      @models.Temperature.findAll(query).success (temps) =>
         cb(@models.mapAttribs(temp) for temp in temps)
 
+  recentKegs: (access_key, num_kegs, cb) ->
+    @models.Kegerator.find({where: {access_key: access_key}}).success (kegerator) =>
+      query = {where: {kegerator_id: kegerator.access_key}, order: 'tapped_date DESC'}
+      query.limit = num_kegs if num_kegs?
+      @models.Keg.findAll(query).success (kegs) =>
+        cb(@models.mapAttribs(keg) for keg in kegs)
+
+  recentUsers: (access_key, num_pours, cb) ->
+    @recentPours access_key, num_pours, (pours) =>
+      cb('') unless pours? && pours.length >= 1
+      rfids = pours.map (pour) -> pour.rfid
+      console.log rfids
+      @models.User.findAll({where: {rfid: rfids}}).success (users) =>
+        cb(@models.mapAttribs(user) for user in users)
+
   recentPours: (access_key, num_pours, cb) ->
+    suffix = if num_pours then "LIMIT #{num_pours}" else ''
     @models.Kegerator.find({where: {access_key: access_key}}).success (kegerator) =>
       sql = "SELECT * FROM `pours` p " +
             "INNER JOIN `kegs` k on p.keg_id = k.id " +
             "INNER JOIN `kegerators` ke ON ke.access_key = k.kegerator_id " +
             "WHERE ke.access_key=#{kegerator.access_key} " +
-            "ORDER BY p.pour_date DESC LIMIT #{num_pours};"
+            "ORDER BY p.pour_date DESC #{suffix};"
       @sequelize.query(sql, @models.Pour).on 'success', (pours) =>
         cb(@models.mapAttribs(pour) for pour in pours)
 
@@ -142,11 +158,7 @@ class Keg
           result['hash'] = hash
           cb result
 
-  recentKegs: (access_key, num_kegs, cb) ->
-    @models.Kegerator.find({where: {access_key: access_key}}).success (kegerator) =>
-      @models.Keg.find({where: {kegerator_id: kegerator.access_key}, limit: num_kegs, order: 'tapped_date DESC'}).success (keg) =>
-        result = @models.mapAttribs keg
-        cb result
+
 
   userCoasters: (rfid, cb) ->
     @models.User.find({where: {rfid: rfid}}).success (user) =>

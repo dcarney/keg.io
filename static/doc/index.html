@@ -92,27 +92,34 @@ JSON.</p>
 </h2>
 <p><code>GET /config/socketPort</code></p>
 
-</section><section class="api h2 ui_get_information_about_the_last_n_number_of_record_temperatures_for_the"><h2 class="api" id="ui_get_information_about_the_last_n_number_of_record_temperatures_for_the">UI: get information about the last N number of record temperatures for the <span class="type"></span>
+</section><section class="api h2 ui_get_temperatures_for_a_kegerator"><h2 class="api" id="ui_get_temperatures_for_a_kegerator">UI: get temperatures for a kegerator <span class="type"></span>
 </h2>
-<p>given kegerator
-  <code>GET /ACCESS_KEY/temperature/recent/N</code></p>
-
-<p>Where <strong>ACCESS_KEY</strong> is the access key of the desired kegerator
-    and <strong>N</strong> is the number of temperatures to retrieve</p>
-
-</section><section class="api h2 ui_get_information_about_the_last_drinker_for_the_given_kegerator"><h2 class="api" id="ui_get_information_about_the_last_drinker_for_the_given_kegerator">UI: get information about the last drinker for the given kegerator <span class="type"></span>
-</h2>
-<p><code>GET /ACCESS_KEY/users/last</code></p>
+<p><code>GET /kegerators/ACCESS_KEY/temperatures</code></p>
 
 <p>Where <strong>ACCESS_KEY</strong> is the access key of the desired kegerator</p>
 
-</section><section class="api h2 ui_get_information_about_the_last_n_number_of_pours_for_the_given"><h2 class="api" id="ui_get_information_about_the_last_n_number_of_pours_for_the_given">UI: get information about the last N number of pours for the given <span class="type"></span>
+<p>Optional params: recent=N
+  WHERE <strong>N</strong> is the number of temperatures to retrieve, in reverse
+  chronological order</p>
+
+</section><section class="api h2 ui_get_users_for_a_kegerator_based_on_recent_pours"><h2 class="api" id="ui_get_users_for_a_kegerator_based_on_recent_pours">UI: get users for a kegerator, based on recent pours <span class="type"></span>
 </h2>
-<p>kegerator
-  <code>GET /ACCESS_KEY/pours/recent/N</code></p>
+<p><code>GET /kegerators/ACCESS_KEY/users</code></p>
+
+<p>Where <strong>ACCESS_KEY</strong> is the access key of the desired kegerator</p>
+
+<p>Optional params: recent=N
+  WHERE <strong>N</strong> is the number of recent pours to retrieve users from</p>
+
+</section><section class="api h2 ui_get_pours_for_a_kegerator"><h2 class="api" id="ui_get_pours_for_a_kegerator">UI: get pours for a kegerator <span class="type"></span>
+</h2>
+<p><code>GET /kegerators/ACCESS_KEY/pours</code></p>
 
 <p>Where <strong>ACCESS_KEY</strong> is the access key of the desired kegerator
     and <strong>N</strong> is the number of pours to retrieve</p>
+
+<p>Optional params: recent=N
+  WHERE <strong>N</strong> is the number of recent pours to retrieve users from</p>
 
 <section class=" h4 examples"><h4>Examples:</h4>
 
@@ -121,7 +128,23 @@ JSON.</p>
 <pre class=" lang- prettyprint"><code>GET /1111/recentPours/10
 </code></pre>
 
-</section></section></section><section class="api h2 api_routes"><h2 class="api" id="api_routes">API routes <span class="type"></span>
+</section></section></section><section class="api h2 ui_get_kegs_for_a_kegerator"><h2 class="api" id="ui_get_kegs_for_a_kegerator">UI: get kegs for a kegerator <span class="type"></span>
+</h2>
+<p><code>GET /kegerators/ACCESS_KEY/kegs</code></p>
+
+<p>Where <strong>ACCESS_KEY</strong> is the access key of the desired kegerator</p>
+
+<p>Optional params: recent=N
+  WHERE <strong>N</strong> is the number of temperatures to retrieve, in reverse
+  chronological order</p>
+
+</section><section class="api h2 ui_get_a_user_s_coasters"><h2 class="api" id="ui_get_a_user_s_coasters">UI: get a user's coasters <span class="type"></span>
+</h2>
+<p><code>GET /users/RFID/coasters</code></p>
+
+<p>Where <strong>RFID</strong> is the rfid assigned to the desired user</p>
+
+</section><section class="api h2 api_routes"><h2 class="api" id="api_routes">API routes <span class="type"></span>
 </h2>
 <p>'API' routes are routes designed for keg.io clients (kegerators, soda machines,
 etc.) to call to interact with the central keg.io server.  All of these routes
@@ -169,7 +192,7 @@ The signature is calculated using
 
 </section></section></section><section class="api h2 api_verify_an_rfid_card"><h2 class="api" id="api_verify_an_rfid_card">API: verify an RFID card <span class="type"></span>
 </h2>
-<p><code>GET /kegerator/ACCESS_KEY/scan/RFID?signature=....</code></p>
+<p><code>GET /api/kegerator/ACCESS_KEY/scan/RFID?signature=....</code></p>
 
 <p>Where <strong>ACCESS_KEY</strong> is an access key registered with the keg.io server
    and <strong>RFID</strong> is a the RFID of a valid keg.io user</p>
@@ -186,7 +209,7 @@ is unknown to keg.io</p>
 
 </section></section></section><section class="api h2 api_report_the_current_flow_rate"><h2 class="api" id="api_report_the_current_flow_rate">API: report the current flow rate <span class="type"></span>
 </h2>
-<p><code>PUT /kegerator/ACCESS_KEY/flow/RATE</code></p>
+<p><code>PUT /api/kegerator/ACCESS_KEY/flow/RATE</code></p>
 
 <p>Where <strong>ACCESS_KEY</strong> is an access key registered with the keg.io server
    and <strong>RATE</strong> is a the current flow rate of the kegerator in liters/min</p>
@@ -200,7 +223,7 @@ is unknown to keg.io</p>
 
 </section></section></section><section class="api h2 api_report_an_end_to_the_current_flow"><h2 class="api" id="api_report_an_end_to_the_current_flow">API: report an end to the current flow <span class="type"></span>
 </h2>
-<p><code>PUT /kegerator/ACCESS_KEY/flow/end</code></p>
+<p><code>PUT /api/kegerator/ACCESS_KEY/flow/end</code></p>
 
 <p>Where <strong>ACCESS_KEY</strong> is an access key registered with the keg.io server</p>
 
@@ -209,7 +232,7 @@ kegerator</p>
 
 </section><section class="api h2 api_report_the_current_kegerator_temperature"><h2 class="api" id="api_report_the_current_kegerator_temperature">API: report the current kegerator temperature <span class="type"></span>
 </h2>
-<p><code>PUT /kegerator/ACCESS_KEY/temp/TEMP</code></p>
+<p><code>PUT /api/kegerator/ACCESS_KEY/temp/TEMP</code></p>
 
 <p>Where <strong>ACCESS_KEY</strong> is an access key registered with the keg.io server
    and <strong>TEMP</strong> is an integer representing the current keg temperature in F.</p></section><aside id="toc"><h1>keg.io</h1>
@@ -217,11 +240,15 @@ kegerator</p>
 </a></h3>
 <ul></ul></nav><nav class="level-2"><h3><a href="#ui_get_the_port_to_use_for_web_socket_connections">UI: get the port to use for web socket connections <span class="type"></span>
 </a></h3>
-<ul></ul></nav><nav class="level-2"><h3><a href="#ui_get_information_about_the_last_n_number_of_record_temperatures_for_the">UI: get information about the last N number of record temperatures for the <span class="type"></span>
+<ul></ul></nav><nav class="level-2"><h3><a href="#ui_get_temperatures_for_a_kegerator">UI: get temperatures for a kegerator <span class="type"></span>
 </a></h3>
-<ul></ul></nav><nav class="level-2"><h3><a href="#ui_get_information_about_the_last_drinker_for_the_given_kegerator">UI: get information about the last drinker for the given kegerator <span class="type"></span>
+<ul></ul></nav><nav class="level-2"><h3><a href="#ui_get_users_for_a_kegerator_based_on_recent_pours">UI: get users for a kegerator, based on recent pours <span class="type"></span>
 </a></h3>
-<ul></ul></nav><nav class="level-2"><h3><a href="#ui_get_information_about_the_last_n_number_of_pours_for_the_given">UI: get information about the last N number of pours for the given <span class="type"></span>
+<ul></ul></nav><nav class="level-2"><h3><a href="#ui_get_pours_for_a_kegerator">UI: get pours for a kegerator <span class="type"></span>
+</a></h3>
+<ul></ul></nav><nav class="level-2"><h3><a href="#ui_get_kegs_for_a_kegerator">UI: get kegs for a kegerator <span class="type"></span>
+</a></h3>
+<ul></ul></nav><nav class="level-2"><h3><a href="#ui_get_a_user_s_coasters">UI: get a user's coasters <span class="type"></span>
 </a></h3>
 <ul></ul></nav><nav class="level-2"><h3><a href="#api_routes">API routes <span class="type"></span>
 </a></h3>
