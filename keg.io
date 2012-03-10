@@ -113,47 +113,60 @@ server.get '/config/socketPort', (req, res, next) ->
   console.log Config.socket_client_connect_port
   res.send Config.socket_client_connect_port.toString(), 200
 
-# ## UI: get the last N temperatures
-#   `GET /kegerators/ACCESS_KEY/temperature/recent/N`
+# ## UI: get temperatures for a kegerator
+#   `GET /kegerators/ACCESS_KEY/temperatures`
 #
 #    Where **ACCESS_KEY** is the access key of the desired kegerator
-#     and **N** is the number of temperatures to retrieve
 #
-server.get '/kegerators/:accessKey/temperature/recent/:num', (req, res, next) ->
-  keg.recentTemperatures req.params.accessKey, req.params.num, (result) ->
+# Optional params: recent=N
+#   WHERE **N** is the number of temperatures to retrieve, in reverse
+#   chronological order
+#
+server.get '/kegerators/:accessKey/temperatures', (req, res, next) ->
+  keg.recentTemperatures req.params.accessKey, req.query['recent'], (result) ->
     res.send result, 200
 
-# ## UI: get the last drinker for the given kegerator
-#   `GET /kegerators/ACCESS_KEY/users/last`
+# ## UI: get users for a kegerator, based on recent pours
+#   `GET /kegerators/ACCESS_KEY/users`
 #
 #    Where **ACCESS_KEY** is the access key of the desired kegerator
 #
-server.get '/kegerators/:accessKey/users/last', (req, res, next) ->
+# Optional params: recent=N
+#   WHERE **N** is the number of recent pours to retrieve users from
+#
+server.get '/kegerators/:accessKey/users', (req, res, next) ->
   res.header('Content-Type', 'application/json')
-  keg.lastDrinker req.params.accessKey, (result) ->
+  keg.recentUsers req.params.accessKey, req.query['recent'], (result) ->
     res.send result, 200
 
-# ## UI: get the last N pours
-#   `GET /kegerators/ACCESS_KEY/pours/recent/N`
+# ## UI: get pours for a kegerator
+#   `GET /kegerators/ACCESS_KEY/pours`
 #
 #    Where **ACCESS_KEY** is the access key of the desired kegerator
 #     and **N** is the number of pours to retrieve
+#
+# Optional params: recent=N
+#   WHERE **N** is the number of recent pours to retrieve users from
 #
 # #### Examples:
 # ##### Retrieve the last 10 pours for kegerator 1111:
 #     GET /1111/recentPours/10
 #
-server.get '/kegerators/:accessKey/pours/recent/:num', (req, res, next) ->
-  keg.recentPours req.params.accessKey, req.params.num, (result) ->
+server.get '/kegerators/:accessKey/pours', (req, res, next) ->
+  keg.recentPours req.params.accessKey, req.query['recent'], (result) ->
     res.send result, 200
 
-# ## UI: get the last N kegs
-#   `GET /kegerators/ACCESS_KEY/kegs/last`
+# ## UI: get kegs for a kegerator
+#   `GET /kegerators/ACCESS_KEY/kegs`
 #
 #    Where **ACCESS_KEY** is the access key of the desired kegerator
 #
-server.get '/kegerators/:accessKey/kegs/recent/:num', (req, res, next) ->
-  keg.recentKegs req.params.accessKey, req.params.num, (result) ->
+# Optional params: recent=N
+#   WHERE **N** is the number of temperatures to retrieve, in reverse
+#   chronological order
+#
+server.get '/kegerators/:accessKey/kegs', (req, res, next) ->
+  keg.recentKegs req.params.accessKey, req.query['recent'], (result) ->
     res.send result, 200
 
 # ## UI: get a user's coasters
@@ -207,7 +220,7 @@ server.get '/users/:rfid/coasters', (req, res, next) ->
 api_middlewares = [middleware.accessKey(), middleware.verify(keys)]
 
 # ## API: verify an RFID card
-#   `GET /kegerator/ACCESS_KEY/scan/RFID?signature=....`
+#   `GET /api/kegerator/ACCESS_KEY/scan/RFID?signature=....`
 #
 #    Where **ACCESS_KEY** is an access key registered with the keg.io server
 #    and **RFID** is a the RFID of a valid keg.io user
@@ -224,7 +237,7 @@ server.get '/api/kegerator/:accessKey/scan/:rfid', api_middlewares, (req, res, n
   res.end req.params.rfid
 
 # ## API: report the current flow rate
-#   `PUT /kegerator/ACCESS_KEY/flow/RATE`
+#   `PUT /api/kegerator/ACCESS_KEY/flow/RATE`
 #
 #    Where **ACCESS_KEY** is an access key registered with the keg.io server
 #    and **RATE** is a the current flow rate of the kegerator in liters/min
@@ -237,7 +250,7 @@ server.put '/api/kegerator/:accessKey/flow/:rate', api_middlewares, (req, res, n
     res.end req.params.rate
 
 # ## API: report an end to the current flow
-#   `PUT /kegerator/ACCESS_KEY/flow/end`
+#   `PUT /api/kegerator/ACCESS_KEY/flow/end`
 #
 #    Where **ACCESS_KEY** is an access key registered with the keg.io server
 #
@@ -248,7 +261,7 @@ server.put '/api/kegerator/:accessKey/flow/end', api_middlewares, (req, res, nex
   res.end 'FLOW IS DONE!'
 
 # ## API: report the current kegerator temperature
-#   `PUT /kegerator/ACCESS_KEY/temp/TEMP`
+#   `PUT /api/kegerator/ACCESS_KEY/temp/TEMP`
 #
 #    Where **ACCESS_KEY** is an access key registered with the keg.io server
 #    and **TEMP** is an integer representing the current keg temperature in F.

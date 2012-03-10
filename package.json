@@ -48,7 +48,7 @@
     "log4js": "0.4.1",
     "optparse": "1.0.3",
     "querystring": "0.1.0",
-    "sequelize": "1.3.5",
+    "sequelize": "https://github.com/dcarney/sequelize/tarball/master",
     "socket.io": "0.8.7",
     "sqlite3": "2.1.1",
     "twitter": "0.1.17",

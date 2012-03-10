@@ -1,4 +1,5 @@
 Sequelize = require 'sequelize'
+async = require 'async'
 
 # populate some 'seed data'
 module.exports.populate = (models, cb) ->
@@ -96,6 +97,8 @@ module.exports.populate = (models, cb) ->
     image_path: 'images/coasters/earlybird.png'
     })
 
+  saveCoaster = (user, coaster, cb) ->
+    user.addCoaster(coaster)
   chainer.add(mannys.save())
          .add(vnc_kegerator.save())
          .add(dc.save())
@@ -111,6 +114,10 @@ module.exports.populate = (models, cb) ->
 
   chainer.run()
     .success () ->
-      cb()
+      models.User.find({ where: {last_name: ['Castle']}}).success (user) ->
+        models.Coaster.find({where: {name: 'Welcome'}}).success (coaster) ->
+          user.addCoaster(coaster).on 'success', (result) ->
+            console.log result
+            cb()
     .error (error) ->
       cb(error)
