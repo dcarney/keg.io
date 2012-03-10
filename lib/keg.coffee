@@ -170,6 +170,11 @@ class Keg
       user.getCoasters().on 'success', (coasters) =>
         cb(@models.mapAttribs(coaster) for coaster in coasters)
 
+  coasters: (id, cb) ->
+    query = if id? then {where: {id: id}} else {}
+    @models.Coaster.findAll(query).success (coasters) =>
+      cb(@models.mapAttribs(coaster) for coaster in coasters)
+
   getLastDrinker: (callback) ->
     @kegDb.getLastDrinker (rows) =>
       callback null unless rows? && rows.length > 0
