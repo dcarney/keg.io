@@ -101,7 +101,7 @@ FakeKegerator.prototype.fakeFlow = function(flowsLeft)
 	if (flowsLeft > 0)
 	{
 		setTimeout(function() {
-			var randomFlow = (Math.floor(Math.random() * 51)) + 30; // between 30-80
+			var randomFlow = (Math.floor(Math.random() * 61)) + 30; // between 30-90
 
 			// send API request
 			kegioAPI.flow(randomFlow).put(function(err, result) {
@@ -134,7 +134,7 @@ FakeKegerator.prototype.fakePour = function()
 {
 	var frequencyInMs = 10000;	// repeat every 10 seconds
 	var self = this;
-	this.fakeFlow(5);   // flow for 5 seconds
+	this.fakeFlow(7);   // flow for 7 seconds
 
 	// Select a random user, using values that we "know" are in the DB,
 	// (based on the fact that they're hardcoded into the DB rebuild script)
