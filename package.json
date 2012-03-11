@@ -46,6 +46,7 @@
     "connect": "1.8.5",
     "express": "2.5.8",
     "log4js": "0.4.1",
+    "moment": "1.4.0",
     "optparse": "1.0.3",
     "querystring": "0.1.0",
     "sequelize": "https://github.com/dcarney/sequelize/tarball/master",
