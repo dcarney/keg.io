@@ -300,11 +300,11 @@ server.put /^\/api\/kegerator\/([\d]+)\/flow\/([\d]+)$/, api_middlewares, (req, 
 # Reports that the flow for the most recent RFID has completed on this
 # kegerator
 server.put '/api/kegerator/:accessKey/flow/end', api_middlewares, (req, res, next) ->
-  keg.endFlow req.params.accessKey, (valid) ->
-    if valid
-      respond(200, res, 'flow', 'end')
-    else
+  keg.endFlow req.params.accessKey, (err) ->
+    if err?
       respond(401, res, 'flow', 'invalid flow event')
+    else
+      respond(200, res, 'flow', 'end')
 
 # ## API: report the current kegerator temperature
 #   `PUT /api/kegerator/ACCESS_KEY/temp/TEMP`

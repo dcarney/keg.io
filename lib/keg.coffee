@@ -19,12 +19,6 @@ async       = require 'async'
 class Keg
   constructor: (logger, config) ->
     process.EventEmitter.call(this)
-    @actions = ['TAG', 'TEMP', 'FLOW']
-    @lastRfidSeen = null
-    @lastTempSeen = null
-    @websocketPort = null
-    @totalFlowAmount = 0.0
-    @lastFlowTime = null
     @logger = logger;
     @adminUiPassword = config.adminUiPassword
     @highTempThreshold = config.highTempThreshold
@@ -84,15 +78,15 @@ class Keg
     @models.Kegerator.hasMany(@models.Keg, {foreignKey: 'kegerator_id'})
     @models.Kegerator.hasMany(@models.Temperature, {foreignKey: 'kegerator_id'})
     @models.Keg.hasMany(@models.Pour, {foreignKey: 'keg_id'})
-    @models.User.hasMany(@models.Pour, {foreignKey: 'user_id'})
-    @models.User.hasMany(@models.Coaster)
+    @models.User.hasMany(@models.Pour, {foreignKey: 'rfid'})
+
     @models.Coaster.hasMany(@models.User)
+    @models.User.hasMany(@models.Coaster)
 
     if config? && config.twitter? && config.twitter.enabled
       # Initialize the Twitter module, passing in all the necessary config
       # values (that represent our API keys)
       @kegTwit = new KegTwitter(@logger, config.twitter)
-      @kegTwit.tweet 'Hello world...'
 
   rebuildDb: (cb) ->
     console.log 'Rebuilding the keg.io DB...'
@@ -112,11 +106,9 @@ class Keg
       # store pour info for future pour events
       # TODO: Add the current keg id to the pour event
       if valid
-        time = moment(new Date()).format('YYYY-MM-DDTHH:mm:ssZ')
         @kegerator_last_scans[access_key] = @models.Pour.build({
           rfid: rfid
           keg_id: 1
-          pour_date: time,
           volume_ounces: 0
           })
       else
@@ -125,13 +117,14 @@ class Keg
       cb(valid)
 
   endFlow: (access_key, cb) ->
-    valid = @kegerator_last_scans[access_key]?
-    if valid
-      # calculate the flow volume from the list of rates.
-      # save to the DB
-      @kegerator_last_scans[access_key].calculateVolume()
-      @kegerator_last_scans[access_key].save().success () ->
-        cb valid
+    pour = @kegerator_last_scans[access_key]
+    unless pour?
+      cb('no valid pour event to end')
+    else
+      # calculate the flow volume from the list of rates, save to DB, remove from memory
+      pour.calculateVolume()
+      delete @kegerator_last_scans[access_key]
+      pour.save().error( (err) -> cb(err) ).success () -> cb()
 
   addFlow: (access_key, rate, cb) ->
       valid = @kegerator_last_scans[access_key]?
