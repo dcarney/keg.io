@@ -246,9 +246,9 @@ server.get '/coasters/:id?', (req, res, next) ->
 api_middlewares = [middleware.accessKey(), middleware.verify(keys)]
 
 # helper method to format API responses for kegerator clients
-respond = (res, actionText, responseText) ->
-  res.writeHead 200, {'Content-Type': 'application/json'}
-  res.end JSON.stringify({ action: actionText, response: responseText })
+respond = (status_code, res, action_text, response_text) ->
+  res.writeHead status_code, {'Content-Type': 'application/json'}
+  res.end JSON.stringify({ action: action_text, response: response_text })
 
 # ## API: verify an RFID card
 #   `GET /api/kegerator/ACCESS_KEY/scan/RFID?signature=....`
@@ -264,7 +264,11 @@ respond = (res, actionText, responseText) ->
 #     GET http://keg.io/kegerator/1111/scan/23657ABF5?signature=....
 #
 server.get '/api/kegerator/:accessKey/scan/:rfid', api_middlewares, (req, res, next) ->
-  respond res, 'scan', req.params.rfid
+  keg.scanRfid req.params.accessKey, req.params.rfid, (valid) ->
+    if valid
+      respond(200, res, 'scan', req.params.rfid)
+    else
+      respond(401, res, 'scan', "#{req.params.rfid} is invalid")
 
 # ## API: report the current flow rate
 #   `PUT /api/kegerator/ACCESS_KEY/flow/RATE`
@@ -275,8 +279,14 @@ server.get '/api/kegerator/:accessKey/scan/:rfid', api_middlewares, (req, res, n
 # #### Examples:
 # ##### Report a flow of 12 liters/min on kegerator 1111:
 #     PUT http://keg.io/kegerator/1111/flow/12
-server.put '/api/kegerator/:accessKey/flow/:rate', api_middlewares, (req, res, next) ->
-    respond res, 'flow', req.params.rate
+server.put /^\/api\/kegerator\/([\d]+)\/flow\/([\d]+)$/, api_middlewares, (req, res, next) ->
+  access_key = req.params[0]
+  rate = req.params[1]
+  keg.addFlow access_key, rate, (valid) ->
+    if valid
+      respond(200, res, 'flow', rate)
+    else
+      respond(401, res, 'flow', 'invalid flow event (a valid scan may not have been received)')
 
 # ## API: report an end to the current flow
 #   `PUT /api/kegerator/ACCESS_KEY/flow/end`
@@ -286,7 +296,11 @@ server.put '/api/kegerator/:accessKey/flow/:rate', api_middlewares, (req, res, n
 # Reports that the flow for the most recent RFID has completed on this
 # kegerator
 server.put '/api/kegerator/:accessKey/flow/end', api_middlewares, (req, res, next) ->
-  respond res, 'flow', 'end'
+  keg.endFlow req.params.accessKey, (valid) ->
+    if valid
+      respond(200, res, 'flow', 'end')
+    else
+      respond(401, res, 'flow', 'invalid flow event')
 
 # ## API: report the current kegerator temperature
 #   `PUT /api/kegerator/ACCESS_KEY/temp/TEMP`
@@ -295,7 +309,11 @@ server.put '/api/kegerator/:accessKey/flow/end', api_middlewares, (req, res, nex
 #    and **TEMP** is an integer representing the current keg temperature in F.
 #
 server.put '/api/kegerator/:accessKey/temp/:temp', api_middlewares, (req, res, next) ->
-  respond res, 'temp', req.params.temp
+  keg.addTemp req.params.accessKey, req.params.temp, (valid) ->
+    if valid
+      respond(200, res, 'temp', req.params.temp)
+    else
+      respond(401, res, 'temp', invalid temp event)
 
 # create the http server, load up our middleware stack, start listening
 server.use connect.favicon(__dirname + '/static/favicon.ico', {maxAge: 2592000000})
