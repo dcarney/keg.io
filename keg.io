@@ -99,6 +99,7 @@ if Options.rebuild
 
 server = express.createServer()
 
+
 # ## UI routes
 # 'UI' routes are routes designed for keg.io UI clients (eg. web pages) to
 # call to interact with the central keg.io server.  The UI routes should respect
@@ -119,7 +120,7 @@ server.get '/config/socketPort', (req, res, next) ->
 #    Where **ACCESS_KEY** is the access key of the desired kegerator
 #
 # Optional params: recent=N
-#   WHERE **N** is the number of temperatures to retrieve, in reverse
+#   where **N** is the number of temperatures to retrieve, in reverse
 #   chronological order
 #
 server.get '/kegerators/:accessKey/temperatures', (req, res, next) ->
@@ -132,10 +133,9 @@ server.get '/kegerators/:accessKey/temperatures', (req, res, next) ->
 #    Where **ACCESS_KEY** is the access key of the desired kegerator
 #
 # Optional params: recent=N
-#   WHERE **N** is the number of recent pours to retrieve users from
+#   where **N** is the number of recent pours to retrieve users from
 #
 server.get '/kegerators/:accessKey/users', (req, res, next) ->
-  res.header('Content-Type', 'application/json')
   keg.recentUsers req.params.accessKey, req.query['recent'], (result) ->
     res.send result, 200
 
@@ -146,7 +146,7 @@ server.get '/kegerators/:accessKey/users', (req, res, next) ->
 #     and **N** is the number of pours to retrieve
 #
 # Optional params: recent=N
-#   WHERE **N** is the number of recent pours to retrieve users from
+#   where **N** is the number of recent pours to retrieve users from
 #
 # #### Examples:
 # ##### Retrieve the last 10 pours for kegerator 1111:
@@ -162,11 +162,24 @@ server.get '/kegerators/:accessKey/pours', (req, res, next) ->
 #    Where **ACCESS_KEY** is the access key of the desired kegerator
 #
 # Optional params: recent=N
-#   WHERE **N** is the number of temperatures to retrieve, in reverse
+#   where **N** is the number of temperatures to retrieve, in reverse
 #   chronological order
 #
 server.get '/kegerators/:accessKey/kegs', (req, res, next) ->
   keg.recentKegs req.params.accessKey, req.query['recent'], (result) ->
+    res.send result, 200
+
+# ## UI: get info about all users
+#   `GET /users`
+#
+
+# ## UI: get info about a user
+#   `GET /users/RFID`
+#
+#    Where **RFID** is the rfid assigned to the desired user
+#
+server.get '/users/:rfid?', (req, res, next) ->
+  keg.users req.params.rfid, (result) ->
     res.send result, 200
 
 # ## UI: get a user's coasters
@@ -176,6 +189,19 @@ server.get '/kegerators/:accessKey/kegs', (req, res, next) ->
 #
 server.get '/users/:rfid/coasters', (req, res, next) ->
   keg.userCoasters req.params.rfid, (result) ->
+    res.send result, 200
+
+# ## UI: get info about all coasters
+#   `GET /coasters`
+#
+
+# ## UI: get info about a coaster
+#   `GET /coasters/ID`
+#
+#    Where **ID** is the ID of the desired coaster
+#
+server.get '/coasters/:id?', (req, res, next) ->
+  keg.coasters req.params.id, (result) ->
     res.send result, 200
 
 # ## API routes
@@ -219,6 +245,11 @@ server.get '/users/:rfid/coasters', (req, res, next) ->
 # - 401: Unauthorized.  Unknown access key.
 api_middlewares = [middleware.accessKey(), middleware.verify(keys)]
 
+# helper method to format API responses for kegerator clients
+respond = (res, actionText, responseText) ->
+  res.writeHead 200, {'Content-Type': 'application/json'}
+  res.end JSON.stringify({ action: actionText, response: responseText })
+
 # ## API: verify an RFID card
 #   `GET /api/kegerator/ACCESS_KEY/scan/RFID?signature=....`
 #
@@ -233,8 +264,7 @@ api_middlewares = [middleware.accessKey(), middleware.verify(keys)]
 #     GET http://keg.io/kegerator/1111/scan/23657ABF5?signature=....
 #
 server.get '/api/kegerator/:accessKey/scan/:rfid', api_middlewares, (req, res, next) ->
-  res.writeHead 200, {'Content-Type': 'text/plain'}
-  res.end req.params.rfid
+  respond res, 'scan', req.params.rfid
 
 # ## API: report the current flow rate
 #   `PUT /api/kegerator/ACCESS_KEY/flow/RATE`
@@ -246,8 +276,7 @@ server.get '/api/kegerator/:accessKey/scan/:rfid', api_middlewares, (req, res, n
 # ##### Report a flow of 12 liters/min on kegerator 1111:
 #     PUT http://keg.io/kegerator/1111/flow/12
 server.put '/api/kegerator/:accessKey/flow/:rate', api_middlewares, (req, res, next) ->
-    res.writeHead 200, {'Content-Type': 'text/plain'}
-    res.end req.params.rate
+    respond res, 'flow', req.params.rate
 
 # ## API: report an end to the current flow
 #   `PUT /api/kegerator/ACCESS_KEY/flow/end`
@@ -257,8 +286,7 @@ server.put '/api/kegerator/:accessKey/flow/:rate', api_middlewares, (req, res, n
 # Reports that the flow for the most recent RFID has completed on this
 # kegerator
 server.put '/api/kegerator/:accessKey/flow/end', api_middlewares, (req, res, next) ->
-  res.writeHead 200, {'Content-Type': 'text/plain'}
-  res.end 'FLOW IS DONE!'
+  respond res, 'flow', 'end'
 
 # ## API: report the current kegerator temperature
 #   `PUT /api/kegerator/ACCESS_KEY/temp/TEMP`
@@ -267,8 +295,7 @@ server.put '/api/kegerator/:accessKey/flow/end', api_middlewares, (req, res, nex
 #    and **TEMP** is an integer representing the current keg temperature in F.
 #
 server.put '/api/kegerator/:accessKey/temp/:temp', api_middlewares, (req, res, next) ->
-  res.writeHead 200, {'Content-Type': 'application/json'}
-  res.end JSON.stringify({ temp: req.params.temp })
+  respond res, 'temp', req.params.temp
 
 # create the http server, load up our middleware stack, start listening
 server.use connect.favicon(__dirname + '/static/favicon.ico', {maxAge: 2592000000})
