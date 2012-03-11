@@ -1,5 +1,5 @@
 Sequelize = require 'sequelize'
-async = require 'async'
+moment = require 'moment'
 
 # populate some 'seed data'
 module.exports.populate = (models, cb) ->
@@ -88,13 +88,13 @@ module.exports.populate = (models, cb) ->
   welcome = models.Coaster.build({
     name: 'Welcome'
     description: 'Pour a beer with keg.io!'
-    image_path: 'images/coasters/firstbeer.png'
+    image_path: 'coasters/firstbeer.png'
     })
 
   early_bird = models.Coaster.build({
     name: 'Early Bird'
     description: 'Pour a beer before noon.'
-    image_path: 'images/coasters/earlybird.png'
+    image_path: 'coasters/earlybird.png'
     })
 
   saveCoaster = (user, coaster, cb) ->
@@ -117,7 +117,6 @@ module.exports.populate = (models, cb) ->
       models.User.find({ where: {last_name: ['Castle']}}).success (user) ->
         models.Coaster.find({where: {name: 'Welcome'}}).success (coaster) ->
           user.addCoaster(coaster).on 'success', (result) ->
-            console.log result
             cb()
     .error (error) ->
       cb(error)

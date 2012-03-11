@@ -65,6 +65,10 @@ unless Config?
     db_path: 'db/kegerator.db'
     high_temp_threshold: 60
     twitter: { enabled: false }
+    image_host: 'http://images.keg.io/'
+
+# some simple configuration cleansing, to take care of common mistakes
+Config.image_host += '/' unless /\/$/.test Config.image_host
 
 # The logging verbosity (particularly to the console for debugging) can be changed via the
 # **conf/log4js.json** configuration file, using standard log4js log levels:

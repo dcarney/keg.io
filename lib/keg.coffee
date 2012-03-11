@@ -26,8 +26,9 @@ class Keg
     @totalFlowAmount = 0.0
     @lastFlowTime = null
     @logger = logger;
-    @adminUiPassword = config.adminUiPassword;
-    @highTempThreshold = config.highTempThreshold;
+    @adminUiPassword = config.adminUiPassword
+    @highTempThreshold = config.highTempThreshold
+    @config = config
 
     # a hash of kegerator access keys to the last RFIDs seen at each
     # Ex. { 1111 => 1234FFE429,
@@ -228,7 +229,9 @@ class Keg
   coasters: (id, cb) ->
     query = if id? then {where: {id: id}} else {}
     @models.Coaster.findAll(query).success (coasters) =>
-      cb(@models.mapAttribs(coaster) for coaster in coasters)
-
+      cstrs = (@models.mapAttribs(coaster) for coaster in coasters)
+      for cstr in cstrs
+        cstr.image_path = "#{@config.image_host}#{cstr.image_path}"
+      cb(cstrs)
 
 module.exports = Keg
