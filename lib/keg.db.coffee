@@ -22,7 +22,7 @@ module.exports.populate = (models, cb) ->
     tapped_date: '2011-03-12T01:23:45Z',
     volume_gallons: '15.5',
     active: 'false',
-    image_path: 'images/MannysPint3.gif'
+    image_path: 'MannysPint3.gif'
   })
 
   dc = models.User.build({
