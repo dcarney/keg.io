@@ -179,7 +179,10 @@ class Keg
       query = {where: {kegerator_id: kegerator.access_key}, order: 'tapped_date DESC'}
       query.limit = num_kegs if num_kegs?
       @models.Keg.findAll(query).success (kegs) =>
-        cb(@models.mapAttribs(keg) for keg in kegs)
+        kegs = (@models.mapAttribs(k) for k in kegs)
+        for k in kegs
+          k.image_path = "#{@config.image_host}#{k.image_path}"
+        cb(kegs)
 
   recentUsers: (access_key, num_pours, cb) ->
     @recentPours access_key, num_pours, (pours) =>
