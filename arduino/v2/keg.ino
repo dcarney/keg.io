@@ -6,6 +6,7 @@
 #include <SC16IS750.h>
 #include <WiFly.h>
 #include <sha256.h>
+#include <Regexp.h>
 #include "Credentials.h"
 
 // Globl Variable Definitions
@@ -35,13 +36,15 @@ String getHash(uint8_t* hash){
   return stringOne;
 }
 
-void sendPut(char* action, char* actionValue){
+void sendPut(String action, String actionValue){
     Serial.println("Connected: Sending PUT Request");
-    String getHeader;
+    actionValue.toLowerCase();
+    action.toLowerCase();
     String sig;
     String payload = "PUT " + applicationPath + "/" + action + "/" + actionValue;
     Sha256.initHmac(clientSecret,clientSecretLength);
     Sha256.print("PUT "+String(domain) + applicationPath + "/" + action + "/" + actionValue);
+    Serial.println("PUT "+String(domain) + applicationPath + "/" + action + "/" + actionValue);
     sig = getHash(Sha256.resultHmac());
     Serial.println(sig);
     String putHeader = payload + "?signature="+sig+" HTTP/1.1";
@@ -56,20 +59,37 @@ void sendPut(char* action, char* actionValue){
     client.println();
 }
 
-void sendGET(char* action, char* cardId){
+void sendGet(String action, String cardId){
     Serial.println("Connected: Sending GET Request");
-    String getHeader;
+    cardId.toLowerCase();
+    action.toLowerCase();
+    String getHeader = " ";
+    String appPath = String(applicationPath);
+    String appDomain = String(domain);
     String sig;
-    String payload = "GET " + String(applicationPath) + "/" + action +"/"+ cardId;
+    String payload = "GET " + appPath + "/" + action +"/"+ cardId;
     Sha256.initHmac(clientSecret,clientSecretLength);
-    Sha256.print("GET "+String(domain) + String(applicationPath) + "/" + action +"/"+ cardId);
+    Sha256.print("GET "+ appDomain + appPath + "/" + action +"/"+ cardId);
+    Serial.println("GET "+ appDomain + appPath + "/" + action +"/"+ cardId);
     sig = getHash(Sha256.resultHmac());
-    getHeader = payload + "?signature="+sig+" HTTP/1.1";
+    getHeader = "GET " + appPath + "/";
+    getHeader += action+"/";
+    getHeader += cardId+"?signature=";
+    getHeader += sig;
+    getHeader += " HTTP/1.1";
     Serial.println(getHeader);
     client.println(getHeader);
-    Serial.println("Host: "+String(domain));
-    client.println("Host: "+String(domain));
+    Serial.println("Host: "+appDomain);
+    client.println("Host: "+appDomain);
     client.println();
+}
+
+bool validResponse(){
+  Serial.println("In valid response.");
+    while (client.available()){
+      char c = client.read();
+      Serial.print(c);
+    }
 }
 
 void setup() {
@@ -87,19 +107,6 @@ int requestType = 1;
     }
   }  
 
-  /*Serial.println("connecting...");
-  if (client.connect()) {
-    Serial.println("connected");
-  } else {
-    Serial.println("connection failed");
-  }*/
-  //Sha256.init();
-  //Sha256.print("123456789");
-  //hash = Sha256.result();
-  //printHash(hash);
-  //Sha256.initHmac(hmacKey1,6);
-  //Sha256.print("secret message!");
-  //printHash(Sha256.resultHmac());
   if (client.connect()) {
     Serial.println("Connected");
   } else {
@@ -110,10 +117,13 @@ int a=0;
 void loop() {
  
   if (a == 0){
+    //sendGet("scan","411231231231A");
     sendPut("temp","41");
     a++;
   }
-
+  //if (client.available()) {
+  //    validResponse();
+  //}
   if (client.available()) {
     char c = client.read();
     Serial.print(c);
