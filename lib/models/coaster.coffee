@@ -6,4 +6,8 @@ module.exports = (sequelize, DataTypes) ->
     name: DataTypes.STRING,
     description: DataTypes.TEXT,
     image_path: DataTypes.TEXT
-  }, {underscored: true})
+  },
+  {
+    underscored: true,
+    timestamps: false
+  })

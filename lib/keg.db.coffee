@@ -1,5 +1,4 @@
 Sequelize = require 'sequelize'
-moment = require 'moment'
 
 # populate some 'seed data'
 module.exports.populate = (models, cb) ->
@@ -9,12 +8,11 @@ module.exports.populate = (models, cb) ->
     access_key: 1111,
     name: 'VNC Seattle'
     description: 'The original home of keg.io',
-    created_date: '2011-03-12T01:23:45Z',
     owner_email: 'chris.castle@vivaki.com'
   })
 
   mannys = models.Keg.build({
-    kegerator_id: 1111,
+    kegerator_id: 1,
     beer: "Mannys",
     brewery: 'Georgetown Brewery',
     beer_style: 'Pale Ale',
@@ -64,25 +62,23 @@ module.exports.populate = (models, cb) ->
   pour1 = models.Pour.build({
     rfid: dc.rfid
     keg_id: 1
-    pour_date: '2011-03-19T16:34:17Z'
     volume_ounces: 16
   })
 
   pour2 = models.Pour.build({
     rfid: crc.rfid
     keg_id: 1
-    pour_date: '2011-03-19T16:44:17Z'
     volume_ounces: 32
     })
 
   temp1 = models.Temperature.build({
     temperature: 36
-    kegerator_id: 1111
+    kegerator_id: 1
     })
 
   temp2 = models.Temperature.build({
     temperature: 39
-    kegerator_id: 1111
+    kegerator_id: 1
     })
 
   welcome = models.Coaster.build({

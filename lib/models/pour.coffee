@@ -4,7 +4,6 @@
 module.exports = (sequelize, DataTypes) ->
   sequelize.define('pour', {
     rfid: DataTypes.INTEGER,
-    pour_date: DataTypes.DATE,
     volume_ounces: DataTypes.INTEGER
   },
   {
@@ -28,5 +27,6 @@ module.exports = (sequelize, DataTypes) ->
               flow_amount_oz = diff_ms * (parseFloat(last_rate_time.rate) * 0.00000939278408)
               @volume_ounces += flow_amount_oz;
             last_rate_time = rate_time
+          @volume_ounces = Math.round(@volume_ounces)
       }
   })
