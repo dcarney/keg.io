@@ -121,10 +121,13 @@ class Keg
     unless pour?
       cb('no valid pour event to end')
     else
-      # calculate the flow volume from the list of rates, save to DB, remove from memory
-      pour.calculateVolume()
+      # remove the pour obj from memory, calculate the total volume of the pours,
+      # and save to the DB if > 0
       delete @kegerator_last_scans[access_key]
-      pour.save().error( (err) -> cb(err) ).success () -> cb()
+      if pour.calculateVolume() > 0
+        pour.save().error( (err) -> cb(err) ).success () -> cb()
+      else
+        cb() # no-op
 
   addFlow: (access_key, rate, cb) ->
       valid = @kegerator_last_scans[access_key]?
@@ -169,7 +172,7 @@ class Keg
 
   recentKegs: (access_key, num_kegs, cb) ->
     @models.Kegerator.find({where: {access_key: access_key}}).success (kegerator) =>
-      query = {where: {kegerator_id: kegerator.access_key}, order: 'tapped_date DESC'}
+      query = {where: {kegerator_id: kegerator.id}, order: 'tapped_date DESC'}
       query.limit = num_kegs if num_kegs?
       @models.Keg.findAll(query).success (kegs) =>
         kegs = (@models.mapAttribs(k) for k in kegs)
