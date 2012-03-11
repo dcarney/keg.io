@@ -41,6 +41,6 @@
 	/* This is a hack to try to improve stability. */
 	"temp_update_threshold": "120000",
 
-        /* Keg.io will start tweeting about temps above this value */
-	"high_temp_threshold": "60"
+    /* location where images for kegs and coasters are stored */
+    "image_host": "http://images.keg.io/"
 }
