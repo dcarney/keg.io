@@ -1,94 +1,75 @@
 // keg.io v2 Arduino Code
 // Written By: Carl Krauss
 //
-// Header Files
+
+// Serial
+long serialBaud = 115200L;
+
+// Solenoid
+int solenoid = 2; //Solenoid Pin
+#define SOLENOID_OPENED 1
+#define SOLENOID_CLOSED 0
+int solenoidStatus;
+
+// Temp sensor
+#include <OneWire.h>
+#include <DallasTemperature.h>
+// Data wire is plugged into pin 2 on the Arduino
+#define ONE_WIRE_BUS 9
+float temp = 0;
+// Setup a oneWire instance to communicate with any OneWire devices (not just Maxim/Dallas temperature ICs)
+OneWire oneWire(ONE_WIRE_BUS);
+// Pass our oneWire reference to Dallas Temperature.
+DallasTemperature tempSensor(&oneWire);
+long PreviousTempMillis = 0;
+long TempInterval = 5000; //how often to send temp
+
+// Flow sensor
+volatile int NbTopsFan;
+int Calc;
+int hallsensor = 3;
+int interrupt = 1;
+
+// Wifly and HTTP stuff
 #include <SPI.h>
 #include <SC16IS750.h>
 #include <WiFly.h>
-#include <sha256.h>
-#include <Regexp.h>
 #include "Credentials.h"
-#include <SoftwareSerial.h>
-
-// Globl Variable Definitions
+#include <sha256.h>
 String ap = "/api/kegerator/";
 String applicationPath = ap+clientId;
 String httpParameters = "id="+ String(clientId);
 char domain[] = "dev.keg.io";
-
 WiFlyClient client(domain, 80);
 
-// Global variables for RFID reader
+// RFID reader
+#include <SoftwareSerial.h>
 int rxPin = 12;
 int txPin = 10;
+int rfidPin = 11;
 SoftwareSerial RFID(rxPin,txPin);
 
-
-void printHash(uint8_t* hash) {
-  int i;
-  for (i=0; i<32; i++) {
-    Serial.print("0123456789abcdef"[hash[i]>>4]);
-    Serial.print("0123456789abcdef"[hash[i]&0xf]);
-  }
-  Serial.println();
-}
-
-String getHash(uint8_t* hash){
-  String stringOne;
-  int i;
-  for (i=0; i<32; i++) {
-    stringOne+=("0123456789abcdef"[hash[i]>>4]);
-    stringOne+=("0123456789abcdef"[hash[i]&0xf]);
-  }
-  return stringOne;
-}
-
-void sendPut(String action, String actionValue){
-    Serial.println("Connected: Sending PUT Request");
-    actionValue.toLowerCase();
-    action.toLowerCase();
-    String sig;
-    String payload = "PUT " + applicationPath + "/" + action + "/" + actionValue;
-    Sha256.initHmac(clientSecret,clientSecretLength);
-    Sha256.print("PUT "+String(domain) + applicationPath + "/" + action + "/" + actionValue);
-    Serial.println("PUT "+String(domain) + applicationPath + "/" + action + "/" + actionValue);
-    sig = getHash(Sha256.resultHmac());
-    Serial.println(sig);
-    String putHeader = payload + "?signature="+sig+" HTTP/1.1";
-    client.println(putHeader);
-    client.println("Host: " + String(domain));
-    client.println("Connection: close");
-    client.println();
-}
-
-void sendGet(String action, String cardId){
-    Serial.println("Connected: Sending GET Request");
-    cardId.toLowerCase();
-    action.toLowerCase();
-    String getHeader = " ";
-    String appPath = String(applicationPath);
-    String appDomain = String(domain);
-    String sig;
-    String payload = "GET " + appPath + "/" + action +"/"+ cardId;
-    Sha256.initHmac(clientSecret,clientSecretLength);
-    Sha256.print("GET "+ appDomain + appPath + "/" + action +"/"+ cardId);
-    Serial.println("GET "+ appDomain + appPath + "/" + action +"/"+ cardId);
-    sig = getHash(Sha256.resultHmac());
-    getHeader = "GET " + appPath + "/";
-    getHeader += action+"/";
-    getHeader += cardId+"?signature=";
-    getHeader += sig;
-    getHeader += " HTTP/1.1";
-    Serial.println(getHeader);
-    client.println(getHeader);
-    Serial.println("Host: "+appDomain);
-    client.println("Host: "+appDomain);
-    client.println();
-}
+// Regexp library to validate RFID card ID
+#include <Regexp.h>
 
 void setup() {
-  //Setup variables
-  Serial.begin(115200);
+  Serial.begin(serialBaud);
+
+  // setup solenoid
+  pinMode(solenoid, OUTPUT);
+  digitalWrite(solenoid, LOW);
+  solenoidStatus = SOLENOID_CLOSED;
+
+  // setup temp sensor
+  // IC Default 9 bit. If you have troubles consider upping it 12.
+  // Ups the delay giving the IC more time to process the temperature measurement
+  tempSensor.begin();
+
+  // setup flow sensor
+  pinMode(hallsensor, INPUT); //initializes digital pin 2 as an input
+  attachInterrupt(interrupt, rpm, RISING); //and the interrupt is attached
+
+  //wifly!
   SC16IS750.begin();
   WiFly.setUart(&SC16IS750);
   WiFly.begin();
@@ -110,7 +91,10 @@ void setup() {
     if ( true/* test keg.io request returned with 200 */ ) { // TODO: replace false with real logic
       Serial.println("Connected");
       // TODO: set LED to solid red
-      // now start listening to RFID reader since we know we have an active internet connection
+      // now setup and start listening to RFID reader since we know we have
+      // an active internet connection and can verify RFID cards
+      pinMode(rfidPin,OUTPUT);
+      digitalWrite(rfidPin, LOW);
       RFID.begin(2400);
     } else {
       Serial.println("Connected to wifi, but unable to contact server.");
@@ -127,12 +111,11 @@ void setup() {
 
 void loop() {
   while (true) {
-    // if there is a temp value
-    if (false) { // TODO: replace false with real logic
-      // TODO: read temp value
-      // send temp in put request
-      sendPut("temp", "43");
-    }
+    // read temp value and convert to String
+    char charTemp[6];
+    String strTemp = String(dtostrf(getTemp(),5,2,charTemp));
+    // send temp in put request
+    sendPut("temp", strTemp);
 
     // if data is available from card scanner
     if (RFID.available()) {
@@ -180,7 +163,9 @@ void loop() {
           // TODO: replace false with real logic
           if ( false/*response is not empty && status code is 200 && response hash is good*/ ) {
             // TODO: set LED to solid green
-            // TODO: open solenoid
+            // open solenoid
+            digitalWrite(solenoid, HIGH);
+            solenoidStatus = SOLENOID_OPENED;
           }
         }
       } else if (result == REGEXP_NOMATCH) {
@@ -196,10 +181,12 @@ void loop() {
     // if solenoid is open, send flow data
     // or if it has been open for 3 seconds with zero flow, send flow end
     // TODO: replace false with real logic
-    if ( false/* solenoid is open? */ ) { // TODO: replace false with real logic
+    if ( solenoidStatus ) { // TODO: replace false with real logic
       // TODO: read flow value
       if ( false/* flow value is zero for > 3 seconds */ ) { // TODO: replace false with real logic
-        // TODO: close solenoid
+        // close solenoid
+        digitalWrite(solenoid, LOW);
+        solenoidStatus = SOLENOID_CLOSED;
         // tell server pour is done
         sendGet("flow", "end");
         // TODO: set LED to solid red
@@ -221,7 +208,90 @@ void loop() {
   } // end while(true)
 } // end void loop()
 
+/*******************************
+ *
+ * HELPER FUNCTIONS
+ *
+ *******************************/
 
+// Read the current temperature, convert to F, and return it as a Float
+// Temp library from http://milesburton.com/Main_Page?title=Dallas_Temperature_Control_Library
+// OneWire library from http://www.pjrc.com/teensy/td_libs_OneWire.html
+float getTemp() {
+  Serial.print("Requesting temperatures...");
+  tempSensor.requestTemperatures(); // Send the command to get temperatures
+
+  Serial.print("Temperature for Device 1 is: ");
+  // Why "byIndex"? You can have more than one IC on the same bus. 0 refers to the first IC on the wire
+  temp = tempSensor.getTempCByIndex(0);
+  temp = temp*1.8+32; // comment this line out to get celsius
+  Serial.println(temp);
+
+  return temp;
+}
+
+// Print hash out to Serial as hex values
+// This is for debugging only.
+void printHash(uint8_t* hash) {
+  int i;
+  for (i=0; i<32; i++) {
+    Serial.print("0123456789abcdef"[hash[i]>>4]);
+    Serial.print("0123456789abcdef"[hash[i]&0xf]);
+  }
+  Serial.println();
+}
+
+// Return hash as String of hex values
+String getHash(uint8_t* hash){
+  String stringOne;
+  int i;
+  for (i=0; i<32; i++) {
+    stringOne+=("0123456789abcdef"[hash[i]>>4]);
+    stringOne+=("0123456789abcdef"[hash[i]&0xf]);
+  }
+  return stringOne;
+}
+
+// Send HTTP PUT request with HmacSha256 signature
+void sendPut(String action, String actionValue){
+  sendHttp("PUT", action, actionValue);
+}
+
+// Send HTTP GET request with HmacSha256 signature
+void sendGet(String action, String cardId){
+  sendHttp("GET", action, cardId);
+}
+
+void sendHttp(String httpMethod, String action, String actionValue) {
+  Serial.println("Connected: Sending " + httpMethod + " Request");
+  action.toLowerCase();
+  actionValue.toLowerCase();
+  String valueToHash = httpMethod + " " + domain + applicationPath + "/" + action + "/" + actionValue;
+  String sig = calcHash(clientSecret, clientSecretLength, valueToHash);
+  String requestPath = httpMethod + " " + applicationPath + "/" + action + "/" + actionValue;
+
+  // now write to wifly client and output to Serial
+  client.println(requestPath + "?signature=" + sig + " HTTP/1.1");
+  Serial.println(requestPath + "?signature=" + sig + " HTTP/1.1");
+  client.println("Host: " + String(domain));
+  Serial.println("Host: " + String(domain));
+  client.println("Connection: close");
+  Serial.println("Connection: close");
+  client.println();
+}
+
+// Calculate and return a HmacSha256 hash as a String
+String calcHash(uint8_t secret[], int secretLength, String str) {
+  Sha256.initHmac(secret, secretLength);
+  Sha256.print(str);
+  return getHash(Sha256.resultHmac());
+}
+
+//This is the function that the interupt calls
+//This function measures the rising and falling edge of the hall effect sensors signal
+void rpm (){
+  NbTopsFan++;
+}
 
 
 
