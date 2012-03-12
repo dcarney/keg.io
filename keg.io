@@ -112,9 +112,9 @@ server = express.createServer()
 #
 
 # ## UI: ping the keg.io server
-#   `GET /ping`
+#   `GET /hello`
 #
-server.get '/ping', (req, res, next) ->
+server.get '/hello', (req, res, next) ->
   res.send '', 200
 
 # ## UI: get the port to use for web socket connections
