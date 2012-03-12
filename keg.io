@@ -111,11 +111,16 @@ server = express.createServer()
 # JSON.
 #
 
+# ## UI: ping the keg.io server
+#   `GET /ping`
+#
+server.get '/ping', (req, res, next) ->
+  res.send '', 200
+
 # ## UI: get the port to use for web socket connections
 #   `GET /config/socketPort`
 #
 server.get '/config/socketPort', (req, res, next) ->
-  console.log Config.socket_client_connect_port
   res.send Config.socket_client_connect_port.toString(), 200
 
 # ## UI: get temperatures for a kegerator
