@@ -192,9 +192,9 @@ class Keg
     @models.Kegerator.find({where: {access_key: access_key}}).success (kegerator) =>
       sql = "SELECT * FROM `pours` p " +
             "INNER JOIN `kegs` k on p.keg_id = k.id " +
-            "INNER JOIN `kegerators` ke ON ke.access_key = k.kegerator_id " +
+            "INNER JOIN `kegerators` ke ON ke.id = k.kegerator_id " +
             "WHERE ke.access_key=#{kegerator.access_key} " +
-            "ORDER BY p.pour_date DESC #{suffix};"
+            "ORDER BY p.created_at DESC #{suffix};"
       @sequelize.query(sql, @models.Pour).on 'success', (pours) =>
         cb(@models.mapAttribs(pour) for pour in pours)
 
