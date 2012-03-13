@@ -2,7 +2,7 @@
 <!-- saved from url=(0054)/hero.html -->
 <html lang="en"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
     <meta charset="utf-8">
-    <title>Bootstrap, from Twitter</title>
+    <title>keg.io v2</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="">
     <meta name="author" content="Garrett" >
@@ -72,7 +72,9 @@ google.load("visualization", "1", {packages:["corechart"]});
 			<h2>Current Keg</h2>
 			<span id="currentKegName">Mannys Pale Ale</span>
 			<img id="currentKegImage" />
-			
+			<div id="flow_chart" ></div>
+			<div id="temp_chart" ></div>
+			<div id="beer_chart" ></div>
 			</div>
 			
 			<div class="span8">
@@ -128,7 +130,10 @@ google.load("visualization", "1", {packages:["corechart"]});
     <script src="./index_files/bootstrap-carousel.js"></script>
     <script src="./index_files/bootstrap-typeahead.js"></script>
       <script type="text/javascript" src="/js/socket.io.js"></script>
-    <script type="text/javascript" src="/js/keg.io.client.js" ></script>
+    
+<script type="text/javascript">
+    document.write('<scr'+'ipt type="text/javasc'+'ript" src="/js/keg.io.client.js?'+Math.random()+'" ></scr'+'ipt>');
+    </script>
 	<script type="text/javascript" >
 	$(document).ready(function(){
 		isEditTimeout = null;
@@ -136,9 +141,9 @@ google.load("visualization", "1", {packages:["corechart"]});
 		kegio.getLastDrinkers(function(drinkers){
 			var current = drinkers[0];
 			//$('#currentDrinkerImage').attr("src","http://www.gravatar.com/avatar/" + current.hash + "?s=250&d=mm");
-			$('#currentDrinkerName').text(current.first_name + (current.nickname!=''?' &quot;' + current.nickname + 'quot; ':' ')+current.last_name);
+			$('#currentDrinkerName').text(current.first_name + (current.nickname!=''?' "' + current.nickname + '" ':' ')+current.last_name);
 		});
-		
+	
 		kegio.getKegs(function(kegs){
 			var current = kegs[0];
 			$('#currentKegName').text(current.beer + ' ' + current.beer_style);

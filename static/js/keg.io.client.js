@@ -88,43 +88,109 @@ var drawGauges = function(){
         beerGauge.draw(beerGaugeOptions.data,beerGaugeOptions);
 }
 
-var needleBump = function(){
-	if(flowRateGaugeOptions.data.getValue(0, 1)!=0){
-		var bump = Math.random()>.5?1:-1;
-		var nv = flowRateGaugeOptions.data.getValue(0, 1) + bump;
-		flowRateGaugeOptions.data.setValue(0,1,nv);
-		flowRateGauge.draw(flowRateGaugeOptions.data,flowRateGaugeOptions);
-	}
-}
-     
-     
-var googleDatafy  = function(g_data,json){
-	
-	var values = json.value;
-	g_data.addRows(values.length);
-	for(var i = 0; i < values.length; i++){
-		var tv = values[i];
-		for(var z = 0; z < tv.length; z ++){
-			g_data.setValue(i,z,tv[z]);
-		}
-	
-	}
-	return g_data;
-	
-}
-
-
 var kegio = {
 	
 	
 	accessKey: '1111',
+
+  charts : [{
+      target:'flow_chart',
+      type:'gauge',
+      label:'Flow',
+      data: (new google.visualization.DataTable()),
+      options:{ 
+                redFrom:70,
+                redTo:80,
+                yellowFrom:60,
+                yellowTo:70,
+                yellowColor: '#FF6E00',
+                width:150,
+                height:150,
+                min: 0,
+                max: 80,
+                data:{}
+              }   
+  
+    },{
+      target:'temp_chart',
+      type:'gauge',
+      label:'Temp °F',
+      data: function(){
+        return this.getCurrentTemp();
+      },
+      options:{
+                min:30,
+                max:70,
+                greenFrom:30,
+                greenTo:48,
+                greenColor:'#1FD8D8',
+                yellowFrom:48,
+                yellowTo:60,
+                yellowColor: '#FF6E00',
+                redFrom:60,
+                redTo:70,
+                redColor: 'red',
+                width:150,
+                height:150,
+                data:{}
+              }
+
+
+    },{
+      target:'beer_chart',
+      type:'gauge',
+      label:'Beer %',
+      data:[],
+      options:{
+        redFrom:0,
+        redTo: 10,
+        yellowFrom:10,
+        yellowTo:30,
+        yellowColor: '#FF6E00',
+        greenFrom:80,
+        greenTo:100,
+        width: 150,
+        height: 150,
+        data : {}
+      }
+
+
+    }
+
+
+    ],
+
+needleBump : function(){
+  if(flowRateGaugeOptions.data.getValue(0, 1)!=0){
+    var bump = Math.random()>.5?1:-1;
+    var nv = flowRateGaugeOptions.data.getValue(0, 1) + bump;
+    flowRateGaugeOptions.data.setValue(0,1,nv);
+    flowRateGauge.draw(flowRateGaugeOptions.data,flowRateGaugeOptions);
+  }
+},
+     
+     
+googleDatafy: function(g_data,json){
+  
+  var values = json.value;
+  g_data.addRows(values.length);
+  for(var i = 0; i < values.length; i++){
+    var tv = values[i];
+    for(var z = 0; z < tv.length; z ++){
+      g_data.setValue(i,z,tv[z]);
+    }
+  
+  }
+  return g_data;
+  
+},
 
   getSocketPort: function(callback){
   		return this.sendRequest('/config/socketPort',callback);
   		
   	}	,
   	
-  	getLastDrinkers: function(callback,n){
+  getLastDrinkers: function(callback,n){
   		if(n==null){
   			n=1;
   		}
@@ -133,7 +199,7 @@ var kegio = {
 	},
 
 	getCurrentTemp: function(callback){
-		this.sendRequest('/kegerators/'+this.accessKey+'/temperatures',callback);
+		this.sendRequest('/kegerators/'+this.accessKey+'/temperatures',callback,null,false);
 		
    },
 	
@@ -156,23 +222,6 @@ var kegio = {
        new Notification('<strong>' + data.status.toUpperCase() + '</strong> ' + data.data + ' - Error Code: ' + data.code, 'error');
    },
 
- pageAuth: function(data) {
-       display_name = data.data.display_name;
-       user_name = data.data.user_name;
-       $('#userinfo').toggle();
-       $('div.intro').html('Welcome, <span style="color: #eee;">' + data.data.display_name + '</span><br />' + data.data.email + '<br /><a class="profile_link" href="profile.html">Profile</a> | <a href="/doc/toc.html" target="_blank">API Docs</a> | <a id="logout" href="login.html">Logout</a>');
-       $('img.avatar').attr('src', 'https://secure.gravatar.com/avatar/' + Crypto.MD5(data.data.email) + '?s=50&d=mm');
-       $('img.avatar').attr('alt', 'setup image at www.gravatar.com');
-       $('#logout').click(function() {
-           token = null;
-           environment = null;
-       });
-       $('.profile_link').live('click', function() {
-           var exp = new Date();
-           exp.setMinutes(exp.getMinutes() + 1);
-           $.cookie('token', token, exp);
-       });
-   },
  
    inDeveloperMode: function() {
        return $('#devmode').is(':checked');
@@ -234,21 +283,6 @@ sendRequest: function(url, callback, error, method, data) {
                error( { status: 'ab /config/socketPortorted', data: 'User cancelled request.', code: 'N/A' } );
                return;
            } else {
-               // Uncomment this and comment json block to use msgpack
-               //if (url.indexOf("?") != -1) {
-               // url = url + "&format=msgpack";
-               //}else {
-               //  url = url + "?format=msgpack";
-               //}
-               //
-               //msgPackCallback = function(data, options, status) {
-               //      if(status.ok) {
-               //              callback(data);
-               //      } else {
-               //              error(data);
-               //      }
-               //}
-               //msgpack.download(url, {method: method}, msgPackCallback);
  
                $.ajax({
                    type: method,
