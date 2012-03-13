@@ -1,0 +1,230 @@
+html, body {
+	margin: 0;
+	padding: 0;
+	height: 100%;
+}
+
+#sidebar a:link, #sidebar a:hover, #sidebar a:active, #sidebar a:visited{
+		text-decoration: none;
+	}
+	
+	#sidebar a img{
+		border: 0;
+		}
+
+ul {
+		list-style-type:none;
+}
+
+#flow_status, #kegio_about{
+		cursor: pointer;
+	}
+	
+	#about {
+		padding: .3em;
+		text-align: center;
+		}
+
+div.ui-widget-overlay{
+	position: absolute;
+	top: 0;
+	left: 0;
+	background-color: white;
+	opacity: 0.5;
+	filter: alpha(opacity=50);
+
+}
+
+.ui-dialog-title{
+	position: relative;
+	float: left;
+}
+	
+.ui-dialog-titlebar-close{
+
+}
+
+div.ui-dialog-titlebar{
+		background: #ccc;
+		border-bottom: 1px solid #999;
+		padding: .2em;
+		clear: both;
+		text-align: right;
+	}
+
+div.ui-dialog{
+	background: white;
+		border-radius: 5px;
+	border: 1px solid #ccc;
+}
+
+#wrap {
+	background-image: url("../images/wood-texture-background.jpg");
+	background-repeat: repeat;
+	margin: auto;
+	height: 100%;
+	min-height:800px;
+	font-family: 'Annie Use Your Telescope', arial, serif;
+	font-size: 20px;
+}
+
+#header {
+	clear:both;
+	float:left;
+	width:100%;
+}
+
+#footer {
+	clear:both;
+	float:left;
+	width:100%;
+	border-top:1px solid #000;
+}
+
+#sidebar {
+	float:left;
+	width:34%;
+	background:#111;
+	color: white;
+	height:100%;
+	padding-left:1%;
+}
+
+#main {
+	padding-left: 2%;
+	float:left;
+	width:63%;
+	height:100%;
+	color: white;
+}
+
+#main .badge_main {
+		font-size:25px;
+}
+
+#sidebar h1
+{
+	font-family: 'Cabin Sketch', arial, serif; 
+	font-size: 150px;
+	margin:0px;
+	padding:0px;
+	text-align: left;
+}
+
+#sidebar .gauges {
+	float:left;
+	width: 155px;
+	height: 170px;
+	padding-bottom: 6px;
+	background-image: url("../images/gauge-outline.png");
+	background-repeat: no-repeat;
+	padding-left: 3px;
+	padding-top: 3px;
+}
+
+#sidebar .gauges text {
+	/* Style the Google guage text (inside an svg rendering) */
+	font-family: 'Annie Use Your Telescope', arial, serif;
+	font-size: 16px;
+}
+
+#sidebar .beer_info {
+	display: block;
+}
+#sidebar .beer_info img {
+	float:left;
+	margin: 10px 10px 25px 10px;
+}
+
+#sidebar #rotating_charts {
+	margin-left: 40px;
+}
+
+#footer p {
+	padding:10px;
+	margin:0;
+}
+
+
+img#user_gravatar {
+	float:left;
+	display:block;
+	padding-right: 10px;
+}
+
+div#coasters,
+div#history {
+	clear:both;
+}
+
+div#coasters h1,
+div#history h1 {
+	clear:both;
+	margin: 0px;
+}
+
+div.badge ul
+{
+	margin-left: 10px;
+	list-style-type:none;
+}
+
+/* TODO: Clean this up */
+
+ul.badges
+{
+ /* margin: 15px -15px 0px 0px; */
+  padding: 0;
+  list-style-type: none;  
+  display:inline;
+  float:none;
+  list-style-position: inside; }
+  ul.badges li {
+	clear:none;
+    padding: 0px;
+    display: inline;
+    margin-right: 15px;
+    margin-bottom: 15px;
+    float: left;
+    width: 175px;
+    padding: 0px;
+   /* background: #efefef;
+    background: -webkit-gradient(linear, left top, left bottom, from(#efefef), to(#dfe1e2));
+    background: -moz-linear-gradient(-90deg, #efefef, #dfe1e2); 
+    filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='#efefef', endColorstr='#dfe1e2');
+    -ms-filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='#efefef', endColorstr='#dfe1e2');
+    border-bottom: 1px solid #ededed;
+    box-shadow: 0 2px 3px #aaaaaa;
+    -moz-box-shadow: 0 2px 3px #aaaaaa;
+    -webkit-box-shadow: 0 2px 3px #aaaaaa; */
+    /*height: 240px; */}
+  ul.badges .badge .image {
+    padding: 8px 0px 5px 0px;
+  /*  background-color: white; 
+    box-shadow: inset 0px 0px 5px rgba(0, 0, 0, 0.5);
+    -webkit-box-shadow: inset 0px 0px 5px rgba(0, 0, 0, 0.5);
+    -moz-box-shadow: inset 0px 0px 5px rgba(0, 0, 0, 0.5); } */
+  ul.badges .badge img {
+    margin-left: 15px;
+    height: 125px;
+    width: 125px; }
+  ul.badges .badge h4 {
+    margin: 0px 0px 0px 0px;
+    text-align: center;
+    padding: 0; }
+  ul.badges .badge p {
+    margin: 0px 0px 0px 0px;
+    padding: 0px; }
+  ul.badges .more h4 {
+    padding: 0px 0px 0px 0px;
+    text-align: center; }
+  ul.badges .more h5 {
+    margin: 15px 0px 0px 0px;
+    padding: 0; }
+  ul.badges .more p {
+    margin: 0;
+    padding: 0; }
+  ul.badges .more a {
+    font-weight: bold;
+    color: #f3aa64;
+    text-decoration: none; }
