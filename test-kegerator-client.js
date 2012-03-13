@@ -101,14 +101,14 @@ FakeKegerator.prototype.fakeFlow = function(flowsLeft)
 	if (flowsLeft > 0)
 	{
 		setTimeout(function() {
-			var randomFlow = (Math.floor(Math.random() * 51)) + 30; // between 30-80
+			var randomFlow = (Math.floor(Math.random() * 61)) + 30; // between 30-90
 
 			// send API request
 			kegioAPI.flow(randomFlow).put(function(err, result) {
 				if (!err) {
 					console.log('flow sent: ' + randomFlow + ', server responded with: ' + result);
 				} else {
-					console.log('ERROR: error sending flow request: ' + result.data );
+					console.log('ERROR: error sending flow request: ' + result );
 				}
 			});
 
@@ -123,7 +123,7 @@ FakeKegerator.prototype.fakeFlow = function(flowsLeft)
 			if (!err) {
 				console.log('flow ended, server responded with: ' + result);
 			} else {
-				console.log('ERROR: error sending flow end request: ' + result.data );
+				console.log('ERROR: error sending flow end request: ' + result );
 			}
 		});
 	}
@@ -134,11 +134,11 @@ FakeKegerator.prototype.fakePour = function()
 {
 	var frequencyInMs = 10000;	// repeat every 10 seconds
 	var self = this;
-	this.fakeFlow(5);   // flow for 5 seconds
+	this.fakeFlow(7);   // flow for 7 seconds
 
 	// Select a random user, using values that we "know" are in the DB,
 	// (based on the fact that they're hardcoded into the DB rebuild script)
-	var randomUser = Math.floor(Math.random() * 5); // between 0-4
+	var randomUser = Math.floor(Math.random() * 6); // between 0-5
 	var userRFID = "";
 	switch(randomUser)
 	{
@@ -157,6 +157,9 @@ FakeKegerator.prototype.fakePour = function()
 		case 4:
 			userRFID = "DENYTAG544";  //deny user
 		break;
+		case 5:
+			userRFID = "DENYTAG546";  //deny user
+		break;
 	}
 
 	setTimeout(function() {
@@ -167,7 +170,7 @@ FakeKegerator.prototype.fakePour = function()
 			if (!err) {
 				console.log('scan user: ' + userRFID + ', server responded with: ' + result);
 			} else {
-				console.log('ERROR: error sending scan request for user: ' + userRFID + ' ' + result.data);
+				console.log('ERROR: error sending scan request for user: ' + userRFID + ' ' + result);
 			}
 		});
 
@@ -178,7 +181,7 @@ FakeKegerator.prototype.fakePour = function()
 // Produces a fake "temp" event on a given interval, used in development mode
 FakeKegerator.prototype.fakeTemp = function()
 {
-	var frequencyInMs = 3000;    // repeat every 3 seconds
+	var frequencyInMs = 30000;    // repeat every 30 seconds
 	var self = this;
 	setTimeout(function() {
 		var randomTemp = 40;                              	   // start at 40

@@ -7,6 +7,5 @@ module.exports = (sequelize, DataTypes) ->
     access_key: {type: DataTypes.STRING, unique: true},
     name: DataTypes.STRING,
     description: DataTypes.TEXT,
-    created_date: DataTypes.DATE,
     owner_email: DataTypes.STRING
   }, {underscored: true})
