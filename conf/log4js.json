@@ -3,7 +3,7 @@
     {
       "category": "default",
       "type": "logLevelFilter",
-      "level": "DEBUG",
+      "level": "ALL",
       "appender": {
         "type": "file",
         "filename": "log/errors.log",
