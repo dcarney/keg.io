@@ -1,103 +1,15 @@
-/* Author: Chris Castle & Dylan Carney
 
-*/
-var temperatureHistoryChart;
-var pourHistoryChart;
-var flowData = [];
-var flowRateGauge;
-var tempGauge;
-var beerGauge;
-var g_pourHistoryChart;   
-var g_pourHistoryAllTimeChart;
-// temperature history chart options
-
-var beerGaugeOptions = {
-	redFrom:0,
-	redTo: 10,
-	yellowFrom:10,
-	yellowTo:30,
-	yellowColor: '#FF6E00',
-	greenFrom:80,
-	greenTo:100,
-	width: 150,
-	height: 150,
-	data : {}
-}
-
-
-var tempGaugeOptions = {
-	min:30,
-	max:70,
-	greenFrom:30,
-	greenTo:48,
-	greenColor:'#1FD8D8',
-	yellowFrom:48,
-	yellowTo:60,
-	yellowColor: '#FF6E00',
-	redFrom:60,
-	redTo:70,
-	redColor: 'red',
-	width:150,
-	height:150,
-	data:{}
-}
-
-var flowRateGaugeOptions = {
-	redFrom:70,
-	redTo:80,
-	yellowFrom:60,
-	yellowTo:70,
-	yellowColor: '#FF6E00',
-	width:150,
-	height:150,
-	min: 0,
-	max: 80,
-	data:{}
-}
-
-
-var drawGauges = function(){
-	    tempGaugeOptions.data = new google.visualization.DataTable();
-        tempGaugeOptions.data.addColumn('string', 'Label');
-        tempGaugeOptions.data.addColumn('number', 'Value');
-        tempGaugeOptions.data.addRows(1);
-        tempGaugeOptions.data.setValue(0, 0, 'Temp °F');
-        tempGaugeOptions.data.setValue(0, 1, 0);
-        
-        flowRateGaugeOptions.data = new google.visualization.DataTable();
-        flowRateGaugeOptions.data.addColumn('string', 'Label');
-        flowRateGaugeOptions.data.addColumn('number', 'Value');
-        flowRateGaugeOptions.data.addRows(1);
-        flowRateGaugeOptions.data.setValue(0, 0, 'Flow');
-        flowRateGaugeOptions.data.setValue(0, 1, 0);
-        
-      	tempGauge = new google.visualization.Gauge(document.getElementById('temp_chart'));
-        tempGauge.draw(tempGaugeOptions.data , tempGaugeOptions);
-        
-        flowRateGauge =  new google.visualization.Gauge(document.getElementById('flow_chart'));
-        flowRateGauge.draw(flowRateGaugeOptions.data,flowRateGaugeOptions);
-        window.setInterval(needleBump,100);
-        
-	    beerGaugeOptions.data = new google.visualization.DataTable();
-        beerGaugeOptions.data.addColumn('string', 'Label');
-        beerGaugeOptions.data.addColumn('number', 'Value');
-        beerGaugeOptions.data.addRows(1);
-        beerGaugeOptions.data.setValue(0, 0, 'Beer %');
-        beerGaugeOptions.data.setValue(0, 1, 0);
-        beerGauge =  new google.visualization.Gauge(document.getElementById('beer_chart'));
-        beerGauge.draw(beerGaugeOptions.data,beerGaugeOptions);
-}
 
 var kegio = {
 	
 	
 	accessKey: '1111',
-
-  charts : [{
+/*
+  gauges:[ 
+  {
       target:'flow_chart',
       type:'gauge',
       label:'Flow',
-      data: (new google.visualization.DataTable()),
       options:{ 
                 redFrom:70,
                 redTo:80,
@@ -107,17 +19,13 @@ var kegio = {
                 width:150,
                 height:150,
                 min: 0,
-                max: 80,
-                data:{}
+                max: 80
               }   
   
     },{
       target:'temp_chart',
       type:'gauge',
       label:'Temp °F',
-      data: function(){
-        return this.getCurrentTemp();
-      },
       options:{
                 min:30,
                 max:70,
@@ -131,8 +39,7 @@ var kegio = {
                 redTo:70,
                 redColor: 'red',
                 width:150,
-                height:150,
-                data:{}
+                height:150
               }
 
 
@@ -140,7 +47,6 @@ var kegio = {
       target:'beer_chart',
       type:'gauge',
       label:'Beer %',
-      data:[],
       options:{
         redFrom:0,
         redTo: 10,
@@ -150,16 +56,13 @@ var kegio = {
         greenFrom:80,
         greenTo:100,
         width: 150,
-        height: 150,
-        data : {}
+        height: 150
       }
 
 
-    }
-
-
-    ],
-
+    ]
+  ,
+*/
 needleBump : function(){
   if(flowRateGaugeOptions.data.getValue(0, 1)!=0){
     var bump = Math.random()>.5?1:-1;
@@ -199,8 +102,13 @@ googleDatafy: function(g_data,json){
 	},
 
 	getCurrentTemp: function(callback){
-		this.sendRequest('/kegerators/'+this.accessKey+'/temperatures',callback,null,false);
-		
+		  this.getTemperatures(function(data){
+        callback(data[0].temperature);
+      },1);
+   },
+
+   getTemperatures : function (callback, n){
+      this.sendRequest('/kegerators/'+this.accessKey+'/temperatures?recent='+n,callback);
    },
 	
 	getKegs: function(callback, n){
@@ -210,6 +118,29 @@ googleDatafy: function(g_data,json){
 			this.sendRequest('/kegerators/' + this.accessKey + '/kegs?recent=' + n,callback);
 			
 		},
+
+    getPours : function(callback, n){
+      n = n==null?1:n;
+      this.sendRequest('/kegerators/' + this.accessKey + '/pours?recent='+n,callback);
+    },
+
+    getUsers : function(callback){
+      this.sendRequest('/users',callback);
+    },
+
+    getUserInfo : function(rfid,callback){
+        this.sendRequest('/users/'+rfid,callback);
+    },
+
+    getUserCoasters : function(rfid,callback){
+        this.sendRequest('/coasters/'+rfid,callback);
+    },
+
+    getCoasters:function(callback){
+        this.sendRequest('/coasters');
+    },
+
+
 	
 	
   handleError: function(data) {
