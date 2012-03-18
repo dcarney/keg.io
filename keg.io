@@ -368,6 +368,9 @@ keg.on 'flow', (kegerator_access_key, rate) ->
 keg.on 'temp', (kegerator_access_key, temp) ->
   sendToAttachedSockets kegerator_access_key, 'temp', temp
 
+keg.on 'deny', (kegerator_access_key, rfid) ->
+  sendToAttachedSockets kegerator_access_key, 'deny', rfid
+
 io.sockets.on 'connection', (socket) ->
   logger.info 'browser client connected'
   sendToSocket socket, 'hello', 'world'

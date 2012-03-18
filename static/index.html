@@ -33,6 +33,7 @@
 <script src="https://www.google.com/uds/?file=visualization&v=1&packages=gauge" language="javascript"></script>
 <script type="text/javascript" >
 google.load("visualization", "1", {packages:["corechart"]});
+google.load("visualization", "1", {packages:["imagesparkline"]});
 </script>
   </head>
 
@@ -41,7 +42,7 @@ google.load("visualization", "1", {packages:["corechart"]});
     <h1>keg.io</h1>
     </header>
     <div class="container_12">
-      <div class="grid_4">
+      <div class="grid_4 left">
         <div class="beer_info grid_4" id="currentkeg">
           <img id="beer_label" src="{{image_path}}"/>
           <ul>
@@ -52,17 +53,19 @@ google.load("visualization", "1", {packages:["corechart"]});
             <li><em><span id="beer_desc">{{description}}</span></em></li>
           <ul>
         </div>
-      <div class="grid_1">
+      <div class="grid_2">
         <div id="flow_chart" class="gauges"></div>
         <div id="temp_chart" class="gauges"></div>
         <div id="beer_chart" class="gauges"></div> 
       </div>
+      <div class="jewel grid_1 locked"></div>
+      <div class="jewel grid_1 open"></div>
     </div>
     <div class="grid_5">
       <div id="pours">
 
         <div id="drinker_template" class="drinker grid_5">
-          <img src="http://www.gravatar.com/avatar/{{hash}}?s={{image_size}}" />
+          <img src="http://www.gravatar.com/avatar/{{hash}}?s={{image_size}}" class="gravatar" />
           <ul>
             <li>Name:{{first_name}} {{last_name}}</li>
             <li>Member Since: {{created_at}}</li>
@@ -79,7 +82,8 @@ google.load("visualization", "1", {packages:["corechart"]});
     <!-- Le javascript
     ================================================== -->
     <!-- Placed at the end of the document so the pages load faster -->
-<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.4.2/jquery.min.js"></script>
+<!--<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.4.2/jquery.min.js"></script>-->
+<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js"></script>
 <script src="/js/jquery-ui-1.8.10.custom.min.js"></script>
 <!-- <script type="text/javascript" src="/js/socket.io.js"></script> -->
 <!-- <script src="http://localhost:8888/socket.io/socket.io.js"></script> -->
@@ -115,12 +119,19 @@ google.load("visualization", "1", {packages:["corechart"]});
         console.log(data);
         needleBump = window.setInterval(kegio.needleBump,200);
         kegio.getUserInfo(data.data,addPour);
+        $('.jewel.open').addClass('active');
     });
 
     socket.on('flow', function (data) {
-        console.log("flow event from server:");
-        console.log(data);
+        //console.log("flow event from server:");
+        //console.log(data);
         updateChart('flow_chart',data.data*1);
+        updateSpark('current_spark',data.data*1);
+    });
+
+    socket.on('deny',function (data) {
+      $('.jewel.locked').addClass('active');
+      window.setTimeout(function(){('.jewel.locked').removeClass('active')},2000)
     });
 
     socket.on('pour', function (data) {
@@ -129,7 +140,7 @@ google.load("visualization", "1", {packages:["corechart"]});
         window.clearInterval(needleBump);
         updateChart('flow_chart',0);
         $('#pours div.last span.ounces').text(data.data);
-        
+        $('.jewel.open').removeClass('active');
     });
 
 		kegio.getLastDrinkers(function(drinkers){
@@ -157,6 +168,7 @@ google.load("visualization", "1", {packages:["corechart"]});
             if(first){
               $(drinker).addClass('last');
             }
+            $(drinker).addClass('grid_5');
             $('#pours').append(drinker);
 
           });
@@ -168,7 +180,7 @@ google.load("visualization", "1", {packages:["corechart"]});
       //$('#pours').html(Mustache.to_html(pours_template,p))
 
 
-    },10);
+    },5);
 	
 		kegio.getKegs(function(kegs){
 			var current = kegs[0];
@@ -192,7 +204,7 @@ google.load("visualization", "1", {packages:["corechart"]});
       )       
       var opts = gauge.options;
 
-      charts[gauge.target] ={'chart':chart,'options':opts,'data':dt,'draw':function(){this.chart.draw(this.data,this.options)}};
+      charts[gauge.target] = {'chart':chart,'options':opts,'data':dt,'draw':function(){this.chart.draw(this.data,this.options)}};
       chart.draw(dt,opts);
       var target = gauge.target;
               if(gauge.data){
@@ -215,6 +227,14 @@ function updateChart(id,data){
   chart.draw();
 }
 
+function updateSpark(id,data){
+  var chart = charts[id];
+  chart.tick+=1;
+  chart.data.setValue(chart.tick,0,data);
+  //chart.data.addRow([{v:data}]);
+  chart.draw();
+}
+
 function addPour(user){
 
             //user['volume_ounces']= pour.volume_ounces;
@@ -222,12 +242,30 @@ function addPour(user){
     user['image_size']='160';
     user['volume_ounces'] = "Pouring...";
     var drinker = $(Mustache.render(drinker_template,user));
-    $(drinker).addClass('last');
+    $(drinker).addClass('last grid_5');
+    $(drinker).append('<div id="current_spark"></div>');
+    $('#pours div.last #current_spark').remove();
     $('#pours div.last').removeClass('last');
-    $('#pours').prepend(drinker);
-    if($('#pours').children().size()>10){
-      $('#pours div').last().remove();
+    $('#pours').prepend($(drinker).hide().fadeIn(2000));
+    if($('#pours').children().size()>5){
+      $('#pours div').last().fadeOut(2000).remove();
     }
+   var chart = new google.visualization.ImageSparkLine(document.getElementById('current_spark'));
+
+   var dt = new google.visualization.DataTable(
+       {
+         cols: [{id: 'flow', label: 'Flow', type: 'number'}
+                ],
+         rows: [{c:[{v:0}]},{c:[{v:0}]},{c:[{v:0}]},{c:[{v:0}]},{c:[{v:0}]},{c:[{v:0}]},{c:[{v:0}]},{c:[{v:0}]},{c:[{v:0}]},{c:[{v:0}]}]
+       },
+     0.6
+    ) 
+    var opts = {'showAxisLines':false,'showValueLabels':false,'layout':'v','width':200,height:40,fill:true,max:100};
+        
+    chart.draw(dt,opts);
+    charts['current_spark'] = {'chart':chart,'tick':0,'options':opts,'data':dt,'draw':function(){
+        this.chart.draw(this.data,this.options)
+      }};      
   }
 
 }
