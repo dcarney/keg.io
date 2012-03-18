@@ -6,6 +6,7 @@
 #
 fs          = require 'fs'
 sys         = require 'util'
+events      = require 'events'
 util        = require if process.binding('natives').util then 'util' else 'sys'
 keg_db      = require './keg.db'
 KegTwitter  = require './keg.twitter'
@@ -16,9 +17,9 @@ new_db      = require './keg.db.coffee'
 moment      = require 'moment'
 async       = require 'async'
 
-class Keg
+class Keg extends events.EventEmitter
   constructor: (logger, config) ->
-    process.EventEmitter.call(this)
+    events.EventEmitter.call this
     @logger = logger;
     @adminUiPassword = config.adminUiPassword
     @highTempThreshold = config.highTempThreshold
@@ -79,7 +80,6 @@ class Keg
     @models.Kegerator.hasMany(@models.Temperature, {foreignKey: 'kegerator_id'})
     @models.Keg.hasMany(@models.Pour, {foreignKey: 'keg_id'})
     @models.User.hasMany(@models.Pour, {foreignKey: 'rfid'})
-
     @models.Coaster.hasMany(@models.User)
     @models.User.hasMany(@models.Coaster)
 
@@ -111,6 +111,7 @@ class Keg
           keg_id: 1
           volume_ounces: 0
           })
+        @emit 'scan', access_key, rfid
       else
         # invalid rfid; delete any Pour object we might have had for that kegerator
         delete @kegerator_last_scans[access_key]
@@ -124,7 +125,9 @@ class Keg
       # remove the pour obj from memory, calculate the total volume of the pours,
       # and save to the DB if > 0
       delete @kegerator_last_scans[access_key]
-      if pour.calculateVolume() > 0
+      volume = pour.calculateVolume()
+      if  volume > 0
+        @emit 'pour', access_key, volume
         pour.save().error( (err) -> cb(err) ).success () -> cb()
       else
         cb() # no-op
@@ -132,6 +135,7 @@ class Keg
   addFlow: (access_key, rate, cb) ->
       valid = @kegerator_last_scans[access_key]?
       if valid
+        @emit 'flow', access_key, rate
         @kegerator_last_scans[access_key].addFlow rate
       cb(valid)
 
@@ -139,38 +143,17 @@ class Keg
       @models.Temperature.build({
         temperature: temp,
         kegerator_id: access_key}).save().success () ->
+        @emit 'temp', access_key, temp
         cb(true)
 
-  formatPourTrend: (rows, callback) ->
-    formattedData = []
-    if (rows)
-      for row in rows
-        formattedData.push( [row.first_name + " " + row.last_name, row.volume ] )
-    data = JSON.stringify({ name: 'pourHistory', value: formattedData });
-    callback(data)
-
-  getPourTrend: (callback) ->
-    @kegDb.getActiveKeg (rows) =>
-      if rows && rows.length > 0
-        @kegDb.getPourTotalsByUserByKeg rows[0].keg_id, (rows) =>
-          @formatPourTrend(rows, callback)
-
-  getPourTrendAllTime: (callback) ->
-    @kegDb.getPourTotalsByUser (rows) =>
-      @formatPourTrend(rows, callback)
-
-  getRecentHistory: (callback) ->
-    @kegDb.getRecentHistory (rows) ->
-      callback JSON.stringify(rows)
-
-  recentTemperatures: (access_key, num_temps, cb) ->
+  kegeratorTemperatures: (access_key, num_temps, cb) ->
     @models.Kegerator.find({where: {access_key: access_key}}).success (kegerator) =>
       query = {where: {kegerator_id: kegerator.access_key}}
       query.limit = num_temps if num_temps?
       @models.Temperature.findAll(query).success (temps) =>
         cb(@models.mapAttribs(temp) for temp in temps)
 
-  recentKegs: (access_key, num_kegs, cb) ->
+  kegeratorKegs: (access_key, num_kegs, cb) ->
     @models.Kegerator.find({where: {access_key: access_key}}).success (kegerator) =>
       query = {where: {kegerator_id: kegerator.id}, order: 'tapped_date DESC'}
       query.limit = num_kegs if num_kegs?
@@ -180,14 +163,14 @@ class Keg
           k.image_path = "#{@config.image_host}#{k.image_path}"
         cb(kegs)
 
-  recentUsers: (access_key, num_pours, cb) ->
-    @recentPours access_key, num_pours, (pours) =>
+  kegeratorUsers: (access_key, num_pours, cb) ->
+    @kegeratorPours access_key, num_pours, (pours) =>
       cb('') unless pours? && pours.length >= 1
       rfids = pours.map (pour) -> pour.rfid
       @models.User.findAll({where: {rfid: rfids}}).success (users) =>
         cb(@models.mapAttribs(user) for user in users)
 
-  recentPours: (access_key, num_pours, cb) ->
+  kegeratorPours: (access_key, num_pours, cb) ->
     suffix = if num_pours then "LIMIT #{num_pours}" else ''
     @models.Kegerator.find({where: {access_key: access_key}}).success (kegerator) =>
       sql = "SELECT * FROM `pours` p " +
@@ -198,27 +181,19 @@ class Keg
       @sequelize.query(sql, @models.Pour).on 'success', (pours) =>
         cb(@models.mapAttribs(pour) for pour in pours)
 
-  lastDrinker: (access_key, cb) ->
-    @recentPours access_key, 1, (pours) =>
-      cb '' unless pours && pours.length == 1
-      @models.User.find({where: {rfid: pours[0].rfid}}).success (user) =>
-        result = @models.mapAttribs user
-        user.emailHash (hash) ->
-          result['hash'] = hash
-          cb result
-
   # a thin 'wrapper' around the user.emailHash method, for user with the
   # async.map call below.  There's probably a cleaner way to do this...
   getUserGravatar: (user, cb) ->
     user.emailHash (hash) ->
       user.gravatar = "http://www.gravatar.com/avatar/#{hash}?s=256"
+      user.hash = hash
       cb(null, user)
 
   users: (rfid, cb) =>
     query = if rfid? then {where: {rfid: rfid}} else {}
     @models.User.findAll(query).success (users) =>
       async.map users, @getUserGravatar, (err) =>
-        cb(@models.mapAttribs(user, ['email'], ['gravatar']) for user in users)
+        cb(@models.mapAttribs(user, ['email'], ['gravatar', 'hash']) for user in users)
 
   userCoasters: (rfid, cb) ->
     @models.User.find({where: {rfid: rfid}}).success (user) =>

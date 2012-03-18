@@ -11,6 +11,13 @@ module.exports.populate = (models, cb) ->
     owner_email: 'chris.castle@vivaki.com'
   })
 
+  another_kegerator = models.Kegerator.build({
+    access_key: 2222,
+    name: 'Some Other Kegerator'
+    description: 'The second home of keg.io',
+    owner_email: 'dcarney@gmail.com'
+  })
+
   mannys = models.Keg.build({
     kegerator_id: 1,
     beer: "Mannys",
@@ -97,6 +104,7 @@ module.exports.populate = (models, cb) ->
     user.addCoaster(coaster)
   chainer.add(mannys.save())
          .add(vnc_kegerator.save())
+         .add(another_kegerator.save())
          .add(dc.save())
          .add(crc.save())
          .add(ck.save())

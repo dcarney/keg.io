@@ -172,8 +172,8 @@ JSON.</p>
 </h2>
 <p>'API' routes are routes designed for keg.io clients (kegerators, soda machines,
 etc.) to call to interact with the central keg.io server.  All of these routes
-require a signed request, utilizing the access key and secret key that are
-registered with the central keg.io server.</p>
+require a signed request (see below for details), utilizing the access key and
+secret key that are registered with the central keg.io server.</p>
 
 <p>Responses for API routes have a content type of 'text/plain'</p>
 
@@ -196,7 +196,7 @@ items, concatenated into a single string:</p>
 </ul>
 </li>
 <li><p>Sign the assembled payload, using the secret key assigned to you by keg.io.
-The signature is calculated using
+The signature is a hex value calculated using
 <a href="http://en.wikipedia.org/wiki/HMAC">HMAC SHA256</a>.</p></li>
 <li><p>Base64 encode the resulting signature</p></li>
 <li><p>Append the signature to the querystring/data using the key 'signature'</p></li>
@@ -212,7 +212,8 @@ The signature is calculated using
 <p>API routes adhere to the following HTTP response code conventions:
 - 200: Request was received and processed successfully
 - 400: Bad request syntax, or signature verfification failed
-- 401: Unauthorized.  Unknown access key.</p>
+- 401: Unauthorized.  Unknown access key.
+- 404: Unknown resource requested.  Either the kegerator ID was incorrect or an invalid ACTION was specified.</p>
 
 </section></section></section><section class="api h2 api_verify_an_rfid_card"><h2 class="api" id="api_verify_an_rfid_card">API: verify an RFID card <span class="type"></span>
 </h2>
@@ -238,6 +239,9 @@ is unknown to keg.io</p>
 <p>Where <strong>ACCESS_KEY</strong> is an access key registered with the keg.io server
    and <strong>RATE</strong> is a the current flow rate of the kegerator in liters/min</p>
 
+<p>This and all subsequent flow requests are associated with the last rfid seen
+on the given kegerator until the special "flow/end" request is received</p>
+
 <section class=" h4 examples"><h4>Examples:</h4>
 
 <section class=" h5 report_a_flow_of_12_liters_min_on_kegerator_1111"><h5>Report a flow of 12 liters/min on kegerator 1111:</h5>
@@ -252,7 +256,8 @@ is unknown to keg.io</p>
 <p>Where <strong>ACCESS_KEY</strong> is an access key registered with the keg.io server</p>
 
 <p>Reports that the flow for the most recent RFID has completed on this
-kegerator</p>
+kegerator.  Any subsequnt 'flow' requests after this request, but before
+another successful 'scan' request will be ignored.</p>
 
 </section><section class="api h2 api_report_the_current_kegerator_temperature"><h2 class="api" id="api_report_the_current_kegerator_temperature">API: report the current kegerator temperature <span class="type"></span>
 </h2>
