@@ -11,7 +11,7 @@
 <link rel="stylesheet" type="text/css" media="all" href="css/960.css" />
     <!-- Le styles -->
   <link href='http://fonts.googleapis.com/css?family=Cabin+Sketch:bold' rel='stylesheet' type='text/css'>
-  <link href='http://fonts.googleapis.com/css?family=Rock+Salt' rel='stylesheet' type='text/css'>  
+  <link href='http://fonts.googleapis.com/css?family=Rock+Salt' rel='stylesheet' type='text/css'>
   <link href='http://fonts.googleapis.com/css?family=Annie+Use+Your+Telescope' rel='stylesheet' type='text/css'>
   <link rel="stylesheet" type="text/css" href="css/style.css" media="screen" />
     <link rel="stylesheet" href="/css/forms.css">
@@ -27,7 +27,7 @@
     <link rel="apple-touch-icon" href="/images/apple-touch-icon.png">
     <link rel="apple-touch-icon" sizes="72x72" href="/images/apple-touch-icon-72x72.png">
     <link rel="apple-touch-icon" sizes="114x114" href="/images/apple-touch-icon-114x114.png">
-    
+
     <script src="https://www.google.com/jsapi?key=ABQIAAAA-hloRCoCScu-_bN2fSn1sRR4EqRj3RNZnoYuzojShxUjcPQKRRTnvFxdzgemDA4fIDmabxpsMJwNew" type="text/javascript">
 </script>
 <script src="https://www.google.com/uds/?file=visualization&v=1&packages=gauge" language="javascript"></script>
@@ -43,7 +43,7 @@ google.load("visualization", "1", {packages:["corechart"]});
     <div class="container_12">
       <div class="grid_4">
         <div class="beer_info grid_4" id="currentkeg">
-          <img id="beer_label" src="{{image_path}}" width="220" height="218"/>
+          <img id="beer_label" src="{{image_path}}"/>
           <ul>
             <li><strong>On tap:</strong> <span id="beer_name">{{beer}}</span></li>
             <li><strong>Style:</strong> <span id="beer_style">{{beer_style}}</span></li>
@@ -62,11 +62,11 @@ google.load("visualization", "1", {packages:["corechart"]});
       <div id="pours">
 
         <div id="drinker_template" class="drinker grid_5">
-          <img src="{{gravatar}}" />
+          <img src="http://www.gravatar.com/avatar/{{hash}}?s={{image_size}}" />
           <ul>
             <li>Name:{{first_name}} {{last_name}}</li>
             <li>Member Since: {{created_at}}</li>
-            <li>Ounces Poured: {{volume_ounces}}</li>
+            <li>Ounces Poured: <span class="ounces">{{volume_ounces}}</span></li>
           </ul>
   			</div>	
 
@@ -79,17 +79,59 @@ google.load("visualization", "1", {packages:["corechart"]});
     <!-- Le javascript
     ================================================== -->
     <!-- Placed at the end of the document so the pages load faster -->
-    <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.4.2/jquery.min.js"></script>
+<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.4.2/jquery.min.js"></script>
 <script src="/js/jquery-ui-1.8.10.custom.min.js"></script>
-      <script type="text/javascript" src="/js/socket.io.js"></script>
-     <script type="text/javascript" src="/js/mustache.js"></script>
+<!-- <script type="text/javascript" src="/js/socket.io.js"></script> -->
+<!-- <script src="http://localhost:8888/socket.io/socket.io.js"></script> -->
+<script src="/socket.io/socket.io.js"></script>
+<script src="/js/mustache.js"></script>
+
 <script type="text/javascript">
     document.write('<scr'+'ipt type="text/javasc'+'ript" src="/js/keg.io.client.js?'+Math.random()+'" ></scr'+'ipt>');
     </script>
 	<script type="text/javascript" >
+  charts = [];
+  needleBump = null;
 	$(document).ready(function(){
 		isEditTimeout = null;
 		reloadAttempt = 0;
+
+    var socket = io.connect('http://localhost:8081');
+
+    socket.on('connect', function () {
+      var kegerator_id = 1111; // the kegerator you want to "listen to"
+      socket.emit('attach', kegerator_id);
+      socket.on('attached', function () {
+        console.log('attached to ' + kegerator_id + '!');
+      });
+    });
+
+    socket.on('hello', function (data) {
+        console.log(data);
+    });
+
+    socket.on('scan', function (data) {
+        console.log("scan event from server:");
+        console.log(data);
+        needleBump = window.setInterval(kegio.needleBump,200);
+        kegio.getUserInfo(data.data,addPour);
+    });
+
+    socket.on('flow', function (data) {
+        console.log("flow event from server:");
+        console.log(data);
+        updateChart('flow_chart',data.data*1);
+    });
+
+    socket.on('pour', function (data) {
+        console.log("pour event from server:");
+        console.log(data);
+        window.clearInterval(needleBump);
+        updateChart('flow_chart',0);
+        $('#pours div.last span.ounces').text(data.data);
+        
+    });
+
 		kegio.getLastDrinkers(function(drinkers){
 			var current = drinkers[0];
 			//$('#currentDrinkerImage').attr("src","http://www.gravatar.com/avatar/" + current.hash + "?s=250&d=mm");
@@ -101,17 +143,24 @@ google.load("visualization", "1", {packages:["corechart"]});
 
       for(var i = 0; i < pours.length;i++){
         var pour = pours[i];
-
-          kegio.getUserInfo(pour.rfid,function(user,i){
-            user['volume_ounces']= pour.volume_ounces;
-
-            var drinker = $(Mustache.render(drinker_template,user));
+        var ozs = {'volume_ounces':pour.volume_ounces};
+          kegio.getUserInfo(pour.rfid,function(user){
+            user['volume_ounces']= ozs.volume_ounces;
+            var first = false;
             if($('#pours').children().size()==0){
+              first = true;
+              user['image_size']='160';
+            }else{
+              user['image_size']= '100';
+            }
+            var drinker = $(Mustache.render(drinker_template,user));
+            if(first){
               $(drinker).addClass('last');
             }
             $('#pours').append(drinker);
 
           });
+
 
       }
 
@@ -128,8 +177,61 @@ google.load("visualization", "1", {packages:["corechart"]});
 			$('#currentKegImage').attr('src',current.image_path);
 		});
 
+    var gauges = kegio.gauges;
+    for(var i = 0; i < gauges.length;i++){
+      var gauge = gauges[i];
+      var chart = new google.visualization.Gauge(document.getElementById(gauges[i].target));
+      var dt = new google.visualization.DataTable(
+           {
+             cols: [{id: 'label', label: 'Label', type: 'string'},
+                    {id:'value',label:'Value',type:'number'}
+                    ],
+             rows: [{c:[{v:gauge.label},{v:0}]}]
+           },
+         0.6
+      )       
+      var opts = gauge.options;
+
+      charts[gauge.target] ={'chart':chart,'options':opts,'data':dt,'draw':function(){this.chart.draw(this.data,this.options)}};
+      chart.draw(dt,opts);
+      var target = gauge.target;
+              if(gauge.data){
+                gauge.data(function(data){
+                       // flowRateGaugeOptions.data.setValue(0,1,value*1);
+                      //flowRateGauge.draw(flowRateGaugeOptions.data,flowRateGaugeOptions);
+                      updateChart(target,data);
+
+                },target)
+
+
+              } 
+    }
+
 	});
+
+function updateChart(id,data){
+  var chart = charts[id];
+  chart.data.setValue(0,1,data);
+  chart.draw();
+}
+
+function addPour(user){
+
+            //user['volume_ounces']= pour.volume_ounces;
+  if(typeof user.rfid != 'undefined'){
+    user['image_size']='160';
+    user['volume_ounces'] = "Pouring...";
+    var drinker = $(Mustache.render(drinker_template,user));
+    $(drinker).addClass('last');
+    $('#pours div.last').removeClass('last');
+    $('#pours').prepend(drinker);
+    if($('#pours').children().size()>10){
+      $('#pours div').last().remove();
+    }
+  }
+
+}
 </script>
-  
+
 
 </body></html>

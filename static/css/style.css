@@ -12,20 +12,28 @@ border-radius: 6px;
 		}
 
 
-.drinker ul
-, .drinker img{
+.drinker ul{
 	float: left;
-
 }
 
-.drinker dd{
+.drinker img{
 	float: left;
+	clear: left;
 }
 
 
 .drinker li{
 	list-style-type: none;
 	margin-left: 0;
+}
+
+.drinker img {
+	width: 100px;
+	height: 100px;
+}
+.drinker.last img{
+	width: 160px;
+	height: 160px;
 }
 
 	/*

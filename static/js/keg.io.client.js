@@ -4,12 +4,13 @@ var kegio = {
 	
 	
 	accessKey: '1111',
-/*
+
   gauges:[ 
   {
       target:'flow_chart',
       type:'gauge',
       label:'Flow',
+      data:0,
       options:{ 
                 redFrom:70,
                 redTo:80,
@@ -26,6 +27,12 @@ var kegio = {
       target:'temp_chart',
       type:'gauge',
       label:'Temp °F',
+      data:function(callback){
+        kegio.getCurrentTemp(callback);
+      },
+      update:function(){
+        kegio.getCurrentTemp(callback,this.target);
+      },
       options:{
                 min:30,
                 max:70,
@@ -46,29 +53,30 @@ var kegio = {
     },{
       target:'beer_chart',
       type:'gauge',
-      label:'Beer %',
+      label:'Beer',
+      data:0,
       options:{
         redFrom:0,
-        redTo: 10,
+        redTo:10,
         yellowFrom:10,
         yellowTo:30,
         yellowColor: '#FF6E00',
         greenFrom:80,
         greenTo:100,
-        width: 150,
-        height: 150
+        width:150,
+        height:150
       }
-
-
-    ]
+    }
+      ]
   ,
-*/
+
 needleBump : function(){
-  if(flowRateGaugeOptions.data.getValue(0, 1)!=0){
+  flowchart = charts['flow_chart'];
+  if(flowchart.data.getValue(0, 1)!=0){
     var bump = Math.random()>.5?1:-1;
-    var nv = flowRateGaugeOptions.data.getValue(0, 1) + bump;
-    flowRateGaugeOptions.data.setValue(0,1,nv);
-    flowRateGauge.draw(flowRateGaugeOptions.data,flowRateGaugeOptions);
+    var nv = flowchart.data.getValue(0, 1) + bump;
+    flowchart.data.setValue(0,1,nv);
+    flowchart.draw(flowchart.data,flowchart.options);
   }
 },
      
@@ -106,9 +114,9 @@ googleDatafy: function(g_data,json){
       this.sendRequest('/kegerators/' + this.accessKey + '/lastdrinker',callback);
   },
 
-	getCurrentTemp: function(callback){
+	getCurrentTemp: function(callback,target){
 		  this.getTemperatures(function(data){
-        callback(data[0].temperature);
+        callback(data[0].temperature,target);
       },1);
    },
 
@@ -133,9 +141,9 @@ googleDatafy: function(g_data,json){
       this.sendRequest('/users',callback);
     },
 
-    getUserInfo : function(rfid,callback,user){
+    getUserInfo : function(rfid,callback){
         this.sendRequest('/users/'+rfid,function(users){
-          callback(users[0],user);
+          callback(users[0]);
         });
     },
 
