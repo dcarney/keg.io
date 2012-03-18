@@ -101,6 +101,11 @@ googleDatafy: function(g_data,json){
   		
 	},
 
+  getLastDrinker: function(callback){
+
+      this.sendRequest('/kegerators/' + this.accessKey + '/lastdrinker',callback);
+  },
+
 	getCurrentTemp: function(callback){
 		  this.getTemperatures(function(data){
         callback(data[0].temperature);
@@ -128,8 +133,10 @@ googleDatafy: function(g_data,json){
       this.sendRequest('/users',callback);
     },
 
-    getUserInfo : function(rfid,callback){
-        this.sendRequest('/users/'+rfid,callback);
+    getUserInfo : function(rfid,callback,user){
+        this.sendRequest('/users/'+rfid,function(users){
+          callback(users[0],user);
+        });
     },
 
     getUserCoasters : function(rfid,callback){
