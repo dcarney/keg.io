@@ -11,12 +11,36 @@ border-radius: 6px;
 
 		}
 
+.left{
+	background: url('/images/kegio_left.png') no-repeat top left;
+}
 
-.drinker ul{
+.jewel {
+	height: 40px;
+}
+
+.jewel.locked{
+	background: url('/images/red_jewel_off.png') no-repeat center center;
+}
+
+.jewel.locked.acive, .jewel.open.active{
+	background: url('/images/red_jewel_on.png') no-repeat center center;
+}
+.jewel.open{
+	background: url('/images/red_jewel_off.png') no-repeat center center;
+}
+
+.drinker{
+	margin-bottom: 5px;
 	float: left;
 }
 
-.drinker img{
+.drinker ul{
+	float: left;
+	padding-left: 5px;
+}
+
+.drinker img.gravatar{
 	float: left;
 	clear: left;
 }
@@ -27,11 +51,25 @@ border-radius: 6px;
 	margin-left: 0;
 }
 
-.drinker img {
+.drinker img.gravatar {
 	width: 100px;
 	height: 100px;
 }
-.drinker.last img{
+
+.drinker {
+	background: white;
+	padding: 4px;
+	line-height: 1;
+	border: 1px solid #DDD;
+	-webkit-border-radius: 4px;
+	-moz-border-radius: 4px;
+	border-radius: 4px;
+	-webkit-box-shadow: 0 1px 1px rgba(0, 0, 0, 0.075);
+	-moz-box-shadow: 0 1px 1px rgba(0, 0, 0, 0.075);
+	box-shadow: 0 1px 1px rgba(0, 0, 0, 0.075);
+}
+
+.drinker.last img.gravatar{
 	width: 160px;
 	height: 160px;
 }
