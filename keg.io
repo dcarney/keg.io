@@ -148,6 +148,10 @@ server.get '/kegerators/:accessKey/users', (req, res, next) ->
   keg.recentUsers req.params.accessKey, req.query['recent'], (result) ->
     res.send result, 200
 
+server.get '/kegerators/:accessKey/lastDrinker', (req,res,next) ->
+  keg.lastDrinker req.params.accessKey, (result) ->
+    res.send result, 200
+
 # ## UI: get pours for a kegerator
 #   `GET /kegerators/ACCESS_KEY/pours`
 #

@@ -1,5 +1,6 @@
 body {
-	background: url('/images/diamondplate.jpg') repeat;
+	background-image: url("/images/wood-texture-background.jpg");
+	background-repeat: repeat;
 	}
 	
 	.row div{
@@ -9,6 +10,24 @@ body {
 border-radius: 6px;
 
 		}
+
+
+.drinker ul
+, .drinker img{
+	float: left;
+
+}
+
+.drinker dd{
+	float: left;
+}
+
+
+.drinker li{
+	list-style-type: none;
+	margin-left: 0;
+}
+
 	/*
 .insetText {
         font-family: Consolas, Lucida Console, Courier, Courier New;
