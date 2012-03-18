@@ -186,13 +186,14 @@ class Keg extends events.EventEmitter
   getUserGravatar: (user, cb) ->
     user.emailHash (hash) ->
       user.gravatar = "http://www.gravatar.com/avatar/#{hash}?s=256"
+      user.hash = hash
       cb(null, user)
 
   users: (rfid, cb) =>
     query = if rfid? then {where: {rfid: rfid}} else {}
     @models.User.findAll(query).success (users) =>
       async.map users, @getUserGravatar, (err) =>
-        cb(@models.mapAttribs(user, ['email'], ['gravatar']) for user in users)
+        cb(@models.mapAttribs(user, ['email'], ['gravatar', 'hash']) for user in users)
 
   userCoasters: (rfid, cb) ->
     @models.User.find({where: {rfid: rfid}}).success (user) =>
