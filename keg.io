@@ -8,7 +8,7 @@ sys 				= require 'util'
 url 				= require 'url'
 path        = require 'path'
 querystring = require 'querystring'
-io 					= require 'socket.io'
+socket_io 	= require 'socket.io'
 Keg 			  = require './lib/keg'
 log4js 			= require 'log4js'
 connect 		= require 'connect'
@@ -133,7 +133,7 @@ server.get '/config/socketPort', (req, res, next) ->
 #   chronological order
 #
 server.get '/kegerators/:accessKey/temperatures', (req, res, next) ->
-  keg.recentTemperatures req.params.accessKey, req.query['recent'], (result) ->
+  keg.kegeratorTemperatures req.params.accessKey, req.query['recent'], (result) ->
     res.send result, 200
 
 # ## UI: get users for a kegerator, based on recent pours
@@ -145,7 +145,7 @@ server.get '/kegerators/:accessKey/temperatures', (req, res, next) ->
 #   where **N** is the number of recent pours to retrieve users from
 #
 server.get '/kegerators/:accessKey/users', (req, res, next) ->
-  keg.recentUsers req.params.accessKey, req.query['recent'], (result) ->
+  keg.kegeratorUsers req.params.accessKey, req.query['recent'], (result) ->
     res.send result, 200
 
 # ## UI: get pours for a kegerator
@@ -162,7 +162,7 @@ server.get '/kegerators/:accessKey/users', (req, res, next) ->
 #     GET /1111/recentPours/10
 #
 server.get '/kegerators/:accessKey/pours', (req, res, next) ->
-  keg.recentPours req.params.accessKey, req.query['recent'], (result) ->
+  keg.kegeratorPours req.params.accessKey, req.query['recent'], (result) ->
     res.send result, 200
 
 # ## UI: get kegs for a kegerator
@@ -175,7 +175,7 @@ server.get '/kegerators/:accessKey/pours', (req, res, next) ->
 #   chronological order
 #
 server.get '/kegerators/:accessKey/kegs', (req, res, next) ->
-  keg.recentKegs req.params.accessKey, req.query['recent'], (result) ->
+  keg.kegeratorKegs req.params.accessKey, req.query['recent'], (result) ->
     res.send result, 200
 
 # ## UI: get info about all users
@@ -216,8 +216,8 @@ server.get '/coasters/:id?', (req, res, next) ->
 # ## API routes
 # 'API' routes are routes designed for keg.io clients (kegerators, soda machines,
 # etc.) to call to interact with the central keg.io server.  All of these routes
-# require a signed request, utilizing the access key and secret key that are
-# registered with the central keg.io server.
+# require a signed request (see below for details), utilizing the access key and
+# secret key that are registered with the central keg.io server.
 #
 # Responses for API routes have a content type of 'text/plain'
 #
@@ -234,7 +234,7 @@ server.get '/coasters/:id?', (req, res, next) ->
 #          If no querystring or form data is being sent, then no question mark
 #          is used.
 # - Sign the assembled payload, using the secret key assigned to you by keg.io.
-#   The signature is calculated using
+#   The signature is a hex value calculated using
 #   [HMAC SHA256](http://en.wikipedia.org/wiki/HMAC).
 #
 # - Base64 encode the resulting signature
@@ -252,6 +252,7 @@ server.get '/coasters/:id?', (req, res, next) ->
 # - 200: Request was received and processed successfully
 # - 400: Bad request syntax, or signature verfification failed
 # - 401: Unauthorized.  Unknown access key.
+# - 404: Unknown resource requested.  Either the kegerator ID was incorrect or an invalid ACTION was specified.
 api_middlewares = [middleware.accessKey(), middleware.verify(keys)]
 
 # helper method to format API responses for kegerator clients
@@ -285,6 +286,9 @@ server.get '/api/kegerator/:accessKey/scan/:rfid', api_middlewares, (req, res, n
 #    Where **ACCESS_KEY** is an access key registered with the keg.io server
 #    and **RATE** is a the current flow rate of the kegerator in liters/min
 #
+# This and all subsequent flow requests are associated with the last rfid seen
+# on the given kegerator until the special "flow/end" request is received
+#
 # #### Examples:
 # ##### Report a flow of 12 liters/min on kegerator 1111:
 #     PUT http://keg.io/kegerator/1111/flow/12
@@ -303,7 +307,8 @@ server.put /^\/api\/kegerator\/([\d]+)\/flow\/([\d]+)$/, api_middlewares, (req, 
 #    Where **ACCESS_KEY** is an access key registered with the keg.io server
 #
 # Reports that the flow for the most recent RFID has completed on this
-# kegerator
+# kegerator.  Any subsequnt 'flow' requests after this request, but before
+# another successful 'scan' request will be ignored.
 server.put '/api/kegerator/:accessKey/flow/end', api_middlewares, (req, res, next) ->
   keg.endFlow req.params.accessKey, (err) ->
     if err?
@@ -332,3 +337,40 @@ server.use middleware.path()											# parse url path
 server.use connect.static(__dirname + '/static') 	# static file handling
 server.use server.router                          # UI and API routing
 server.listen Config.http_port
+
+io = socket_io.listen(server)
+
+sendToAllSockets = (event, data) ->
+  logger.debug "pushing #{event} event to all sockets"
+  io.sockets.emit event, {data: data}
+
+sendToSocket = (socket, event, data) ->
+  logger.debug "pushing #{event} event to socket #{socket.id}"
+  socket.emit event, {data: data}
+
+sendToAttachedSockets = (attachment, event, data) ->
+  logger.debug "pushing #{event} event to sockets attached to #{attachment}"
+  io.sockets.in(attachment).emit event, {data: data}
+
+keg.on 'scan', (kegerator_access_key, rfid) ->
+  sendToAttachedSockets kegerator_access_key, 'scan', rfid
+
+keg.on 'pour', (kegerator_access_key, volume) ->
+  sendToAttachedSockets kegerator_access_key, 'pour', volume
+
+keg.on 'flow', (kegerator_access_key, rate) ->
+  sendToAttachedSockets kegerator_access_key, 'flow', rate
+
+keg.on 'temp', (kegerator_access_key, temp) ->
+  sendToAttachedSockets kegerator_access_key, 'temp', temp
+
+io.sockets.on 'connection', (socket) ->
+  logger.info 'browser client connected'
+  sendToSocket socket, 'hello', 'world'
+
+  # events from browser client
+  socket.on 'attach', (kegerator_access_key) ->
+    console.log "attach request for #{kegerator_access_key}"
+    socket.join kegerator_access_key
+    console.log 'attached'
+    socket.emit 'attached'

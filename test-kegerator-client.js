@@ -1,61 +1,29 @@
-
-/*****************************
-	Communication protocol spec between keg.io server and kegerator client
-	All communication is one-way.  Requests are initiated by kegerator client.
-
-	URL Format: http://keg.io/api/kegerator/KEGERATOR_ID/ACTION/VALUE?signature=REQUEST_SIGNATURE
-		- KEGERATOR_ID: 4-digit kegerator ID
-		- ACTION: one of "scan", "flow", or "temp"
-		- VALUE:
-			- an rfid when ACTION=scan
-			- an integer or the special keyword "end" when ACTION=flow
-			- an integer when ACTION=temp
-		- REQUEST_SIGNATURE: the HMAC-SHA-256 signature of the request (in hex)
-
-	Example:
-	http://keg.io/api/kegerator/1111/scan/afcdef09d43?signature=79732c5ca659b29acd04967431d2843b6b958de308d974cc2f45cb09aaa7b08a
-
-	Signing the request:
-		- The signature is computed by HMAC-SHA-256 signing the HTTP verb followed by the full request URL
-		- The signature is a hex value
-		- For example the signature for "GET http://keg.io/api/kegerator/1111/scan/afcdef09d43" with secret 's3cr3t' is '79732c5ca659b29acd04967431d2843b6b958de308d974cc2f45cb09aaa7b08a'
-		- This library is used by the server to verify signatures https://github.com/crcastle/nodejs-string-signer
-
-	Request Details:
-
-	Verify a card ID:
-	GET http://keg.io/api/kegerator/1111/scan/afcdef09d43
-		- *rfid* indicates an rfid scan, where *rfid* is the value that was scanned
-		- all subsequent received flow requests are associated with this rfid until the special "flow/end" request is received
-
-	Send the current flow rate:
-	PUT http://keg.io/api/kegerator/1111/flow/89
-		- 89 indicates the current flow rate in liters/min
-		- this and all subsequent flow requests are associated with the last rfid until the special "flow/end" request is received
-
-	Tell the server that the flow for this card ID done(special case of the above):
-	PUT http://keg.io/api/kegerator/1111/flow/end
-		- indicates that pouring is complete e.g. solenoid closed
-		- any flow requests after this but before a "scan" request should be ignored
-
-	Send the current temperature:
-	PUT http://keg.io/api/kegerator/1111/temp/39
-		- *temp* indicates the current keg temp, where *temp* is in F
-
-	Response code details:
-	- 200: Request was received and processed successfully
-	- 400: Bad request syntax
-	- 401: Unauthorized.  Invalid signature.
-	- 404: Unknown resource requested.  Either the kegerator ID was incorrect or an invalid ACTION was specified.
- *****************************/
+/*
+ * Simulates a kegerator client, for development without the physical hardware.
+ *
+ * Usage: node test-kegerator-client.js [access_key] [secret_key]
+ *
+ * Options:
+ *   [access_key] : the 'public key' for the desired kegerator (defaults to '1111')
+ *   [secret_key] : the 'secret key' for the desired kegerator (defaults to 's3cr3t')
+ *
+ *   remember to quote any access/secret keys that contain special characters:
+ *
+ *   Ex. node test-kegerator-client.js 2222 'p@$$w3rd'
+ *
+ */
 
 // this allows us to require coffeescript files as if they were .js files
 require('coffee-script');
 
 var HOST = 'localhost';
-var KEGERATOR_ID = '1111';
+var KEGERATOR_ID = (process.argv.length > 2) ? process.argv[2] : '1111';
 var PORT = '8081';
-var SECRET = 's3cr3t'; //password with which to sign requests. should *never* be transferred over the wire.
+//password with which to sign requests. should *never* be transferred over the wire.
+var SECRET = (process.argv.length > 3) ? process.argv[3] : 's3cr3t';
+
+console.log(KEGERATOR_ID);
+console.log(SECRET);
 
 var fermata = require('fermata'), // used to make easy REST HTTP requests
 	signedRequest = require('string-signer'), // used to sign each HTTP request
