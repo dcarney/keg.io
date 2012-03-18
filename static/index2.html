@@ -77,7 +77,7 @@ google.load("visualization", "1", {packages:["corechart"]});
     var socket = io.connect('http://localhost:8081');
 
     socket.on('connect', function () {
-      var kegerator_id = 1111; // the kegerator you want to "listen to"
+      var kegerator_id = 2222; // the kegerator you want to "listen to"
       socket.emit('attach', kegerator_id);
       socket.on('attached', function () {
         console.log('attached to ' + kegerator_id + '!');
