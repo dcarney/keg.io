@@ -53,13 +53,18 @@ google.load("visualization", "1", {packages:["imagesparkline"]});
             <li><em><span id="beer_desc">{{description}}</span></em></li>
           <ul>
         </div>
-      <div class="grid_2">
+      <div class="grid_3">
+        <p class="statusdisplay">
+      waiting for socket...
+      </p>
+      </div>
+      <div class="grid_2 alpha">
         <div id="flow_chart" class="gauges"></div>
         <div id="temp_chart" class="gauges"></div>
         <div id="beer_chart" class="gauges"></div> 
       </div>
       <div class="jewel grid_1 locked"></div>
-      <div class="jewel grid_1 open"></div>
+      <div class="jewel grid_1 open omega"></div>
     </div>
     <div class="grid_5">
       <div id="pours">
@@ -96,18 +101,46 @@ google.load("visualization", "1", {packages:["imagesparkline"]});
 	<script type="text/javascript" >
   charts = [];
   needleBump = null;
+
+  var alarm = {
+    interval:null,
+    toggle:function(){
+      $('.jewel.locked').toggleClass('active');
+    },
+    on:function (){
+      this.interval = window.setInterval(alarm.toggle,1000);
+    },
+    off:function(){
+      $('.jewel.locked').removeClass('active');
+      window.clearInterval(this.interval);
+    }
+
+  }
+
+
 	$(document).ready(function(){
 		isEditTimeout = null;
 		reloadAttempt = 0;
-
+    cursor();
     var socket = io.connect('http://localhost:8081');
 
     socket.on('connect', function () {
       var kegerator_id = 1111; // the kegerator you want to "listen to"
       socket.emit('attach', kegerator_id);
+
       socket.on('attached', function () {
         console.log('attached to ' + kegerator_id + '!');
+        window.setTimeout(function(){writeStatus('attached to keg '+ kegerator_id);window.setTimeout(function(){$('.jewel.open').removeClass('active');},1000)},1000);
+        $('.jewel.open').addClass('active');
+
+        alarm.off();
       });
+    });
+
+    socket.on('disconnect', function () {
+      writeStatus('SOCKET DISCONNECTED!');
+      alarm.on();//$('.jewel.locked').addClass('active');
+
     });
 
     socket.on('hello', function (data) {
@@ -118,6 +151,7 @@ google.load("visualization", "1", {packages:["imagesparkline"]});
         console.log("scan event from server:");
         console.log(data);
         needleBump = window.setInterval(kegio.needleBump,200);
+        writeStatus('SCAN: rfid# '+data.data);
         kegio.getUserInfo(data.data,addPour);
         $('.jewel.open').addClass('active');
     });
@@ -141,6 +175,7 @@ google.load("visualization", "1", {packages:["imagesparkline"]});
         updateChart('flow_chart',0);
         $('#pours div.last span.ounces').text(data.data);
         $('.jewel.open').removeClass('active');
+        writeStatus('POUR COMPLETE - '+ data.data + ' OZ');
     });
 
 		kegio.getLastDrinkers(function(drinkers){
@@ -219,7 +254,52 @@ google.load("visualization", "1", {packages:["imagesparkline"]});
               } 
     }
 
+    
+
+//end document.ready()
 	});
+
+function writeStatus(txt){
+    if((typeof $('.statusdisplay').attr('next')=='undefined'|| $('.statusdisplay').attr('next')=='') && txt!=null){
+      $('.statusdisplay').attr('next',txt);
+      $('.statusdisplay').text('');
+      if(cursor.interval){
+        window.clearInterval(cursor.interval);
+      }
+    }
+
+    if($('.statusdisplay').attr('next')){
+      var txt = $('.statusdisplay').attr('next');
+      var chars = Math.round(Math.random()*3);
+      $('.statusdisplay').append(txt.substring(0,chars));
+      $('.statusdisplay').attr('next',txt.substring(chars,txt.length));
+      if($('.statusdisplay').attr('next').length > 0){
+        window.setTimeout(writeStatus,50);
+      }else{
+        $('.statusdisplay').removeAttr('next');
+        window.setTimeout(writeStatus,1000);
+      }
+    }else{
+      cursor()
+    }
+}
+
+function cursor(){
+    if(!$('.statusdisplay').attr('next')){
+      var txt = $('.statusdisplay').text();
+      if(txt.substring(txt.length-1)=='_'){
+        $('.statusdisplay').text(txt.substring(0,txt.length-1));
+      }else{
+        $('.statusdisplay').append('_');
+      }
+      if(typeof this.interval=='undefined'){
+        this.interval = window.setInterval(cursor,700);
+      }
+    }
+}
+
+
+
 
 function updateChart(id,data){
   var chart = charts[id];
@@ -264,7 +344,13 @@ function addPour(user){
         
     chart.draw(dt,opts);
     charts['current_spark'] = {'chart':chart,'tick':0,'options':opts,'data':dt,'draw':function(){
-        this.chart.draw(this.data,this.options)
+        var cs = document.createElement('DIV');
+        cs.id = 'current_spark';
+        var cht = new google.visualization.ImageSparkLine(cs);
+        cht.draw(this.data,this.options);
+        this.chart = cht;
+        $('#current_spark').replaceWith(cs);
+        //this.chart.draw(this.data,this.options)
       }};      
   }
 

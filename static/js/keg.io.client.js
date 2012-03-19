@@ -17,8 +17,8 @@ var kegio = {
                 yellowFrom:60,
                 yellowTo:70,
                 yellowColor: '#FF6E00',
-                width:150,
-                height:150,
+        width:135,
+        height:135,
                 min: 0,
                 max: 80
               }   
@@ -45,8 +45,8 @@ var kegio = {
                 redFrom:60,
                 redTo:70,
                 redColor: 'red',
-                width:150,
-                height:150
+                width:135,
+                height:135
               }
 
 
@@ -63,8 +63,8 @@ var kegio = {
         yellowColor: '#FF6E00',
         greenFrom:80,
         greenTo:100,
-        width:150,
-        height:150
+        width:135,
+        height:135
       }
     }
       ]

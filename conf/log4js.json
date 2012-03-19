@@ -19,6 +19,6 @@
   ],
 
   "levels": {
-    "default":  "DEBUG"
+    "default":  "ALL"
   }
 }

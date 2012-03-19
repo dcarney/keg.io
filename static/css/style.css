@@ -11,23 +11,43 @@ border-radius: 6px;
 
 		}
 
+h1 {
+
+	margin-bottom: 0;
+}
+
 .left{
-	background: url('/images/kegio_left.png') no-repeat top left;
+	background: url('/images/metal_texture_2_by_wojtar_stock.jpg') no-repeat top left;
+	-webkit-border-radius-topright: 6px;
+	-moz-border-radius-topright: 6px;
+	border-radius-topright: 6px;
+	-webkit-border-radius-bottomright: 6px;
+	-moz-border-radius-bottomright: 6px;
+	border-right-radius-bottomright:6px;
 }
 
 .jewel {
-	height: 40px;
+	height: 60px;
 }
 
 .jewel.locked{
-	background: url('/images/red_jewel_off.png') no-repeat center center;
+	background: url('/images/redjewel.png') no-repeat left 0;
 }
 
-.jewel.locked.acive, .jewel.open.active{
-	background: url('/images/red_jewel_on.png') no-repeat center center;
+.jewel.locked.active{
+	background: url('/images/redjewel.png') no-repeat -60px 0;
 }
 .jewel.open{
-	background: url('/images/red_jewel_off.png') no-repeat center center;
+	background: url('/images/greenjewel.png') no-repeat 0 0;
+	background-position: 0 0;
+}
+
+.jewel.open.active {
+	background: url('/images/greenjewel.png') no-repeat -60px 0;
+}
+
+.gauges {
+	background: url('/images/gaugebackground.png') no-repeat -5px -5px;
 }
 
 .drinker{
@@ -72,6 +92,25 @@ border-radius: 6px;
 .drinker.last img.gravatar{
 	width: 160px;
 	height: 160px;
+}
+
+.statusdisplay {
+    border-style:solid inset;
+    border-width:2px;
+    border-color:#ccd9d8;
+    background-color:#080808;
+    color:#5fba3d;
+    font-family:monospace, prestige;
+    padding: 3px;
+}
+
+.beer_info ul {
+	float: left;
+	width: 150px;
+}
+
+.beer_info img{
+	float: left;
 }
 
 	/*
