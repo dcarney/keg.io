@@ -1,8 +1,8 @@
 #ifndef __CREDENTIALS_H__
 #define __CREDENTIALS_H__
 
-char passphrase[] = "xxx";
-char ssid[] = "xxx";
+char passphrase[] = "K3g3rator";
+char ssid[] = "KegioAP";
 char clientId[] = "1111";
 uint8_t clientSecret[]={
   // s3cr3t
