@@ -3,7 +3,7 @@
 //
 
 // Serial
-long serialBaud = 115200L;
+long serialBaud = 2400;
 
 // Solenoid
 int solenoid = 2; //Solenoid Pin
@@ -37,37 +37,45 @@ int interrupt = 1;
 #include "Credentials.h"
 #include <sha256.h>
 String ap = "/api/kegerator/";
-String applicationPath = ap+clientId;
+String applicationPath = ap + String(clientId);
 String httpParameters = "id="+ String(clientId);
 char domain[] = "dev.keg.io";
 WiFlyClient client(domain, 80);
 
 // RFID reader
 #include <SoftwareSerial.h>
-int rxPin = 12;
-int txPin = 10;
-int rfidPin = 11;
+#define rxPin 8
+#define txPin 9
+int rfidPin = 2;
+// RFID reader SOUT pin connected to Serial RX pin at 2400bps to pin8
 SoftwareSerial RFID(rxPin,txPin);
+int val = 0;
+char code[10];
 
 // Regexp library to validate RFID card ID
 #include <Regexp.h>
 
 void setup() {
   Serial.begin(serialBaud);
+  Serial.println("Booting...");
 
   // setup solenoid
+/*
   pinMode(solenoid, OUTPUT);
   digitalWrite(solenoid, LOW);
   solenoidStatus = SOLENOID_CLOSED;
+*/
 
   // setup temp sensor
   // IC Default 9 bit. If you have troubles consider upping it 12.
   // Ups the delay giving the IC more time to process the temperature measurement
-  tempSensor.begin();
+  //tempSensor.begin();
 
   // setup flow sensor
+/*
   pinMode(hallsensor, INPUT); //initializes digital pin 2 as an input
   attachInterrupt(interrupt, rpm, RISING); //and the interrupt is attached
+*/
 
   //wifly!
   SC16IS750.begin();
@@ -85,7 +93,7 @@ void setup() {
 
   if (client.connect()) {
     // TODO: make test request to keg.io
-    // sendGet("ping", "1");
+    //sendGet("hello", "");
 
     // if test request was successful
     if ( true/* test keg.io request returned with 200 */ ) { // TODO: replace false with real logic
@@ -107,81 +115,72 @@ void setup() {
     client.stop();
     // TODO: set LED to flash red continuously
   }
+  Serial.println("Boot complete.");
 }
 
 void loop() {
   while (true) {
+/*
     // read temp value and convert to String
     char charTemp[6];
     String strTemp = String(dtostrf(getTemp(),5,2,charTemp));
     // send temp in put request
     sendPut("temp", strTemp);
+*/
 
     // if data is available from card scanner
-    if (RFID.available()) {
-      // then read rfid
-      // TODO: this needs to be turned in to a loop that constructs the char[]
-      char rfid[ ] = "44004C3A1A";//RFID.read();
-
-      // if rfid is invalid length, ignore rfid
-      // note that 11 is the valid length because the char[] needs to be terminated with a null byte
-      if (sizeof(rfid) != 11) {
-        Serial.println("bad rfid");
-        // TODO: make LED turn off for 1 sec then back to red
-        // restart main while loop
-        continue;
+    if (RFID.available() > 0) {
+      readTag();
+      unsigned long start = millis();
+      while (RFID.available() <= 1) {
+        delay(10);
+        if (RFID.available() > 0 && RFID.peek() == 13) {
+          RFID.read();  // dump stop byte
+        }
+        if ((millis() - start) > 1000) {
+          Serial.println("tag scan timeout");
+          break;
+        }
       }
+      if (RFID.available() > 0) {
+        if (isValidTag()) {
+          digitalWrite(rfidPin, HIGH);  //deactivate RFID reader
+          Serial.print("**Tag is: ");
+          String strCode = String(code).substring(0,10);
+          Serial.println(strCode);
 
-      // create a regexp object
-      MatchState ms;
-      // create buffer to work in
-      char buf [22];  // large enough to hold expected string, or malloc it
-      ms.Target (rfid);  // string to test with regexp
+          sendGet("scan", strCode);
 
-      // test char[] against "(%x+)" regexp starting at index 0 in char[]
-      char result = ms.Match("(%x+)", 0);
+          // wait 3 seconds for response then timeout
+          unsigned long scanTime = millis();
+          while ((millis() - scanTime) < 3000) {
 
-      // if char[] is valid hex characters
-      if (result == REGEXP_MATCHED) {
-
-        // get the first string of hex characters that matched
-        String validRfid = String(ms.GetCapture(buf, 0));
-        sendGet("scan", validRfid);  // send get scan request
-
-        // wait 3 seconds for response then timeout
-        unsigned long scanTime = millis();
-        unsigned long now = millis();
-        while ((now - scanTime) < 3000) {
-          // clear any other extraneous incoming RFID data
-          RFID.flush();
-
-          // if HTTP response available?
-          String response = "";
-          while (client.available()) {
-            response += client.read();
-          }
-          // TODO: replace false with real logic
-          if ( false/*response is not empty && status code is 200 && response hash is good*/ ) {
-            // TODO: set LED to solid green
-            // open solenoid
-            digitalWrite(solenoid, HIGH);
-            solenoidStatus = SOLENOID_OPENED;
+            // if HTTP response available?
+            while (client.available()) {
+              char c = client.read();
+              Serial.print(c);
+            }
+            // TODO: replace false with real logic
+            if ( false ) {
+              // TODO: set LED to solid green
+              // open solenoid
+              digitalWrite(solenoid, HIGH);
+              solenoidStatus = SOLENOID_OPENED;
+            }
           }
         }
-      } else if (result == REGEXP_NOMATCH) {
-        Serial.println("Bad RFID");
-        // TODO: make LED turn off for 1 sec then back to red
-      } else {
-        Serial.print("Regex error parsing RFID: ");
-        Serial.println(result, DEC);
-        // TODO: make LED turn off for 1 sec then back to red
       }
+
+      RFID.flush();
+      clearTag();
+      delay(2000);
+      digitalWrite(rfidPin, LOW);  //reactivate RFID reader
     } // end if (RFID.available())
 
     // if solenoid is open, send flow data
     // or if it has been open for 3 seconds with zero flow, send flow end
     // TODO: replace false with real logic
-    if ( solenoidStatus ) { // TODO: replace false with real logic
+    if ( false ) { // TODO: replace false with "solenoid"
       // TODO: read flow value
       if ( false/* flow value is zero for > 3 seconds */ ) { // TODO: replace false with real logic
         // close solenoid
@@ -196,6 +195,8 @@ void loop() {
     }
 
     // if wifi connection is lost
+    // TODO: Fix this...
+/*
     if (!client.connected()) {
       Serial.println("Wifi connection lost");
       client.stop();
@@ -204,6 +205,7 @@ void loop() {
         // hang on dead wifi connection
       }
     }
+*/
 
   } // end while(true)
 } // end void loop()
@@ -293,7 +295,57 @@ void rpm (){
   NbTopsFan++;
 }
 
+void readTag() {
+  if((val = RFID.read()) == 10) {   // check for header
+    int bytesread = 0;
+    while(bytesread<10) {              // read 10 digit code
+      if( RFID.available() > 0) {
+        val = RFID.read();
+        if((val == 10)||(val == 13)) { // if header or stop bytes before the 10 digit reading
+          break;                       // stop reading
+        }
+        code[bytesread] = byte(val);         // add the digit
+        bytesread++;                   // ready to read next digit
+      }
+    }
+  }
+}
 
+bool isValidTag() {
+  int value;
+  int bytesread = 0;
+  while (RFID.available() > 0) {
+    if((value = RFID.read()) == 10) {   // check for header
+      int bytesread = 0;
+      while(bytesread<10) {              // read 10 digit code
+        if( RFID.available() > 0) {
+          value = RFID.read();
+          if((value == 10)||(value == 13)) { // if header or stop bytes before the 10 digit reading
+            Serial.println("tag validate break");
+            break;                       // stop reading
+          }
+          if (code[bytesread] != byte(value)) {
+            Serial.println("isTagValid: Tag does not match");
+            return false;
+          }
+          bytesread++;                   // ready to read next digit
+        }
+      }
+      //Serial.println("isTagValid: Valid Tag");
+      return true;
+    }
+    Serial.println("isTagValid: no header");
+    return false;
+  }
+  Serial.println("isTagValid: no match");
+  return false;
+}
+
+void clearTag() {
+  for(int i=0; i<10; i++) {
+    code[i] = 0;
+  }
+}
 
 
 /******************

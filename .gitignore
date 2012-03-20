@@ -7,3 +7,4 @@ keg.io.tmproj
 /conf/configuration.json
 /conf/keys.json
 /lib/keg.io
+/arduino/v2/keg/Credentials.h
