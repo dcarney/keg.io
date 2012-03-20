@@ -156,6 +156,14 @@ google.load("visualization", "1", {packages:["imagesparkline"]});
         $('.jewel.open').addClass('active');
     });
 
+    socket.on('deny', function(data){
+        console.log("DENY TAG FROM SERVER");
+        console.log(data);
+        writeStatus('DENIED POUR');
+        $('.jewel.locked').addClass('active');
+        window.setTimeout(function(){$('.jewel.locked').removeClass('active');},1000);
+    });
+
     socket.on('flow', function (data) {
         //console.log("flow event from server:");
         //console.log(data);
