@@ -147,6 +147,12 @@ class Keg extends events.EventEmitter
         @emit 'temp', access_key, temp
         cb(true)
 
+  kegerators: (num_kegerators, cb) ->
+    query = {order: 'created_at DESC'}
+    query.limit = num_kegerators if num_kegerators?
+    @models.Kegerator.findAll(query).success (kegerators) =>
+      cb(@models.mapAttribs(kegerator, ['owner_email', 'id', 'updated_at']) for kegerator in kegerators)
+
   kegeratorTemperatures: (access_key, num_temps, cb) ->
     @models.Kegerator.find({where: {access_key: access_key}}).success (kegerator) =>
       query = {where: {kegerator_id: kegerator.access_key}}
