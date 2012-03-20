@@ -35,7 +35,7 @@ h1 {
 }
 
 .jewel.locked.active{
-	background: url('/images/redjewel.png') no-repeat -60px 0;
+	background: url('/images/redjewel.png') no-repeat -61px 0;
 }
 .jewel.open{
 	background: url('/images/greenjewel.png') no-repeat 0 0;
@@ -102,6 +102,7 @@ h1 {
     color:#5fba3d;
     font-family:monospace, prestige;
     padding: 3px;
+    height: 1.2em;
 }
 
 .beer_info ul {

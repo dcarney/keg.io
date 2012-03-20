@@ -113,6 +113,7 @@ class Keg extends events.EventEmitter
           })
         @emit 'scan', access_key, rfid
       else
+        @emit 'deny', access_key, rfid
         # invalid rfid; delete any Pour object we might have had for that kegerator
         delete @kegerator_last_scans[access_key]
       cb(valid)
