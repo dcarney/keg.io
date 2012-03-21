@@ -15,6 +15,7 @@
   <link href='http://fonts.googleapis.com/css?family=Annie+Use+Your+Telescope' rel='stylesheet' type='text/css'>
   <link rel="stylesheet" type="text/css" href="css/style.css" media="screen" />
     <link rel="stylesheet" href="/css/forms.css">
+    <link rel="stylesheet" href="/css/bootstrap.min.css" />
   
 
     <!-- Le HTML5 shim, for IE6-8 support of HTML5 elements -->
@@ -35,12 +36,24 @@
 google.load("visualization", "1", {packages:["corechart"]});
 google.load("visualization", "1", {packages:["imagesparkline"]});
 </script>
+<style type="text/css">
+ul{margin-left: 5px;}
+</style
   </head>
 
   <body>
-    <header>
+    <!--<header>
     <h1>keg.io</h1>
-    </header>
+    </header>-->
+    <div class="navbar">
+  <div class="navbar-inner">
+    <div class="container">
+      <a class="brand" href="#">
+  keg.io
+</a>
+    </div>
+  </div>
+</div>
     <div class="container_12">
       <div class="grid_4 left">
         <div class="beer_info grid_4" id="currentkeg">
@@ -66,10 +79,10 @@ google.load("visualization", "1", {packages:["imagesparkline"]});
       <div class="jewel grid_1 locked"></div>
       <div class="jewel grid_1 open omega"></div>
     </div>
-    <div class="grid_5">
+    <div class="grid_6">
       <div id="pours">
 
-        <div id="drinker_template" class="drinker grid_5">
+        <div id="drinker_template" class="drinker grid_6">
           <img src="http://www.gravatar.com/avatar/{{hash}}?s={{image_size}}" class="gravatar" />
           <ul>
             <li>Name:{{first_name}} {{last_name}}</li>
@@ -173,7 +186,7 @@ google.load("visualization", "1", {packages:["imagesparkline"]});
 
     socket.on('deny',function (data) {
       $('.jewel.locked').addClass('active');
-      window.setTimeout(function(){('.jewel.locked').removeClass('active')},2000)
+      window.setTimeout(function(){$('.jewel.locked').removeClass('active')},2000)
     });
 
     socket.on('pour', function (data) {
