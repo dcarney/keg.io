@@ -123,6 +123,17 @@ server.get '/hello', (req, res, next) ->
 server.get '/config/socketPort', (req, res, next) ->
   res.send Config.socket_client_connect_port.toString(), 200
 
+# ## UI: get kegerators
+#   `GET /kegerators`
+#
+# Optional params: recent=N
+#   where **N** is the number of temperatures to retrieve, in reverse
+#   chronological order
+#
+server.get '/kegerators', (req, res, next) ->
+  keg.kegerators req.query['recent'], (result) ->
+    res.send result, 200
+
 # ## UI: get temperatures for a kegerator
 #   `GET /kegerators/ACCESS_KEY/temperatures`
 #
@@ -341,6 +352,10 @@ server.use middleware.path()											# parse url path
 server.use connect.static(__dirname + '/static') 	# static file handling
 server.use server.router                          # UI and API routing
 server.listen Config.http_port
+
+# dump a list of all the available routes to stdout (for debugging)
+#server.routes.all().forEach (route) ->
+#  console.log('  \033[90m%s \033[36m%s\033[0m', route.method.toUpperCase(), route.path)
 
 io = socket_io.listen(server)
 

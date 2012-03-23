@@ -1,9 +1,10 @@
 // keg.io v2 Arduino Code
 // Written By: Carl Krauss
 //
+#include <MemoryFree.h>  // debugging
 
 // Serial
-long serialBaud = 2400;
+#define SERIAL_BAUD 2400
 
 // Solenoid
 int solenoid = 2; //Solenoid Pin
@@ -21,14 +22,14 @@ float temp = 0;
 OneWire oneWire(ONE_WIRE_BUS);
 // Pass our oneWire reference to Dallas Temperature.
 DallasTemperature tempSensor(&oneWire);
-long PreviousTempMillis = 0;
-long TempInterval = 5000; //how often to send temp
+//long PreviousTempMillis = 0;
+#define TempInterval 5000 //how often to send temp
 
 // Flow sensor
 volatile int NbTopsFan;
 int Calc;
-int hallsensor = 3;
-int interrupt = 1;
+#define HALLSENSOR 3
+#define INTERRUPT 1
 
 // Wifly and HTTP stuff
 #include <SPI.h>
@@ -36,27 +37,26 @@ int interrupt = 1;
 #include <WiFly.h>
 #include "Credentials.h"
 #include <sha256.h>
-String ap = "/api/kegerator/";
-String applicationPath = ap + String(clientId);
-String httpParameters = "id="+ String(clientId);
-char domain[] = "dev.keg.io";
-WiFlyClient client(domain, 80);
+#define APPLICATION_PATH "/api/kegerator/1111"
+//String httpParameters = "id="+ String(clientId);
+char domain[] = "192.168.15.6";
+WiFlyClient client(domain, 8081);
 
 // RFID reader
 #include <SoftwareSerial.h>
 #define rxPin 8
 #define txPin 9
-int rfidPin = 2;
+#define rfidPin 2
 // RFID reader SOUT pin connected to Serial RX pin at 2400bps to pin8
 SoftwareSerial RFID(rxPin,txPin);
 int val = 0;
-char code[10];
+char code[11];
 
 // Regexp library to validate RFID card ID
 #include <Regexp.h>
 
 void setup() {
-  Serial.begin(serialBaud);
+  Serial.begin(SERIAL_BAUD);
   Serial.println("Booting...");
 
   // setup solenoid
@@ -73,8 +73,8 @@ void setup() {
 
   // setup flow sensor
 /*
-  pinMode(hallsensor, INPUT); //initializes digital pin 2 as an input
-  attachInterrupt(interrupt, rpm, RISING); //and the interrupt is attached
+  pinMode(HALLSENSOR, INPUT); //initializes digital pin 2 as an input
+  attachInterrupt(INTERRUPT, rpm, RISING); //and the interrupt is attached
 */
 
   //wifly!
@@ -85,8 +85,11 @@ void setup() {
   if (!WiFly.join(ssid, passphrase)) {
     Serial.println("Association failed.");
     client.stop();
-    // TODO: set LED to flash red continuously
     while (1) {
+      // TODO: set LED to red on
+      delay(500);
+      // TODO: set LED to off
+      delay(500);
       // Hang on failure.
     }
   }
@@ -96,22 +99,18 @@ void setup() {
     //sendGet("hello", "");
 
     // if test request was successful
-    if ( true/* test keg.io request returned with 200 */ ) { // TODO: replace false with real logic
-      Serial.println("Connected");
-      // TODO: set LED to solid red
-      // now setup and start listening to RFID reader since we know we have
-      // an active internet connection and can verify RFID cards
-      pinMode(rfidPin,OUTPUT);
-      digitalWrite(rfidPin, LOW);
-      RFID.begin(2400);
-    } else {
-      Serial.println("Connected to wifi, but unable to contact server.");
-      client.stop();
-      // TODO: set LED to flash red continuously
-    }
+    Serial.println("Connected");
 
+    // then close connection
+    client.stop();
+    // now setup and start listening to RFID reader since we know we have
+    // an active internet connection and can verify RFID cards
+    pinMode(rfidPin,OUTPUT);
+    digitalWrite(rfidPin, LOW);
+    RFID.begin(2400);
+    // TODO: set LED to solid red
   } else {
-    Serial.println("Unable to connect to wifi.");
+    Serial.println("Associated with wifi AP, but unable to connect to server.");
     client.stop();
     // TODO: set LED to flash red continuously
   }
@@ -131,6 +130,8 @@ void loop() {
     // if data is available from card scanner
     if (RFID.available() > 0) {
       readTag();
+      //Serial.print("Unconfirmed tag: ");
+      //Serial.println(code);
       unsigned long start = millis();
       while (RFID.available() <= 1) {
         delay(10);
@@ -142,71 +143,60 @@ void loop() {
           break;
         }
       }
+
       if (RFID.available() > 0) {
         if (isValidTag()) {
           digitalWrite(rfidPin, HIGH);  //deactivate RFID reader
-          Serial.print("**Tag is: ");
-          String strCode = String(code).substring(0,10);
-          Serial.println(strCode);
+          Serial.print("**Confirmed Tag is: ");
+          Serial.println(code);
 
-          sendGet("scan", strCode);
+          // send scan request to server
+          sendGet("scan", code);
 
-          // wait 3 seconds for response then timeout
+          // wait 2 seconds for response then timeout
           unsigned long scanTime = millis();
-          while ((millis() - scanTime) < 3000) {
-
+          char c;
+          while ((millis() - scanTime) < 2000) {
             // if HTTP response available?
             while (client.available()) {
-              char c = client.read();
+              c = client.read();
               Serial.print(c);
             }
             // TODO: replace false with real logic
             if ( false ) {
-              // TODO: set LED to solid green
               // open solenoid
               digitalWrite(solenoid, HIGH);
+              // TODO: set LED to solid green
               solenoidStatus = SOLENOID_OPENED;
             }
           }
+          client.stop();
         }
       }
 
       RFID.flush();
       clearTag();
-      delay(2000);
+      //delay(1000);
       digitalWrite(rfidPin, LOW);  //reactivate RFID reader
     } // end if (RFID.available())
 
     // if solenoid is open, send flow data
     // or if it has been open for 3 seconds with zero flow, send flow end
     // TODO: replace false with real logic
-    if ( false ) { // TODO: replace false with "solenoid"
+    if ( false ) { // TODO: replace false with "solenoidStatus == SOLENOID_OPEN"
       // TODO: read flow value
       if ( false/* flow value is zero for > 3 seconds */ ) { // TODO: replace false with real logic
         // close solenoid
         digitalWrite(solenoid, LOW);
         solenoidStatus = SOLENOID_CLOSED;
         // tell server pour is done
-        sendGet("flow", "end");
+        sendPut("flow", "end");
         // TODO: set LED to solid red
       } else if ( false/* flow value > 0 */ ) { // TODO: replace false with real logic
         // TODO: send flow value every second
       }
     }
-
-    // if wifi connection is lost
-    // TODO: Fix this...
-/*
-    if (!client.connected()) {
-      Serial.println("Wifi connection lost");
-      client.stop();
-      // TODO: set LED to flashing red
-      while (true) {
-        // hang on dead wifi connection
-      }
-    }
-*/
-
+    // TODO: if wifi connection is lost, notify with LED?
   } // end while(true)
 } // end void loop()
 
@@ -243,50 +233,92 @@ void printHash(uint8_t* hash) {
   Serial.println();
 }
 
-// Return hash as String of hex values
-String getHash(uint8_t* hash){
+// Put hash as char[] of hex values in sig[] parameter
+void getHash(uint8_t* hash, char sig[]) {
   String stringOne;
   int i;
+  //strcpy(sig, "");
   for (i=0; i<32; i++) {
     stringOne+=("0123456789abcdef"[hash[i]>>4]);
+    //sig += "0123456789abcdef"[hash[i]>>4];
     stringOne+=("0123456789abcdef"[hash[i]&0xf]);
+    //sig += "0123456789abcdef"[hash[i]&0xf];
   }
-  return stringOne;
+  stringOne.toCharArray(sig, 65);
 }
 
 // Send HTTP PUT request with HmacSha256 signature
-void sendPut(String action, String actionValue){
+void sendPut(char action[], char actionValue[]){
   sendHttp("PUT", action, actionValue);
 }
 
 // Send HTTP GET request with HmacSha256 signature
-void sendGet(String action, String cardId){
+void sendGet(char action[], char cardId[]){
   sendHttp("GET", action, cardId);
 }
 
-void sendHttp(String httpMethod, String action, String actionValue) {
-  Serial.println("Connected: Sending " + httpMethod + " Request");
-  action.toLowerCase();
-  actionValue.toLowerCase();
-  String valueToHash = httpMethod + " " + domain + applicationPath + "/" + action + "/" + actionValue;
-  String sig = calcHash(clientSecret, clientSecretLength, valueToHash);
-  String requestPath = httpMethod + " " + applicationPath + "/" + action + "/" + actionValue;
+// Send HTTP request with HmacSha256 signature
+void sendHttp(char httpMethod[], char action[], char actionValue[]) {
+  client.connect();
+  Serial.print("Sending HTTP ");
+  Serial.println(httpMethod);
+
+  // lower case these values
+  lower(action);
+  lower(actionValue);
+
+  char httpStr[50];  // i think this will always be big enough
+  strcpy(httpStr, httpMethod);
+  strcat(httpStr, " ");
+  strcat(httpStr, domain);
+  strcat(httpStr, APPLICATION_PATH);
+  strcat(httpStr, "/");
+  strcat(httpStr, action);
+  strcat(httpStr, "/");
+  strcat(httpStr, actionValue);
+  //Serial.println(valueToHash);
+  char sig[65];  // 64 bytes plus null string termination byte
+  calcHash(clientSecret, clientSecretLength, httpStr, sig);
+  strcpy(httpStr, httpMethod);
+  strcat(httpStr, " ");
+  strcat(httpStr, APPLICATION_PATH);
+  strcat(httpStr, "/");
+  strcat(httpStr, action);
+  strcat(httpStr, "/");
+  strcat(httpStr, actionValue);
 
   // now write to wifly client and output to Serial
-  client.println(requestPath + "?signature=" + sig + " HTTP/1.1");
-  Serial.println(requestPath + "?signature=" + sig + " HTTP/1.1");
-  client.println("Host: " + String(domain));
-  Serial.println("Host: " + String(domain));
-  client.println("Connection: close");
-  Serial.println("Connection: close");
+  client.print(httpStr);
+  //Serial.print(requestPath);
+  client.print("?signature=");
+  //Serial.print("?signature=");
+  client.print(sig);
+  //Serial.print(sig);
+  client.println(" HTTP/1.1");
+  //Serial.println(" HTTP/1.1");
+
+  client.print("Host: ");
+  //Serial.print("Host: ");
+  client.println(domain);
+  //Serial.println(domain);
+
+  client.println("Connection: keep-alive");
+  //Serial.println("Connection: close");
   client.println();
 }
 
-// Calculate and return a HmacSha256 hash as a String
-String calcHash(uint8_t secret[], int secretLength, String str) {
+// converts a string to its lowercase equivalent
+void lower(char str[]) {
+  for (int i = 0; i < strlen(str); i++) {
+    str[i] = tolower(str[i]);
+  }
+}
+
+// Calculate and put a HmacSha256 hash in sig[] parameter
+void calcHash(uint8_t secret[], int secretLength, char str[], char sig[]) {
   Sha256.initHmac(secret, secretLength);
   Sha256.print(str);
-  return getHash(Sha256.resultHmac());
+  getHash(Sha256.resultHmac(), sig);
 }
 
 //This is the function that the interupt calls
@@ -295,6 +327,7 @@ void rpm (){
   NbTopsFan++;
 }
 
+// read an RFID tag
 void readTag() {
   if((val = RFID.read()) == 10) {   // check for header
     int bytesread = 0;
@@ -311,6 +344,10 @@ void readTag() {
   }
 }
 
+// validate an RFID tag
+// this must be called right after readTag()
+// it makes use of the fact that the Parallax RFID reader
+// sends the card ID twice for a valid scan
 bool isValidTag() {
   int value;
   int bytesread = 0;
@@ -341,8 +378,9 @@ bool isValidTag() {
   return false;
 }
 
+// zeroes out the char[] used to store the scanned card ID
 void clearTag() {
-  for(int i=0; i<10; i++) {
+  for(int i=0; i<11; i++) {
     code[i] = 0;
   }
 }
