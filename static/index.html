@@ -139,7 +139,7 @@ ul{margin-left: 5px;}
 
     socket.on('connect', function () {
       var kegerator_id = 1111; // the kegerator you want to "listen to"
-      socket.emit('attach', kegerator_id);
+      
 
       socket.on('attached', function () {
         console.log('attached to ' + kegerator_id + '!');
