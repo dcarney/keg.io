@@ -101,7 +101,9 @@ class Keg extends events.EventEmitter
         cb(error)
 
   scanRfid: (access_key, rfid, cb) ->
-    @models.User.findAll({where: {rfid: rfid}}).success (user) =>
+    @models.User.findAll({where: {rfid: rfid.toUpperCase()}}).success (user) =>
+      console.log('rfid: ' + rfid)
+      console.log('user:' + rfid)
       valid = user? && user.length > 0
       # store pour info for future pour events
       # TODO: Add the current keg id to the pour event
