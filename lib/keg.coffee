@@ -198,7 +198,7 @@ class Keg extends events.EventEmitter
       cb(null, user)
 
   users: (rfid, cb) =>
-    query = if rfid? then {where: {rfid: rfid}} else {}
+    query = if rfid? then {where: {rfid: rfid.toUpperCase()}} else {}
     @models.User.findAll(query).success (users) =>
       async.map users, @getUserGravatar, (err) =>
         cb(@models.mapAttribs(user, ['email'], ['gravatar', 'hash']) for user in users)
