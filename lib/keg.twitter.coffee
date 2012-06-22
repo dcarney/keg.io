@@ -1,5 +1,5 @@
 sys     = require 'util'
-twitter = require 'twitter'
+twitter = require 'ntwitter'
 
 class KegTwitter
   constructor: (logger, config) ->
