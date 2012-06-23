@@ -1,11 +1,10 @@
 #
-# Kegerator: a physical device that contains Keg(s)
+# Kegerator: A location running the keg.io client software. A physical device
+#            that contains Keg(s)
 #
-module.exports = (sequelize, DataTypes) ->
-  sequelize.define('kegerator', {
-    id: { type: DataTypes.INTEGER, autoIncrement: true, primaryKey: true, unique: true},
-    access_key: {type: DataTypes.STRING, unique: true},
-    name: DataTypes.STRING,
-    description: DataTypes.TEXT,
-    owner_email: DataTypes.STRING
-  }, {underscored: true})
+class Kegerator
+
+  constructor: (db_obj) ->
+    {@access_key, @name, @description, @owner_email} = db_obj
+
+module.exports = Kegerator

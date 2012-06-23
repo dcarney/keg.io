@@ -19,7 +19,7 @@ require 'coffee-script'
 
 fermata       = require 'fermata'       # used to make easy REST HTTP requests
 signedRequest = require 'string-signer' # used to sign each HTTP request
-payload       = require './lib/payload'
+payload       = require '../lib/payload'
 
 HOST = 'localhost'
 KEGERATOR_ID = if (process.argv.length > 2) then process.argv[2] else '1111'

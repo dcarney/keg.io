@@ -1,8 +1,8 @@
 #
 # Temperature: a temp reading for a given Kegerator
 #
-module.exports = (sequelize, DataTypes) ->
-  sequelize.define('temperature', {
-    kegerator_id: DataTypes.INTEGER,
-    temperature: DataTypes.INTEGER
-  }, {underscored: true})
+class Temperature
+  constructor: (db_obj) ->
+    {@kegerator_id, @temperature, @date} = db_obj
+
+module.exports = Temperature

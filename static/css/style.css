@@ -2,7 +2,7 @@ body {
 	background-image: url("/images/wood-texture-background.jpg");
 	background-repeat: repeat;
 	}
-	
+
 	.row div{
 			background: white;
 			-webkit-border-radius: 6px;
@@ -46,6 +46,12 @@ h1 {
 	background: url('/images/greenjewel.png') no-repeat -60px 0;
 }
 
+.brand {
+	font-family: 'Cabin Sketch', cursive;
+}
+#logo {
+	font-size: 60px;
+}
 .gauges {
 	background: url('/images/gaugebackground.png') no-repeat -5px -5px;
 }
@@ -133,7 +139,7 @@ box-shadow: 2px 2px 2px #888;
 font-family: Consolas, Lucida Console, Courier, Courier New;
 text-transform: uppercase;
 	}
-	
+
 	.row div {
 			background: #ccc;
 	-moz-box-shadow: 2px 2px 2px #888;
@@ -141,12 +147,12 @@ text-transform: uppercase;
 box-shadow: 2px 2px 2px #888;
 padding: .5em;
 		}
-		
+
 		.row{
 			padding: .5em;
 			}
-	
+
 	.inset { text-shadow:#fff 0px 1px 0, #000 0 -1px 0;
-	 line-height:3em; font-size:3em; font-weight:bold; color:#808080;} 
-	 
+	 line-height:3em; font-size:3em; font-weight:bold; color:#808080;}
+
 	 */

@@ -52,8 +52,8 @@ class KegTwitter
       @lastTempTweetDate = new Date()
       @tweet "Whoa! This beer is getting too warm! It's currently #{currentTemp} degrees!"
 
-  tweetPour: (userInfo, ounces, beerInfo) ->
-    name = getTwitterName userInfo
+  tweetPour: (userInfo, ounces, beerInfo) =>
+    name = @getTwitterName userInfo
 
     pouredText = " just poured #{ounces} oz of "
     longBeerText = "tasty #{beerInfo.beer} #{beerInfo.beer_style}"

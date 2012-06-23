@@ -16,7 +16,7 @@
   <link rel="stylesheet" type="text/css" href="css/style.css" media="screen" />
     <link rel="stylesheet" href="/css/forms.css">
     <link rel="stylesheet" href="/css/bootstrap.min.css" />
-  
+
 
     <!-- Le HTML5 shim, for IE6-8 support of HTML5 elements -->
     <!--[if lt IE 9]>
@@ -48,7 +48,7 @@ ul{margin-left: 5px;}
     <div class="navbar">
   <div class="navbar-inner">
     <div class="container">
-      <a class="brand" href="#">
+      <a id="logo" class="brand" href="#">
   keg.io
 </a>
     </div>
@@ -74,7 +74,7 @@ ul{margin-left: 5px;}
       <div class="grid_2 alpha">
         <div id="flow_chart" class="gauges"></div>
         <div id="temp_chart" class="gauges"></div>
-        <div id="beer_chart" class="gauges"></div> 
+        <div id="beer_chart" class="gauges"></div>
       </div>
       <div class="jewel grid_1 locked"></div>
       <div class="jewel grid_1 open omega"></div>
@@ -83,13 +83,13 @@ ul{margin-left: 5px;}
       <div id="pours">
 
         <div id="drinker_template" class="drinker grid_6">
-          <img src="http://www.gravatar.com/avatar/{{hash}}?s={{image_size}}" class="gravatar" />
+          <img src="{{gravatar}}" class="gravatar" />
           <ul>
             <li>Name:{{first_name}} {{last_name}}</li>
             <li>Member Since: {{created_at}}</li>
             <li>Ounces Poured: <span class="ounces">{{volume_ounces}}</span></li>
           </ul>
-  			</div>	
+  			</div>
 
       </div>
 		</div>
@@ -130,6 +130,10 @@ ul{margin-left: 5px;}
 
   }
 
+  var socketDebug = function(msg, data) {
+    console.log("socket event: '" + msg + "' data: " + (data == null ? "" : JSON.stringify(data)));
+    // console.log('socket data: ' + (data == null ? "" : JSON.stringify(data)));
+  };
 
 	$(document).ready(function(){
 		isEditTimeout = null;
@@ -138,11 +142,12 @@ ul{margin-left: 5px;}
     var socket = io.connect('http://localhost:8081');
 
     socket.on('connect', function () {
+      socketDebug('connect', null);
       var kegerator_id = 1111; // the kegerator you want to "listen to"
       socket.emit('attach', kegerator_id);
 
       socket.on('attached', function () {
-        console.log('attached to ' + kegerator_id + '!');
+        socketDebug('attached', kegerator_id);
         window.setTimeout(function(){writeStatus('attached to keg '+ kegerator_id);window.setTimeout(function(){$('.jewel.open').removeClass('active');},1000)},1000);
         $('.jewel.open').addClass('active');
 
@@ -151,18 +156,17 @@ ul{margin-left: 5px;}
     });
 
     socket.on('disconnect', function () {
-      writeStatus('SOCKET DISCONNECTED!');
+      socketDebug('disconnect', null);
       alarm.on();
 
     });
 
     socket.on('hello', function (data) {
-        console.log(data);
+        socketDebug('hello', data);
     });
 
     socket.on('scan', function (data) {
-        console.log("scan event from server:");
-        console.log(data);
+        socketDebug('scan', data);
         needleBump = window.setInterval(kegio.needleBump,200);
         writeStatus('SCAN: rfid# '+data.data);
         kegio.getUserInfo(data.data,addPour);
@@ -170,8 +174,7 @@ ul{margin-left: 5px;}
     });
 
     socket.on('deny', function(data){
-        console.log("DENY TAG FROM SERVER");
-        console.log(data);
+        socketDebug('deny', data);
         writeStatus('DENIED POUR');
         $('.jewel.locked').addClass('active');
         window.setTimeout(function(){$('.jewel.locked').removeClass('active');},1000);
@@ -190,8 +193,7 @@ ul{margin-left: 5px;}
     });
 
     socket.on('pour', function (data) {
-        console.log("pour event from server:");
-        console.log(data);
+        socketDebug('pour', data);
         window.clearInterval(needleBump);
         updateChart('flow_chart',0);
         $('#pours div.last span.ounces').text(data.data);
@@ -237,7 +239,7 @@ ul{margin-left: 5px;}
 
 
     },5);
-	
+
 		kegio.getKegs(function(kegs){
 			var current = kegs[0];
       $('#currentkeg').html(Mustache.to_html($('#currentkeg').html(),current));
@@ -257,7 +259,7 @@ ul{margin-left: 5px;}
              rows: [{c:[{v:gauge.label},{v:0}]}]
            },
          0.6
-      )       
+      )
       var opts = gauge.options;
 
       charts[gauge.target] = {'chart':chart,'options':opts,'data':dt,'draw':function(){this.chart.draw(this.data,this.options)}};
@@ -272,10 +274,10 @@ ul{margin-left: 5px;}
                 },target)
 
 
-              } 
+              }
     }
 
-    
+
 
 //end document.ready()
 	});
@@ -330,10 +332,12 @@ function updateChart(id,data){
 
 function updateSpark(id,data){
   var chart = charts[id];
-  chart.tick+=1;
-  chart.data.setValue(chart.tick,0,data);
-  //chart.data.addRow([{v:data}]);
-  chart.draw();
+  if (chart != null) {
+    chart.tick+=1;
+    chart.data.setValue(chart.tick,0,data);
+    //chart.data.addRow([{v:data}]);
+    chart.draw();
+  }
 }
 
 function addPour(user){
@@ -360,9 +364,9 @@ function addPour(user){
          rows: [{c:[{v:0}]},{c:[{v:0}]},{c:[{v:0}]},{c:[{v:0}]},{c:[{v:0}]},{c:[{v:0}]},{c:[{v:0}]},{c:[{v:0}]},{c:[{v:0}]},{c:[{v:0}]}]
        },
      0.6
-    ) 
+    )
     var opts = {'showAxisLines':false,'showValueLabels':false,'layout':'v','width':200,height:40,fill:true,max:100};
-        
+
     chart.draw(dt,opts);
     charts['current_spark'] = {'chart':chart,'tick':0,'options':opts,'data':dt,'draw':function(){
         var cs = document.createElement('DIV');
@@ -372,7 +376,7 @@ function addPour(user){
         this.chart = cht;
         $('#current_spark').replaceWith(cs);
         //this.chart.draw(this.data,this.options)
-      }};      
+      }};
   }
 
 }

@@ -16,9 +16,6 @@
 	/* Port to serve regular HTTP content on */
 	"http_port": "8081",
 
-    /* Sqlite3 DB path */
-	"db_path": "db/kegerator.db",
-
     "twitter": {
     	/* To tweet, or not to tweet */
     	"enabled": false,
@@ -29,6 +26,11 @@
 		"access_token_key": "INSERT_VALUE_HERE",
 		"access_token_secret": "INSERT_VALUE_HERE"
 	},
+
+    "mongo": {
+      "db": "kegio",
+      "servers": [{ "host": "localhost", "port": 27017 }]
+  },
 
 	/* password to use for adding a new user via the UI */
 	"admin_ui_password": "INSERT_VALUE_HERE",

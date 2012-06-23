@@ -12,7 +12,7 @@ module.exports.verify = (keys = {}) ->
         secret = keys[req.accessKey]
         throw Error("Unknown accessKey: #{req.accessKey}") unless secret?
         to_sign = payload.getRequestPayload req
-        console.log to_sign
+        # console.log to_sign
         valid = signer.isValidSignature(req.query.signature, to_sign, secret)
         throw Error('Invalid request signature') unless valid
         next()

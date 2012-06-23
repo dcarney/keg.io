@@ -1,19 +1,23 @@
 #! /usr/bin/env coffee
 
 # Setup dependencies
-fs         = require 'fs'
-http       = require 'http'
-OptParse   = require 'optparse'
-sys 				= require 'util'
-url 				= require 'url'
+async       = require 'async'
+exec        = require('child_process').exec
+express     = require 'express'
+fs          = require 'fs'
+http        = require 'http'
+log4js      = require 'log4js'
+OptParse    = require 'optparse'
 path        = require 'path'
 querystring = require 'querystring'
 socket_io 	= require 'socket.io'
+_           = require 'underscore'
+url         = require 'url'
+sys         = require 'util'
+
 Keg 			  = require './lib/keg'
-log4js 			= require 'log4js'
-connect 		= require 'connect'
 middleware  = require './lib/middleware'
-express     = require 'express'
+KegDb       = require './lib/kegDb'
 
 switches = [
   [ "-h", "--help",         'Display the help information' ],
@@ -21,6 +25,12 @@ switches = [
   [ '-r', '--rebuild', 'rebuilds the DB, creating a backup of the current DB'],
   [ "-v", "--version",      'Displays the version of keg.io']
 ]
+
+defaultConfigPath = 'conf/configuration.json'
+
+# parse the given config file, stripping out C-style comments
+parseConfig = (configFilePath) ->
+  JSON.parse(fs.readFileSync(configFilePath).toString().replace(new RegExp("\\/\\*(.|\\r|\\n)*?\\*\\/", "g"), ""))
 
 Options =
   rebuild: false
@@ -31,7 +41,7 @@ Parser.banner = "Usage keg.io [options]"
 Config = null
 Parser.on "config-file", (opt, value) ->
   # Load our commented JSON configuration file, stripping out C-style comments
-  Config = JSON.parse(fs.readFileSync(value).toString().replace(new RegExp("\\/\\*(.|\\r|\\n)*?\\*\\/", "g"), ""))
+  Config = parseConfig value
 
 Parser.on 'help', (opt, value) ->
   # output the usage info and exit
@@ -42,33 +52,35 @@ Parser.on 'version', (opt, value) ->
   # output the version info from package.json and exit
   package_path = __dirname + "/package.json"
 
-  fs.readFile package_path, (err,data) ->
-    if err
-      console.error "Could not open package file : %s", err
-      process.exit 1
+  data = fs.readFileSync package_path
+  unless data?
+    console.error "Could not open package file : %s", err
+    process.exit 1
 
-    content = JSON.parse(data.toString('ascii'))
-    console.log content['version']
-    process.exit 0
+  content = JSON.parse(data.toString('ascii'))
+  console.log "keg.io version #{content['version']}"
+  process.exit 0
 
 Parser.on 'rebuild', (opt, value) ->
   Options.rebuild = true
 
 Parser.parse process.argv
 
-# defaults, used if no config file is given
+# use the default config file, if no override was given
 unless Config?
-  Config =
-    socket_listen_port: 8081
-    socket_client_connect_port: 8081
-    http_port: 8081
-    db_path: 'db/kegerator.db'
-    high_temp_threshold: 60
-    twitter: { enabled: false }
-    image_host: 'http://images.keg.io/'
+  unless path.existsSync defaultConfigPath
+    console.error "#{defaultConfigPath} not found.  Create or specify a different config."
+    process.exit 1
+  Config = parseConfig defaultConfigPath
 
 # some simple configuration cleansing, to take care of common mistakes
 Config.image_host += '/' unless /\/$/.test Config.image_host
+
+# Load access/secret keys from disk:
+unless path.existsSync 'conf/keys.json'
+  console.error 'conf/keys.json not found'
+  process.exit 1
+keys = JSON.parse(fs.readFileSync('conf/keys.json').toString())
 
 # The logging verbosity (particularly to the console for debugging) can be changed via the
 # **conf/log4js.json** configuration file, using standard log4js log levels:
@@ -78,31 +90,75 @@ logger = log4js.getLogger()
 for k, v of Config
   logger.debug "#{k}:#{v}"
 
-# Load access/secret keys from disk:
-keys = JSON.parse(fs.readFileSync('conf/keys.json').toString())
-
 keg = new Keg(logger, Config)
 
-rebuild = () ->
-  keg.rebuildDb (err) ->
-    if err
-      console.log "ERROR: #{err}" if err
+db = new KegDb(Config.mongo)
+db.connect (err) =>
+  if err?
+    logger.error 'Failed to connect to keg.io DB.'
+    logger.error err
+    process.exit 1
+  else
+    logger.info 'Connected to keg.io DB!'
+
+# callback = (err)
+rebuild = (callback) ->
+  dbName = Config.mongo.db
+  # backup
+  db.exists dbName, (err, exists) ->
+    exists = true
+    if err?
+      console.error err if err
       process.exit 1
-    process.exit 0
+    if exists?
+      console.log "backing up #{dbName} to db/bak..."
+      # run the following commands in series to back up the DB
+      cmds = ["mkdir -p db/bak/"
+              "mongodump -h 127.0.0.1:27017 -d #{dbName} --out #{dbName}",
+              "tar -czvf db/bak/#{dbName}.tar.gz #{dbName}",
+              "rm -rf #{dbName}"]
+      workers = []
+      _.each cmds, (cmd) ->
+        workers.push (cb) ->
+          exec cmd, (err, stdout, stderr) ->
+            return cb err, {out: stdout, err: stderr} if err?
+            cb null, {out: stdout, err: stderr}
+      async.series workers, (err, results) ->
+        return callback err if err?
+        keg.rebuildDb callback  # now do the rebuild
 
 if Options.rebuild
-  # copy the DB file as .bak, build a new DB
-  path.exists Config.db_path, (exists) ->
-    if exists
-      input = fs.createReadStream Config.db_path
-      output = fs.createWriteStream Config.db_path + '.bak'
-      sys.pump input, output, (err) ->
-        rebuild()
-    else
-      rebuild()
+  rebuild (err) ->
+    console.log "ERR: #{err}" if err?
+    process.exit 1 if err?
+    process.exit 0
 
 server = express.createServer()
+# the logger middleware has to be added here first, not down with the rest of
+# the middleware
+server.use express.logger('dev')
 
+# can be used with/without handleResponse
+handleError = (err, req, res) ->
+  res.contentType 'json'
+  responseCode = if err?.responseCode? then err.responseCode else 500
+  message =
+    message: "Internal error: #{err}"
+    error: err
+    time: Date.now()
+    method: req.method
+    query : req.query
+    url: req.url
+    body: req.body
+    headers: req.headers
+  res.send(message, responseCode)
+
+handleResponse = (err, result, req, res) ->
+  res.contentType 'json'
+  if err?
+    handleError err, req, res
+  else
+    res.send result, 200
 
 # ## UI routes
 # 'UI' routes are routes designed for keg.io UI clients (eg. web pages) to
@@ -124,109 +180,114 @@ server.get '/config/socketPort', (req, res, next) ->
   res.send Config.socket_client_connect_port.toString(), 200
 
 # ## UI: get kegerators
-#   `GET /kegerators`
+#   `GET /kegerators/ID?`
 #
-# Optional params: recent=N
+#    Where **ID** is the (optional) ID (aka access key) of the desired kegerator
+#
+# Optional params: limit=N
 #   where **N** is the number of temperatures to retrieve, in reverse
 #   chronological order
 #
-server.get '/kegerators', (req, res, next) ->
-  keg.kegerators req.query['recent'], (result) ->
-    res.send result, 200
+server.get '/kegerators/:id?', (req, res, next) ->
+  criteria = {}
+  criteria['limit'] = req.query['limit']
+  criteria['id'] = req.params.id
+  keg.db.findKegerators criteria, (err, result) ->
+    handleResponse err, result, req, res
 
 # ## UI: get temperatures for a kegerator
-#   `GET /kegerators/ACCESS_KEY/temperatures`
+#   `GET /kegerators/ID/temperatures`
 #
-#    Where **ACCESS_KEY** is the access key of the desired kegerator
+#    Where **ID** is the access key of the desired kegerator
 #
-# Optional params: recent=N
+# Optional params: limit=N
 #   where **N** is the number of temperatures to retrieve, in reverse
 #   chronological order
 #
-server.get '/kegerators/:accessKey/temperatures', (req, res, next) ->
-  keg.kegeratorTemperatures req.params.accessKey, req.query['recent'], (result) ->
-    res.send result, 200
+server.get '/kegerators/:id/temperatures', (req, res, next) ->
+  criteria = {id: req.params.id}
+  criteria.limit = req.query['limit']
+  keg.db.findTemperatures criteria, (err, result) ->
+    handleResponse err, result, req, res
 
 # ## UI: get users for a kegerator, based on recent pours
-#   `GET /kegerators/ACCESS_KEY/users`
+#   `GET /kegerators/ID/users`
 #
-#    Where **ACCESS_KEY** is the access key of the desired kegerator
+#    Where **ID** is the access key of the desired kegerator
 #
-# Optional params: recent=N
+# Optional params: limit=N
 #   where **N** is the number of recent pours to retrieve users from
 #
-server.get '/kegerators/:accessKey/users', (req, res, next) ->
-  keg.kegeratorUsers req.params.accessKey, req.query['recent'], (result) ->
-    res.send result, 200
-
-server.get '/kegerators/:accessKey/lastDrinker', (req,res,next) ->
-  keg.lastDrinker req.params.accessKey, (result) ->
-    res.send result, 200
+server.get '/kegerators/:id/users', (req, res, next) ->
+  criteria = {id: req.params.id}
+  criteria.limit = req.query['limit']
+  keg.db.findPours criteria, (err, result) ->
+    handleError err, req, res if err?
+    # lookup up users based on all the RFIDs returned from the result
+    criteria = {ids: _.pluck(result, 'rfid')}
+    keg.findUsers criteria, (err, result) ->
+      handleResponse err, result, req, res
 
 # ## UI: get pours for a kegerator
-#   `GET /kegerators/ACCESS_KEY/pours`
+#   `GET /kegerators/ID/pours`
 #
-#    Where **ACCESS_KEY** is the access key of the desired kegerator
+#    Where **ID** is the access key of the desired kegerator
 #     and **N** is the number of pours to retrieve
 #
-# Optional params: recent=N
+# Optional params: limit=N
 #   where **N** is the number of recent pours to retrieve users from
 #
 # #### Examples:
 # ##### Retrieve the last 10 pours for kegerator 1111:
-#     GET /1111/recentPours/10
+#     GET kegerators/1111/pours?limit=10
 #
-server.get '/kegerators/:accessKey/pours', (req, res, next) ->
-  keg.kegeratorPours req.params.accessKey, req.query['recent'], (result) ->
-    res.send result, 200
+server.get '/kegerators/:id/pours', (req, res, next) ->
+  criteria = {id: req.params.id}
+  criteria.limit = req.query['limit']
+  keg.db.findPours criteria, (err, result) ->
+    handleResponse err, result, req, res
 
 # ## UI: get kegs for a kegerator
-#   `GET /kegerators/ACCESS_KEY/kegs`
+#   `GET /kegerators/ID/kegs`
 #
-#    Where **ACCESS_KEY** is the access key of the desired kegerator
+#    Where **ID** is the access key of the desired kegerator
 #
-# Optional params: recent=N
+# Optional params: limit=N
 #   where **N** is the number of temperatures to retrieve, in reverse
 #   chronological order
 #
-server.get '/kegerators/:accessKey/kegs', (req, res, next) ->
-  keg.kegeratorKegs req.params.accessKey, req.query['recent'], (result) ->
-    res.send result, 200
+server.get '/kegerators/:id/kegs', (req, res, next) ->
+  criteria = {id: req.params.id}
+  criteria.limit = req.query['limit']
+  keg.db.findKegs criteria, (err, result) ->
+    handleResponse err, result, req, res
 
 # ## UI: get info about all users
-#   `GET /users`
+#   `GET /users/RFID?`
 #
-
-# ## UI: get info about a user
-#   `GET /users/RFID`
+# Where **RFID** is the (optional) rfid assigned to the desired user
 #
-#    Where **RFID** is the rfid assigned to the desired user
+# Optional params: limit=N
+#   where **N** is the number of temperatures to retrieve, in reverse
+#   chronological order
 #
 server.get '/users/:rfid?', (req, res, next) ->
-  keg.users req.params.rfid, (result) ->
-    res.send result, 200
-
-# ## UI: get a user's coasters
-#   `GET /users/RFID/coasters`
-#
-#    Where **RFID** is the rfid assigned to the desired user
-#
-server.get '/users/:rfid/coasters', (req, res, next) ->
-  keg.userCoasters req.params.rfid, (result) ->
-    res.send result, 200
+  criteria = {}
+  criteria['limit'] = req.query['limit']
+  criteria['id'] = req.params.rfid
+  keg.findUsers criteria, (err, result) ->
+    handleResponse err, result, req, res
 
 # ## UI: get info about all coasters
 #   `GET /coasters`
 #
-
-# ## UI: get info about a coaster
-#   `GET /coasters/ID`
-#
-#    Where **ID** is the ID of the desired coaster
-#
+#  Where **ID** is the (optional) ID of the desired coaster
 server.get '/coasters/:id?', (req, res, next) ->
-  keg.coasters req.params.id, (result) ->
-    res.send result, 200
+  criteria = {}
+  criteria['limit'] = req.query['limit']
+  criteria['id'] = req.params.id
+  keg.findCoasters criteria, (err, result) ->
+    handleResponse err, result, req, res
 
 # ## API routes
 # 'API' routes are routes designed for keg.io clients (kegerators, soda machines,
@@ -289,11 +350,12 @@ respond = (status_code, res, action_text, response_text) ->
 #     GET http://keg.io/kegerator/1111/scan/23657ABF5?signature=....
 #
 server.get '/api/kegerator/:accessKey/scan/:rfid', api_middlewares, (req, res, next) ->
-  keg.scanRfid req.params.accessKey, req.params.rfid, (valid) ->
-    if valid
+  keg.scanRfid req.params.accessKey, req.params.rfid, (err, valid) ->
+    if valid?
       respond(200, res, 'scan', req.params.rfid)
     else
       respond(401, res, 'scan', "#{req.params.rfid} is invalid")
+
 
 # ## API: report the current flow rate
 #   `PUT /api/kegerator/ACCESS_KEY/flow/RATE`
@@ -317,40 +379,41 @@ server.put /^\/api\/kegerator\/([\d]+)\/flow\/([\d]+)$/, api_middlewares, (req, 
       respond(401, res, 'flow', 'invalid flow event (a valid scan may not have been received)')
 
 # ## API: report an end to the current flow
-#   `PUT /api/kegerator/ACCESS_KEY/flow/end`
+#   `PUT /api/kegerator/ID/flow/end`
 #
-#    Where **ACCESS_KEY** is an access key registered with the keg.io server
+#    Where **ID** is an access key registered with the keg.io server
 #
 # Reports that the flow for the most recent RFID has completed on this
 # kegerator.  Any subsequnt 'flow' requests after this request, but before
 # another successful 'scan' request will be ignored.
-server.put '/api/kegerator/:accessKey/flow/end', api_middlewares, (req, res, next) ->
-  keg.endFlow req.params.accessKey, (err) ->
+server.put '/api/kegerator/:id/flow/end', api_middlewares, (req, res, next) ->
+  keg.endFlow req.params.id, (err, savedToDb) ->
     if err?
       respond(401, res, 'flow', 'invalid flow event')
     else
       respond(200, res, 'flow', 'end')
 
 # ## API: report the current kegerator temperature
-#   `PUT /api/kegerator/ACCESS_KEY/temp/TEMP`
+#   `PUT /api/kegerator/ID/temp/TEMP`
 #
-#    Where **ACCESS_KEY** is an access key registered with the keg.io server
+#    Where **ID** is an access key registered with the keg.io server
 #    and **TEMP** is an integer representing the current keg temperature in F.
 #
-server.put '/api/kegerator/:accessKey/temp/:temp', api_middlewares, (req, res, next) ->
-  keg.addTemp req.params.accessKey, req.params.temp, (valid) ->
-    if valid
-      respond(200, res, 'temp', req.params.temp)
-    else
+server.put '/api/kegerator/:id/temp/:temp', api_middlewares, (req, res, next) ->
+  keg.addTemp req.params.id, req.params.temp, (err, valid) ->
+    if err? || not valid
       respond(401, res, 'temp', invalid temp event)
+    else
+      respond(200, res, 'temp', req.params.temp)
 
 # create the http server, load up our middleware stack, start listening
-server.use connect.favicon(__dirname + '/static/favicon.ico', {maxAge: 2592000000})
-server.use connect.logger('short')
-server.use connect.query() 												# parse query string
+
+server.use express.favicon(__dirname + '/static/favicon.ico', {maxAge: 2592000000})
+server.use express.query() 												# parse query string
 server.use middleware.path()											# parse url path
-server.use connect.static(__dirname + '/static') 	# static file handling
+server.use express.static(__dirname + '/static') 	# static file handling
 server.use server.router                          # UI and API routing
+
 server.listen Config.http_port
 
 # dump a list of all the available routes to stdout (for debugging)
@@ -360,15 +423,15 @@ server.listen Config.http_port
 io = socket_io.listen(server)
 
 sendToAllSockets = (event, data) ->
-  logger.debug "pushing #{event} event to all sockets"
+  #logger.debug "pushing #{event} event to all sockets"
   io.sockets.emit event, {data: data}
 
 sendToSocket = (socket, event, data) ->
-  logger.debug "pushing #{event} event to socket #{socket.id}"
+  #logger.debug "pushing #{event} event to socket #{socket.id}"
   socket.emit event, {data: data}
 
 sendToAttachedSockets = (attachment, event, data) ->
-  logger.debug "pushing #{event} event to sockets attached to #{attachment}"
+  #logger.debug "pushing #{event} event to sockets attached to #{attachment}"
   io.sockets.in(attachment).emit event, {data: data}
 
 keg.on 'scan', (kegerator_access_key, rfid) ->
@@ -394,5 +457,5 @@ io.sockets.on 'connection', (socket) ->
   socket.on 'attach', (kegerator_access_key) ->
     console.log "attach request for #{kegerator_access_key}"
     socket.join kegerator_access_key
-    console.log 'attached'
+    console.log "attached to #{kegerator_access_key}"
     socket.emit 'attached'
