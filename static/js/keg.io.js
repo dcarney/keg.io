@@ -50,6 +50,8 @@ $(document).ready(function(){
 
  socket = io.connect('http://localhost:8081');
  socket.on('connect', function () { socketDebug('connect', null); });
+ socket.on('hello', function (data) { socketDebug('hello', data); });
+ socket.on('scan', function (data) { socketDebug('scan', data); });
 
 });   // document ready
 
