@@ -171,7 +171,7 @@ handleResponse = (err, result, req, res) ->
 #   `GET /hello`
 #
 server.get '/hello', (req, res, next) ->
-  res.send '', 200
+  res.send 'world', 200
 
 # ## UI: get the port to use for web socket connections
 #   `GET /config/socketPort`
