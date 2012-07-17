@@ -42,7 +42,7 @@ var switchKegerator = function(kegeratorId) {
 
      // re-connect to the appropriate web socket
      reattachWebSocket(kegeratorId);
-  });
+    });
 };
 
 // Connect to a web socket and listen for events for the given kegerator
@@ -72,7 +72,7 @@ var handleTempEvent = function(data) {
     $('#kegerator_temp').addClass("badge-warning");
   } else {
     $('#kegerator_temp').addClass("badge-important");
-	}
+}
 };
 
 var handleDenyEvent = function(data) {
@@ -220,11 +220,11 @@ $(document).ready(function(){
   }
 
   // Get the list of available kegerators, populate the dropdown with them
-  $.getJSON("/kegerators", function(kegerators) {
-    var ids = _.pluck(kegerators, 'kegerator_id');
-    _.each(ids, function(id) {
+    $.getJSON("/kegerators", function(kegerators) {
+        var ids = _.pluck(kegerators, 'kegerator_id');
+        _.each(ids, function(id) {
       $('.dropdown-menu').append("<li><a href='#'>" + id + "</a></li>");
-    });
+        });
   }); // getJSON
 
   // Populate the 'last drinker' and 'current drinker' cards
@@ -234,7 +234,7 @@ $(document).ready(function(){
       var lastPour = pours.shift(); // the 'last' pour is the 0th element!
       getUser(lastPour.rfid, function(user) {
         populateCurrentDrinkerMarkup(user);
-      });
+    });
 
       var pourObjects = [];
       // remove any undefined objecs
@@ -249,7 +249,7 @@ $(document).ready(function(){
             // all done, populate the UI
             populatePreviousDrinkersMarkup(pourObjects);
           }
-        });
+});
       });
 
     }); // getJSON
@@ -259,11 +259,10 @@ $(document).ready(function(){
  socket.on('connect', function () {
   socketDebug('connect', null);
   $('.badge.connected').removeClass("badge-important badge-warning").addClass("badge-success on");//.text("connected");
- });
+    });
  socket.on('disconnect', function() {
   $('.badge.connected').removeClass("badge-success badge-warning").addClass("badge-important on");//.text("disconnected");
- });
- socket.on('hello', function (data) { socketDebug('hello', data); });
+}); socket.on('hello', function (data) { socketDebug('hello', data); });
  socket.on('scan', handleScanEvent);
  socket.on('temp', handleTempEvent);
  socket.on('deny', handleDenyEvent);
