@@ -16,9 +16,26 @@ var switchKegerator = function(kegeratorId) {
 
      // Populate some DOM elements w/ info
      $('#kegerator_details').empty();
-     $('#kegerator_details').append("<li class='nav-header'>" + kegerator.name + "</li>");
-     $('#kegerator_details').append("<li class='nav-header'>" + kegerator.description + "</li>");
-     $('#kegerator_details').append("<li class='nav-header'>current beer temperature: <span id='kegerator_temp'>--</span></li>");
+     $('#kegerator_details').append("<li class='nav-header'>Kegerator</li>");
+     $('#kegerator_details').append("<li><a href='#'>" + kegerator.name + "</a></li>");
+     $('#kegerator_details').append("<li><a href='#'>" + kegerator.description + "</a></li>");
+     $('#kegerator_details').append("<li><a href='#'>current beer temperature: <span id='kegerator_temp'>--</span></a></li>");
+
+     // Get data about most recent keg on this kegerator
+     $.getJSON("/kegerators/" + kegeratorId + "/kegs?limit=1", function(data) {
+      keg = data;
+      if (_.isArray(data)) {
+        keg = data[0];
+      }
+
+      // populate some DOM elements w/ current keg info
+      $('#keg_details').empty();
+      $('#keg_details').append("<li class='nav-header'>Keg</li>");
+      $('#keg_details').append("<li class='nav-header'>" + keg.beer + ' ' + keg.beer_style + "</li>");
+      $('#keg_details').append("<li class='nav-header'>" + keg.brewery + "</li>");
+      $('#keg_details').append("<li class='nav-header'>tapped: " + moment(keg.tapped_date).from(moment()) + "</li>");
+      // image_path: "MannysPint3.gif"
+     });  // getJSON
 
      // re-connect to the appropriate web socket
      reattachWebSocket(kegeratorId);
