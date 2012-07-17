@@ -42,7 +42,7 @@ var switchKegerator = function(kegeratorId) {
 
      // re-connect to the appropriate web socket
      reattachWebSocket(kegeratorId);
-    });
+  });
 };
 
 // Connect to a web socket and listen for events for the given kegerator
@@ -220,11 +220,11 @@ $(document).ready(function(){
   }
 
   // Get the list of available kegerators, populate the dropdown with them
-    $.getJSON("/kegerators", function(kegerators) {
-        var ids = _.pluck(kegerators, 'kegerator_id');
-        _.each(ids, function(id) {
+  $.getJSON("/kegerators", function(kegerators) {
+    var ids = _.pluck(kegerators, 'kegerator_id');
+    _.each(ids, function(id) {
       $('.dropdown-menu').append("<li><a href='#'>" + id + "</a></li>");
-        });
+    });
   }); // getJSON
 
   // Populate the 'last drinker' and 'current drinker' cards
@@ -276,4 +276,3 @@ $('.dropdown-menu').on('click', 'li', function(event){
   console.log('New kegerator selected: ' + selectedId);
   switchKegerator(selectedId);
 });
-
