@@ -435,6 +435,7 @@ sendToAttachedSockets = (attachment, event, data) ->
   io.sockets.in(attachment).emit event, {data: data}
 
 keg.on 'scan', (kegerator_access_key, rfid) ->
+  console.log "scan on #{kegerator_access_key}...sending to sockets"
   sendToAttachedSockets kegerator_access_key, 'scan', rfid
 
 keg.on 'pour', (kegerator_access_key, volume) ->
@@ -455,7 +456,23 @@ io.sockets.on 'connection', (socket) ->
 
   # events from browser client
   socket.on 'attach', (kegerator_access_key) ->
-    console.log "attach request for #{kegerator_access_key}"
+    console.log "attach request for #{kegerator_access_key} on socket #{socket.id}"
     socket.join kegerator_access_key
+
+    # get all the rooms this socket is joined to
+    # ex. { '': true, '/1111': true }
+    rooms = io.sockets.manager.roomClients[socket.id]
+
+    # find all the kegerator rooms that aren't the one we're attaching to
+    otherRooms = _.filter _.keys(rooms), (room) ->
+      room.match(/\/\d+/) && room != "/#{kegerator_access_key}"
+
+    # leave other kegerator's rooms
+    _.each otherRooms, (room) ->
+      roomId = room.replace /^\//, '' # remove leading '/'
+      console.log "leaving #{roomId}..."
+      socket.leave roomId
+
+    console.log io.sockets.manager.roomClients[socket.id]
     console.log "attached to #{kegerator_access_key}"
     socket.emit 'attached'
