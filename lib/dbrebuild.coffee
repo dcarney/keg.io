@@ -12,15 +12,15 @@ class DbRebuild
   rebuild: (dbName, server, port, cb) ->
     kegerators = []
     kegerators.push(
-        kegerator_id: 1111
+        kegerator_id: 2222
         name: 'VNC Seattle'
         description: 'The original home of keg.io'
         owner_email: 'chris.castle@vivaki.com')
 
     kegerators.push(
-        kegerator_id: 2222
-        name: 'Some Other Kegerator'
-        description: 'The second home of keg.io'
+        kegerator_id: 1111
+        name: 'zulily, Seattle WA'
+        description: 'Baby clothes for the win'
         owner_email: 'dcarney@gmail.com')
 
     kegs = []
