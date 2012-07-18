@@ -120,7 +120,7 @@ class FakeKegerator
       else
         console.log "ERROR: error sending temp request: #{randomTemp}"
 
-    delay 30000, @fakeTemp # repeat every 30 seconds
+    delay 10000, @fakeTemp # repeat every 10 seconds
 
 fakeKegerator = new FakeKegerator()
 fakeKegerator.go()
