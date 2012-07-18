@@ -29,12 +29,13 @@ var switchKegerator = function(kegeratorId) {
       }
 
       // populate some DOM elements w/ current keg info
+      // TODO: Make image_path part of the repsonse, liek we do with gravatar images
       $('#keg_details').empty();
       $('#keg_details').append("<li class='nav-header'>Keg</li>");
       $('#keg_details').append("<li class='nav-header'>" + keg.beer + ' ' + keg.beer_style + "</li>");
       $('#keg_details').append("<li class='nav-header'>" + keg.brewery + "</li>");
       $('#keg_details').append("<li class='nav-header'>tapped: " + moment(keg.tapped_date).from(moment()) + "</li>");
-      // image_path: "MannysPint3.gif"
+      $('#keg_details').append("<li><img src='http://images.keg.io/" + keg.image_path + "'></img></li>");
      });  // getJSON
 
      // re-connect to the appropriate web socket
@@ -51,10 +52,59 @@ var reattachWebSocket = function(kegeratorId) {
 
 var handleTempEvent = function(data) {
   socketDebug('temp', data);
+  temperature = data['data'];
   $('#kegerator_temp').empty();
-  $('#kegerator_temp').html(data['data']);
-  $("#kegerator_temp").animate({color: "#FF0000"}, 700);
-  $("#kegerator_temp").animate({color: "#000000"}, 700);
+  $('#kegerator_temp').html(temperature);
+  $("#kegerator_temp").animate({color: "#000000", backgroundColor: "#FF0000"}, 700);
+  $("#kegerator_temp").animate({color: "#000000", backgroundColor: "#FFFFFF"}, 700);
+};
+
+var handleScanEvent = function(data) {
+  socketDebug('scan', data);
+
+  rfid = data['data'];
+  $.getJSON("/users/" + rfid, function(data) {
+    var user = data;
+    if (_.isArray(data)) {
+      user = data[0];
+    }
+
+    console.log(user);
+
+    /*
+      <div class="card">
+              <img class="profile" src="http://www.gravatar.com/avatar/a6bb9f750f1a3f52b7bddc5a3f843852?s=128">
+              <div class="bc-right">
+                <h1>Your Mom</h1>
+                <p class="location">Seattle, WA</p>
+                <p class="title" >Solid dude</p>
+              </div>
+            </div>
+
+
+    email: "garrett.patterson@vivaki.com"
+    first_name: "Garrett"
+      gravatar: "http://www.gravatar.com/avatar/576befa3d0acd03ae83895890c17f848?s=256"
+      last_name: "Patterson"
+      nickname: ""
+      rfid: "440055F873"
+      twitter_handle: "@thegarrettp"
+*/
+   // $('#hero').empty();
+
+    /* $('#hero').append("<h1>Hello, " + user.first_name + "!</h1>");
+    $('#hero').append("<p>Pour yourself a tasty beer!</p>");
+    $('#hero').append("<img style='float: right;' src='http://www.gravatar.com/avatar/a6bb9f750f1a3f52b7bddc5a3f843852?s=256' />"); */
+
+    $('#gravatar').attr('src', user.gravatar);
+    $('#user_info').empty();
+    $('#user_info').append("<h1>Hello, " + user.first_name + "!</h1>");
+    $('#user_info').append("<p>Pour yourself a tasty beer!</p>");
+    //$('#user_info').append("<p class='location'>Seattle, WA</p>");
+    //$('#user_info').append("<p class='title' >Solid dude</p>");
+    $("#hero").animate({backgroundColor: "#FF0000"}, 700);
+    $("#hero").animate({backgroundColor: "#FFFFFF"}, 700);
+  });
 };
 
 
@@ -114,7 +164,7 @@ $(document).ready(function(){
  socket = io.connect('http://localhost:8081');
  socket.on('connect', function () { socketDebug('connect', null); });
  socket.on('hello', function (data) { socketDebug('hello', data); });
- socket.on('scan', function (data) { socketDebug('scan', data); });
+ socket.on('scan', handleScanEvent);
  socket.on('temp', handleTempEvent);
 
 });   // document ready
