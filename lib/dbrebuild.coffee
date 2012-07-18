@@ -46,7 +46,7 @@ class DbRebuild
       tapped_date: '2011-04-12T01:23:45Z'
       volume_gallons: '15.5'
       active: 'false'
-      image_path: '')
+      image_path: 'immortal.jpg')
 
     users = []
     dc =
