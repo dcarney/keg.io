@@ -69,6 +69,14 @@ var handleScanEvent = function(data) {
       user = data[0];
     }
 
+    if (user) {
+      _.each(user.coasters, function(coaster_id) {
+        $.getJSON("/coasters/" + coaster_id, function(data) {
+          var image_path = data.image_path;
+          var description = data.description;
+        });
+      });
+    }
     console.log(user);
 
     /*
@@ -98,10 +106,12 @@ var handleScanEvent = function(data) {
 
     $('#gravatar').attr('src', user.gravatar);
     $('#user_info').empty();
-    $('#user_info').append("<h1>Hello, " + user.first_name + "!</h1>");
+    $('#user_info').append("<h2>Hello, " + user.first_name + "!</h2>");
     $('#user_info').append("<p>Pour yourself a tasty beer!</p>");
     //$('#user_info').append("<p class='location'>Seattle, WA</p>");
     //$('#user_info').append("<p class='title' >Solid dude</p>");
+    // $('#user_coasters').empty();
+
     $("#hero").animate({backgroundColor: "#FF0000"}, 700);
     $("#hero").animate({backgroundColor: "#FFFFFF"}, 700);
   });
@@ -138,6 +148,13 @@ var socket = null;
 
 $(document).ready(function(){
 
+  $('img.coaster').each(function(index, el) {
+    $(el).on('hover', function() {
+      var self = this;
+      $(self).tooltip();
+    });
+  });
+
   // Look for a keg.io cookie, with an all-numeric kegerator ID in it.
   var cookieVal = cookieRead('kegio');
   if ((cookieVal !== null) && (cookieVal.match(/^\d+$/))) {
@@ -166,6 +183,7 @@ $(document).ready(function(){
  socket.on('hello', function (data) { socketDebug('hello', data); });
  socket.on('scan', handleScanEvent);
  socket.on('temp', handleTempEvent);
+ // TODO: add code to handle flow event
 
 });   // document ready
 
