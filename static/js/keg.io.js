@@ -139,8 +139,8 @@ var populateCurrentDrinkerMarkup = function(user) {
     });
   }
 
-  $('#gravatar').attr('src', user.gravatar);
-  $('#user_info').empty();
+    $('#gravatar').attr('src', user.gravatar);
+    $('#user_info').empty();
   $('#user_info').append('<h2>Hello, <span class="firstname"> '+ user.first_name + '</span><span class="lastname">'+user.last_name+'</span>!</h2>');
   $('#user_info').append("<p class='tagline'>Pour yourself a tasty beer!</p>");
   $('#user_info').append("<p class='pour_volume'></p>");
