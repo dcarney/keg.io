@@ -1,372 +1,198 @@
 <!DOCTYPE html>
-<!-- saved from url=(0054)/hero.html -->
 <html lang="en">
   <head>
-    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-    <title>keg.io v2</title>
+    <meta charset="utf-8">
+    <title>keg.io</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="">
-    <meta name="author" content="Garrett">
-
-    <link rel="stylesheet" type="text/css" media="all" href="css/reset.css" />
-    <link rel="stylesheet" type="text/css" media="all" href="css/text.css" />
-    <link rel="stylesheet" type="text/css" media="all" href="css/960.css" />
+    <meta name="author" content="">
 
     <!-- Le styles -->
-    <link href='http://fonts.googleapis.com/css?family=Cabin+Sketch:bold' rel='stylesheet' type='text/css'>
-    <link href='http://fonts.googleapis.com/css?family=Rock+Salt' rel='stylesheet' type='text/css'>
-    <link href='http://fonts.googleapis.com/css?family=Annie+Use+Your+Telescope' rel='stylesheet' type='text/css'>
-    <link rel="stylesheet" type="text/css" href="css/style.css" media="screen" />
-    <link rel="stylesheet" href="/css/forms.css">
-    <link rel="stylesheet" href="/css/bootstrap.min.css" />
+    <link href="../css/bootstrap.css" rel="stylesheet">
+    <style type="text/css">
+      body {
+        padding-top: 60px;
+        padding-bottom: 40px;
+      }
+      .sidebar-nav {
+        padding: 9px 0;
+      }
+    </style>
+    <link href="../css/bootstrap-responsive.css" rel="stylesheet">
+    <link href="../css/style-fluid.css" rel="stylesheet">
 
     <!-- Le HTML5 shim, for IE6-8 support of HTML5 elements -->
     <!--[if lt IE 9]>
-      <script src="//html5shim.googlecode.com/svn/trunk/html5.js"></script>
+      <script src="http://html5shim.googlecode.com/svn/trunk/html5.js"></script>
     <![endif]-->
 
-    <!-- Le fav and touch icons -->
-    <link rel="shortcut icon" href="/images/favicon.ico">
-    <link rel="apple-touch-icon" href="/images/apple-touch-icon.png">
-    <link rel="apple-touch-icon" sizes="72x72" href="/images/apple-touch-icon-72x72.png">
-    <link rel="apple-touch-icon" sizes="114x114" href="/images/apple-touch-icon-114x114.png">
+    <!-- fonts -->
+    <link href='http://fonts.googleapis.com/css?family=Cabin+Sketch:bold' rel='stylesheet' type='text/css'>
 
-    <script src="https://www.google.com/jsapi?key=ABQIAAAA-hloRCoCScu-_bN2fSn1sRR4EqRj3RNZnoYuzojShxUjcPQKRRTnvFxdzgemDA4fIDmabxpsMJwNew"type="text/javascript"></script>
-    <script src="https://www.google.com/uds/?file=visualization&v=1&packages=gauge" language="javascript"></script>
-    <script type="text/javascript" >
-      google.load("visualization", "1", {packages:["corechart"]});
-      google.load("visualization", "1", {packages:["imagesparkline"]});
-    </script>
-    <style type="text/css">
-     ul{margin-left: 5px;}
-    </style>
+    <!-- Le fav and touch icons -->
+    <link rel="shortcut icon" href="../ico/favicon.ico">
+    <link rel="apple-touch-icon-precomposed" sizes="144x144" href="../ico/apple-touch-icon-144-precomposed.png">
+    <link rel="apple-touch-icon-precomposed" sizes="114x114" href="../ico/apple-touch-icon-114-precomposed.png">
+    <link rel="apple-touch-icon-precomposed" sizes="72x72" href="../ico/apple-touch-icon-72-precomposed.png">
+    <link rel="apple-touch-icon-precomposed" href="../ico/apple-touch-icon-57-precomposed.png">
   </head>
+
   <body>
-    <!--<header>
-    <h1>keg.io</h1>
-    </header>-->
-    <div class="navbar">
+    <div class="navbar navbar-fixed-top">
       <div class="navbar-inner">
-        <div class="container">
-          <a id="logo" class="brand" href="#">keg.io</a>
+        <div class="container-fluid">
+          <a class="btn btn-navbar" data-toggle="collapse" data-target=".nav-collapse">
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+          </a>
+          <a class="brand" href="#">keg.io</a>
+          <div class="btn-group pull-right">
+            <a class="btn dropdown-toggle" data-toggle="dropdown" href="#">
+              Kegerators
+              <span class="caret"></span>
+            </a>
+            <ul class="dropdown-menu">
+              <li class="divider"></li>
+              <ul id="kegerator_template">
+                <li><a href="#">some ID</a></li>
+                <li class="divider"></li>
+              </ul>
+            </ul>
+          </div>
+          <div class="nav-collapse">
+            <ul class="nav">
+              <li class="active"><a href="#">home</a></li>
+              <li><a href="http://keg.io" target="_blank">about</a></li>
+              <li><a href="https://github.com/dcarney/keg.io" target="_blank">github</a></li>
+            </ul>
+          </div><!--/.nav-collapse -->
         </div>
       </div>
     </div>
-    <div class="container_12">
-      <div class="grid_4 left">
-        <div class="beer_info grid_4" id="currentkeg">
-          <img id="beer_label" src="{{image_path}}"/>
-          <ul>
-            <li><strong>On tap:</strong> <span id="beer_name">{{beer}}</span></li>
-            <li><strong>Style:</strong> <span id="beer_style">{{beer_style}}</span></li>
-              <li><strong>Brewery:</strong> <span id="beer_brewery">{{brewery}}</span></li>
-            <li><strong>Tapped on:</strong> <span id="beer_tapped_date">{{tapped_date}}</span></li>
-            <li><em><span id="beer_desc">{{description}}</span></em></li>
-          </ul>
-        </div>
-      <div class="grid_3">
-        <p class="statusdisplay">waiting for socket...</p>
-      </div>
-      <div class="grid_2 alpha">
-        <div id="flow_chart" class="gauges"></div>
-        <div id="temp_chart" class="gauges"></div>
-        <div id="beer_chart" class="gauges"></div>
-      </div>
-      <div class="jewel grid_1 locked"></div>
-      <div class="jewel grid_1 open omega"></div>
-    </div>
-    <div class="grid_6">
-      <div id="pours">
-        <div id="drinker_template" class="drinker grid_6">
-          <img src="{{gravatar}}" class="gravatar" />
-          <ul>
-            <li>Name:{{first_name}} {{last_name}}</li>
-            <li>Member Since: {{created_at}}</li>
-            <li>Ounces Poured: <span class="ounces">{{volume_ounces}}</span></li>
-          </ul>
-  			</div>
-      </div>
-		</div>
-    </div> <!-- /container -->
+    <div class="container-fluid">
+      <div class="row-fluid">
+        <div class="span3">
+          <div class="well sidebar-nav">
+            <ul id="kegerator_details" class="nav nav-list">
+              <li class="nav-header">Kegerator</li>
+              <li class="active"><a href="#">Link</a></li>
+              <li><a href="#">Link</a></li>
+              <li><a href="#">Link</a></li>
+              <li><a href="#">Link</a></li>
+              <li class="nav-header">Sidebar</li>
+              <li><a href="#">Link</a></li>
+              <li><a href="#">Link</a></li>
+              <li><a href="#">Link</a></li>
+              <li><a href="#">Link</a></li>
+              <li><a href="#">Link</a></li>
+              <li><a href="#">Link</a></li>
+              <li class="nav-header">Sidebar</li>
+              <li><a href="#">Link</a></li>
+              <li><a href="#">Link</a></li>
+              <li><a href="#">Link</a></li>
+            </ul>
+            <ul id="keg_details" class="nav nav-list">
+              <li class="nav-header">Keg</li>
+            </ul>
+          </div><!--/.well -->
+        </div><!--/span-->
+        <div class="span9">
+          <div id="hero" class="hero-unit">
+            <div class="card">
+              <img id="gravatar" class="profile" src=""/>
+              <div id="user_info" class="bc-right" style="float: left;">
+              </div>
+              <div id="user_coasters" class="user_coasters" style="margin: 10px; float: left;">
+                <img class="coaster" title='Pour a beer before noon.' data-placement='bottom' src="http://images.keg.io/coasters/earlybird.png">
+                <img class="coaster" title='Pour a beer with keg.io!' data-placement='bottom' src="http://images.keg.io/coasters/firstbeer.png">
+              </div>
+            </div>
+            <!-- <h1>Hello, world!</h1>
+            <p>This is a template for a simple marketing or informational website. It includes a large callout called the hero unit and three supporting pieces of content. Use it as a starting point to create something more unique.</p>
+            <p><a class="btn btn-primary btn-large">Learn more &raquo;</a></p>
+            -->
+          </div>
+          <div class="row-fluid">
+            <div class="span4">
+              <div class="mini-card">
+              <h2>Heading</h2>
+              <p>Donec id elit non mi porta gravida at eget metus. Fusce dapibus, tellus ac cursus commodo, tortor mauris condimentum nibh, ut fermentum massa justo sit amet risus. Etiam porta sem malesuada magna mollis euismod. Donec sed odio dui. </p>
+              <p><a class="btn" href="#">View details &raquo;</a></p>
+            </div>
+            </div><!--/span-->
+            <div class="span4">
+              <div class="mini-card">
+              <h2>Heading</h2>
+              <p>Donec id elit non mi porta gravida at eget metus. Fusce dapibus, tellus ac cursus commodo, tortor mauris condimentum nibh, ut fermentum massa justo sit amet risus. Etiam porta sem malesuada magna mollis euismod. Donec sed odio dui. </p>
+              <p><a class="btn" href="#">View details &raquo;</a></p>
+            </div>
+            </div><!--/span-->
+            <div class="span4">
+              <div class="mini-card">
+              <h2>Heading</h2>
+              <p>Donec id elit non mi porta gravida at eget metus. Fusce dapibus, tellus ac cursus commodo, tortor mauris condimentum nibh, ut fermentum massa justo sit amet risus. Etiam porta sem malesuada magna mollis euismod. Donec sed odio dui. </p>
+              <p><a class="btn" href="#">View details &raquo;</a></p>
+            </div>
+            </div><!--/span-->
+          </div><!--/row-->
+          <div class="row-fluid">
+            <div class="span4">
+              <div class="mini-card">
+              <h2>Heading</h2>
+              <p>Donec id elit non mi porta gravida at eget metus. Fusce dapibus, tellus ac cursus commodo, tortor mauris condimentum nibh, ut fermentum massa justo sit amet risus. Etiam porta sem malesuada magna mollis euismod. Donec sed odio dui. </p>
+              <p><a class="btn" href="#">View details &raquo;</a></p>
+            </div>
+            </div><!--/span-->
+            <div class="span4">
+              <div class="mini-card">
+              <h2>Heading</h2>
+              <p>Donec id elit non mi porta gravida at eget metus. Fusce dapibus, tellus ac cursus commodo, tortor mauris condimentum nibh, ut fermentum massa justo sit amet risus. Etiam porta sem malesuada magna mollis euismod. Donec sed odio dui. </p>
+              <p><a class="btn" href="#">View details &raquo;</a></p>
+            </div>
+            </div><!--/span-->
+            <div class="span4">
+              <div class="mini-card">
+              <h2>Heading</h2>
+              <p>Donec id elit non mi porta gravida at eget metus. Fusce dapibus, tellus ac cursus commodo, tortor mauris condimentum nibh, ut fermentum massa justo sit amet risus. Etiam porta sem malesuada magna mollis euismod. Donec sed odio dui. </p>
+              <p><a class="btn" href="#">View details &raquo;</a></p>
+            </div>
+            </div><!--/span-->
+          </div><!--/row-->
+        </div><!--/span-->
+      </div><!--/row-->
+
+      <hr>
+
+      <footer>
+        <p>&copy; keg.io 2012</p>
+      </footer>
+
+    </div><!--/.fluid-container-->
 
     <!-- Le javascript
     ================================================== -->
     <!-- Placed at the end of the document so the pages load faster -->
     <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js"></script>
-    <script src="/js/jquery-ui-1.8.10.custom.min.js"></script>
+    <script src="../js/bootstrap-transition.js"></script>
+    <script src="../js/bootstrap-alert.js"></script>
+    <script src="../js/bootstrap-modal.js"></script>
+    <script src="../js/bootstrap-dropdown.js"></script>
+    <script src="../js/bootstrap-scrollspy.js"></script>
+    <script src="../js/bootstrap-tab.js"></script>
+    <script src="../js/bootstrap-tooltip.js"></script>
+    <script src="../js/bootstrap-popover.js"></script>
+    <script src="../js/bootstrap-button.js"></script>
+    <script src="../js/bootstrap-collapse.js"></script>
+    <script src="../js/bootstrap-carousel.js"></script>
+    <script src="../js/bootstrap-typeahead.js"></script>
+
+    <script src="../js/underscore-min.js"></script>
+    <script src="../js/moment.min.js"></script>
+    <script src="../js/mustache.js"></script>
+    <script src="../js/jquery.color.js"></script>
     <script src="/socket.io/socket.io.js"></script>
-    <script src="/js/mustache.js"></script>
+    <script src="../js/keg.io.js"></script>
 
-    <script type="text/javascript">
-      document.write('<scr'+'ipt type="text/javasc'+'ript" src="/js/keg.io.client.js?'+Math.random()+'" ></scr'+'ipt>');
-    </script>
-	  <script type="text/javascript" >
-      charts = [];
-      needleBump = null;
-
-      var alarm = {
-        interval:null,
-        toggle:function(){
-          $('.jewel.locked').toggleClass('active');
-        },
-        on:function (){
-          this.interval = window.setInterval(alarm.toggle,1000);
-        },
-        off:function(){
-          $('.jewel.locked').removeClass('active');
-          window.clearInterval(this.interval);
-        }
-
-      }
-
-      var socketDebug = function(msg, data) {
-        console.log("socket event: '" + msg + "' data: " + (data == null ? "" : JSON.stringify(data)));
-        // console.log('socket data: ' + (data == null ? "" : JSON.stringify(data)));
-      };
-
-    	$(document).ready(function(){
-    		isEditTimeout = null;
-    		reloadAttempt = 0;
-        cursor();
-        var socket = io.connect('http://localhost:8081');
-
-        socket.on('connect', function () {
-          socketDebug('connect', null);
-          var kegerator_id = 1111; // the kegerator you want to "listen to"
-          socket.emit('attach', kegerator_id);
-
-          socket.on('attached', function () {
-            socketDebug('attached', kegerator_id);
-            window.setTimeout(function(){writeStatus('attached to keg '+ kegerator_id);window.setTimeout(function(){$('.jewel.open').removeClass('active');},1000)},1000);
-            $('.jewel.open').addClass('active');
-
-            alarm.off();
-          });
-        });
-
-        socket.on('disconnect', function () {
-          socketDebug('disconnect', null);
-          alarm.on();
-
-        });
-
-        socket.on('hello', function (data) {
-            socketDebug('hello', data);
-        });
-
-        socket.on('scan', function (data) {
-            socketDebug('scan', data);
-            needleBump = window.setInterval(kegio.needleBump,200);
-            writeStatus('SCAN: rfid# '+data.data);
-            kegio.getUserInfo(data.data,addPour);
-            $('.jewel.open').addClass('active');
-        });
-
-        socket.on('deny', function(data){
-            socketDebug('deny', data);
-            writeStatus('DENIED POUR');
-            $('.jewel.locked').addClass('active');
-            window.setTimeout(function(){$('.jewel.locked').removeClass('active');},1000);
-        });
-
-        socket.on('flow', function (data) {
-            //console.log("flow event from server:");
-            //console.log(data);
-            updateChart('flow_chart',data.data*1);
-            updateSpark('current_spark',data.data*1);
-        });
-
-        socket.on('deny',function (data) {
-          $('.jewel.locked').addClass('active');
-          window.setTimeout(function(){$('.jewel.locked').removeClass('active')},2000)
-        });
-
-        socket.on('pour', function (data) {
-            socketDebug('pour', data);
-            window.clearInterval(needleBump);
-            updateChart('flow_chart',0);
-            $('#pours div.last span.ounces').text(data.data);
-            $('.jewel.open').removeClass('active');
-            writeStatus('POUR COMPLETE - '+ data.data + ' OZ');
-        });
-
-    		kegio.getLastDrinkers(function(drinkers){
-    			var current = drinkers[0];
-    			//$('#currentDrinkerImage').attr("src","http://www.gravatar.com/avatar/" + current.hash + "?s=250&d=mm");
-    			$('#currentDrinkerName').text(current.first_name + (current.nickname!=''?' "' + current.nickname + '" ':' ')+current.last_name);
-    		});
-
-        kegio.getPours(function(pours){
-          drinker_template = '<div class="drinker">' + $('#drinker_template').remove().html() + '</div>';
-
-          for(var i = 0; i < pours.length;i++){
-            var pour = pours[i];
-            var ozs = {'volume_ounces':pour.volume_ounces};
-              kegio.getUserInfo(pour.rfid,function(user){
-                user['volume_ounces']= ozs.volume_ounces;
-                var first = false;
-                if($('#pours').children().size()==0){
-                  first = true;
-                  user['image_size']='160';
-                }else{
-                  user['image_size']= '100';
-                }
-                var drinker = $(Mustache.render(drinker_template,user));
-                if(first){
-                  $(drinker).addClass('last');
-                }
-                $(drinker).addClass('grid_5');
-                $('#pours').append(drinker);
-
-              });
-
-
-          }
-
-
-          //$('#pours').html(Mustache.to_html(pours_template,p))
-
-
-        },5);
-
-    		kegio.getKegs(function(kegs){
-    			var current = kegs[0];
-          $('#currentkeg').html(Mustache.to_html($('#currentkeg').html(),current));
-    			$('#currentKegName').text(current.beer + ' ' + current.beer_style);
-    			$('#currentKegImage').attr('src',current.image_path);
-    		});
-
-        var gauges = kegio.gauges;
-        for(var i = 0; i < gauges.length;i++){
-          var gauge = gauges[i];
-          var chart = new google.visualization.Gauge(document.getElementById(gauges[i].target));
-          var dt = new google.visualization.DataTable(
-               {
-                 cols: [{id: 'label', label: 'Label', type: 'string'},
-                        {id:'value',label:'Value',type:'number'}
-                        ],
-                 rows: [{c:[{v:gauge.label},{v:0}]}]
-               },
-             0.6
-          )
-          var opts = gauge.options;
-
-          charts[gauge.target] = {'chart':chart,'options':opts,'data':dt,'draw':function(){this.chart.draw(this.data,this.options)}};
-          chart.draw(dt,opts);
-          var target = gauge.target;
-                  if(gauge.data){
-                    gauge.data(function(data){
-                           // flowRateGaugeOptions.data.setValue(0,1,value*1);
-                          //flowRateGauge.draw(flowRateGaugeOptions.data,flowRateGaugeOptions);
-                          updateChart(target,data);
-
-                    },target)
-
-
-                  }
-        }
-
-
-
-    //end document.ready()
-    	});
-
-function writeStatus(txt){
-    if((typeof $('.statusdisplay').attr('next')=='undefined'|| $('.statusdisplay').attr('next')=='') && txt!=null){
-      $('.statusdisplay').attr('next',txt);
-      $('.statusdisplay').text('');
-      if(cursor.interval){
-        window.clearInterval(cursor.interval);
-      }
-    }
-
-    if($('.statusdisplay').attr('next')){
-      var txt = $('.statusdisplay').attr('next');
-      var chars = Math.round(Math.random()*3);
-      $('.statusdisplay').append(txt.substring(0,chars));
-      $('.statusdisplay').attr('next',txt.substring(chars,txt.length));
-      if($('.statusdisplay').attr('next').length > 0){
-        window.setTimeout(writeStatus,50);
-      }else{
-        $('.statusdisplay').removeAttr('next');
-        window.setTimeout(writeStatus,1000);
-      }
-    }else{
-      cursor()
-    }
-}
-
-function cursor(){
-    if(!$('.statusdisplay').attr('next')){
-      var txt = $('.statusdisplay').text();
-      if(txt.substring(txt.length-1)=='_'){
-        $('.statusdisplay').text(txt.substring(0,txt.length-1));
-      }else{
-        $('.statusdisplay').append('_');
-      }
-      if(typeof this.interval=='undefined'){
-        this.interval = window.setInterval(cursor,700);
-      }
-    }
-}
-
-function updateChart(id,data){
-  var chart = charts[id];
-  chart.data.setValue(0,1,data);
-  chart.draw();
-}
-
-function updateSpark(id,data){
-  var chart = charts[id];
-  if (chart != null) {
-    chart.tick+=1;
-    chart.data.setValue(chart.tick,0,data);
-    //chart.data.addRow([{v:data}]);
-    chart.draw();
-  }
-}
-
-function addPour(user){
-
-            //user['volume_ounces']= pour.volume_ounces;
-  if(typeof user.rfid != 'undefined'){
-    user['image_size']='160';
-    user['volume_ounces'] = "Pouring...";
-    var drinker = $(Mustache.render(drinker_template,user));
-    $(drinker).addClass('last grid_5');
-    $(drinker).append('<div id="current_spark"></div>');
-    $('#pours div.last #current_spark').remove();
-    $('#pours div.last').removeClass('last');
-    $('#pours').prepend($(drinker).hide().fadeIn(2000));
-    if($('#pours').children().size()>5){
-      $('#pours div').last().fadeOut(2000).remove();
-    }
-   var chart = new google.visualization.ImageSparkLine(document.getElementById('current_spark'));
-
-   var dt = new google.visualization.DataTable(
-       {
-         cols: [{id: 'flow', label: 'Flow', type: 'number'}
-                ],
-         rows: [{c:[{v:0}]},{c:[{v:0}]},{c:[{v:0}]},{c:[{v:0}]},{c:[{v:0}]},{c:[{v:0}]},{c:[{v:0}]},{c:[{v:0}]},{c:[{v:0}]},{c:[{v:0}]}]
-       },
-     0.6
-    )
-    var opts = {'showAxisLines':false,'showValueLabels':false,'layout':'v','width':200,height:40,fill:true,max:100};
-
-    chart.draw(dt,opts);
-    charts['current_spark'] = {'chart':chart,'tick':0,'options':opts,'data':dt,'draw':function(){
-        var cs = document.createElement('DIV');
-        cs.id = 'current_spark';
-        var cht = new google.visualization.ImageSparkLine(cs);
-        cht.draw(this.data,this.options);
-        this.chart = cht;
-        $('#current_spark').replaceWith(cs);
-        //this.chart.draw(this.data,this.options)
-      }};
-  }
-
-}
-</script>
-
-
-</body></html>
+  </body>
+</html>
