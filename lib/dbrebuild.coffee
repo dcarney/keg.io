@@ -74,8 +74,8 @@ class DbRebuild
         first_name: 'Carl'
         last_name: 'Krauss'
         nickname: ''
-        email: ''
-        twitter_handle:  '')
+        email: 'c4krauss@gmail.com'
+        twitter_handle:  '@unstdio')
 
     users.push(
         rfid: '440055F873'
