@@ -57,8 +57,7 @@
   "noAnalyze": true,
   "devDependencies": {
     "node-inspector": "0.1.10",
-    "node-proxy": "git://github.com/samshull/node-proxy.git"
-
+    "fermata": "0.8.6"
   },
   "bundleDependencies": [
   ],
