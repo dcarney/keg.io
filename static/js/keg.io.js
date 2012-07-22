@@ -89,7 +89,7 @@ var handlePourEvent = function(data) {
   $('#user_info .pour_volume').text("You just poured " + volumeOunces + " ounces!");
   $("#kegerator_details .badge.pour").removeClass("badge-important badge-success badge-warning").addClass("badge-important");
 };
-
+		
 // each obj in pourObjects is a regular pour, with the associated member obj
 // as the .user property.
 // Ex:
@@ -130,14 +130,14 @@ var populatePreviousDrinkersMarkup = function(pourObjects) {
 var populateCurrentDrinkerMarkup = function(user) {
   $("#kegerator_details .badge.pour").removeClass("badge-important").addClass("badge-success");
 
-  if (user) {
-    _.each(user.coasters, function(coaster_id) {
-      $.getJSON("/coasters/" + coaster_id, function(data) {
-        var image_path = data.image_path;
-        var description = data.description;
+    if (user) {
+      _.each(user.coasters, function(coaster_id) {
+        $.getJSON("/coasters/" + coaster_id, function(data) {
+          var image_path = data.image_path;
+          var description = data.description;
+        });
       });
-    });
-  }
+    }
 
     $('#gravatar').attr('src', user.gravatar);
     $('#user_info').empty();
