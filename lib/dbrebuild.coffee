@@ -56,7 +56,7 @@ class DbRebuild
       nickname: 'Beardo'
       email: 'dcarney@gmail.com'
       twitter_handle:  '@_dcarney_'
-      coasters: [1,2]
+      coasters: [0,1]
     users.push dc
 
     crc =
@@ -66,7 +66,7 @@ class DbRebuild
       nickname: ''
       email: 'crcastle@gmail.com'
       twitter_handle:  '@crc'
-      coasters: [1]
+      coasters: [0]
     users.push crc
 
     users.push(

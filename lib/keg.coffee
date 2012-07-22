@@ -236,7 +236,7 @@ class Keg extends events.EventEmitter
         coaster.image_path = "#{@config.image_host}#{coaster.image_path}"
         coaster
 
-  kegerators: (num_kegerators, cb) ->
+   kegerators: (num_kegerators, cb) ->
     query = {order: 'created_at DESC'}
     query.limit = num_kegerators if num_kegerators?
     @models.Kegerator.findAll(query).success (kegerators) =>
