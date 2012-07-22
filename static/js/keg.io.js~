@@ -219,7 +219,7 @@ $(document).ready(function(){
 
  socket = io.connect('http://localhost:8081');
  socket.on('connect', function () { socketDebug('connect', null); 
-		$('.badge.connected').removeClass("red yellow").addClass("green on").text("connected"); 
+		$('.badge.connected').removeClass("red yellow").addClass("green on").text("disconnected"); 
  });
  socket.on('disconnect', function(){
  		$('.badge.connected').removeClass("green yellow").addClass("red on").text("disconnected");
