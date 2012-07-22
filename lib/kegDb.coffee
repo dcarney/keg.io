@@ -48,14 +48,26 @@ class KegDb
         return cb err, null if err?
         cb(null, _.any(dbs.databases, (db) -> db.name == dbName))
 
+  # Performs an insert for each of the given objects into the specified
+  # collection
+  #
   # cb = (err, null)
-  saveObjects: (collectionName, objs, cb) =>
+  insertObjects: (collectionName, objs, cb) =>
     if (not _.isArray objs) && _.isObject objs
       objs = [objs]
     @db.collection collectionName, (err, collection) ->
       return cb err, null if err?
-      console.log "saving objects to: #{collectionName}"
       _.each objs, (obj) -> collection.insert obj
+      cb null, null
+
+  # updates (upserts actually) documents in the given collection,
+  # using the provided selector
+  #
+  # cb = (err, null)
+  update: (collectionName, selector, doc, cb) =>
+    @db.collection collectionName, (err, collection) ->
+      return cb err, null if err?
+      collection.update selector, doc, {upsert: true}
       cb null, null
 
   # cb = (err, entity)
@@ -110,7 +122,11 @@ class KegDb
     @getCollection 'pours', (err, collection) =>
       return cb err, null if err?
       limit = if criteria?.limit? then {limit: criteria.limit} else {}
-      selector = if criteria?.id? then {kegerator_id: parseInt(criteria.id, 10)} else {}
+      selector = {}
+      if criteria?.id?
+        selector = {kegerator_id: parseInt(criteria.id, 10)}
+      else if criteria?.rfid?
+        selector = {rfid: criteria.rfid}
       collection.find selector, limit, (err, cursor) =>
         @handleFind cb, err, cursor
 
@@ -134,13 +150,17 @@ class KegDb
       collection.find selector, limit, (err, cursor) =>
         @handleFind cb, err, cursor
 
-  # criteria 1 or more of: {limit: 1, id: 45}
+  # criteria 1 or more of: {limit: 1, id: 45, ids:[45, 13, 2]}
   # cb = (err, coasters)
   findCoasters: (criteria, cb) =>
     @getCollection 'coasters', (err, collection) =>
       return cb err, null if err?
       limit = if criteria?.limit? then {limit: criteria.limit} else {}
-      selector = if criteria?.id? then {coaster_id: parseInt(criteria.id, 10)} else {}
+      selector = {}
+      if criteria?.ids? and _.isArray(criteria.ids)
+        selector = {coaster_id: {$in: criteria.ids }}
+      else if criteria?.id?
+        selector = {coaster_id: parseInt(criteria.id, 10)}
       collection.find selector, limit, (err, cursor) =>
         @handleFind cb, err, cursor
 
