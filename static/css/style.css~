@@ -16,7 +16,9 @@ h1 {
 	margin-bottom: 0;
 }
 
-
+.badge.red{
+		background: url('/images/led-icons-red.png') no-repeat top left;
+	}
 
 .left{
 	background: url('/images/metal_texture_2_by_wojtar_stock.jpg') no-repeat top left;
