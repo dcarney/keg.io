@@ -278,6 +278,21 @@ server.get '/users/:rfid?', (req, res, next) ->
   keg.findUsers criteria, (err, result) ->
     handleResponse err, result, req, res
 
+# ## UI: get info about all of a user's pours
+#   `GET /users/RFID/pours`
+#
+# Where **RFID** is the rfid assigned to the desired user
+#
+# Optional params: limit=N
+#   where **N** is the number of pours to retrieve, in reverse
+#   chronological order
+#
+server.get '/users/:rfid/pours', (req, res, next) ->
+  criteria = {rfid: req.params.rfid}
+  criteria.limit = req.query['limit']
+  keg.db.findPours criteria, (err, result) ->
+    handleResponse err, result, req, res
+
 # ## UI: get info about all coasters
 #   `GET /coasters`
 #
@@ -431,33 +446,35 @@ sendToSocket = (socket, event, data) ->
   socket.emit event, {data: data}
 
 sendToAttachedSockets = (attachment, event, data) ->
-  #logger.debug "pushing #{event} event to sockets attached to #{attachment}"
+  logger.debug "pushing #{event} event to sockets attached to #{attachment}"
   io.sockets.in(attachment).emit event, {data: data}
 
-keg.on 'scan', (kegerator_access_key, rfid) ->
-  console.log "scan on #{kegerator_access_key}...sending to sockets"
-  sendToAttachedSockets kegerator_access_key, 'scan', rfid
+keg.on 'scan', (kegerator_id, rfid) ->
+  sendToAttachedSockets kegerator_id, 'scan', rfid
 
-keg.on 'pour', (kegerator_access_key, volume) ->
-  sendToAttachedSockets kegerator_access_key, 'pour', volume
+keg.on 'pour', (kegerator_id, volume) ->
+  sendToAttachedSockets kegerator_id, 'pour', volume
 
-keg.on 'flow', (kegerator_access_key, rate) ->
-  sendToAttachedSockets kegerator_access_key, 'flow', rate
+keg.on 'flow', (kegerator_id, rate) ->
+  sendToAttachedSockets kegerator_id, 'flow', rate
 
-keg.on 'temp', (kegerator_access_key, temp) ->
-  sendToAttachedSockets kegerator_access_key, 'temp', temp
+keg.on 'temp', (kegerator_id, temp) ->
+  sendToAttachedSockets kegerator_id, 'temp', temp
 
-keg.on 'deny', (kegerator_access_key, rfid) ->
-  sendToAttachedSockets kegerator_access_key, 'deny', rfid
+keg.on 'deny', (kegerator_id, rfid) ->
+  sendToAttachedSockets kegerator_id, 'deny', rfid
+
+keg.on 'coaster', (kegerator_id, coaster) ->
+  sendToAttachedSockets kegerator_id, 'coaster', coaster
 
 io.sockets.on 'connection', (socket) ->
   logger.info 'browser client connected'
   sendToSocket socket, 'hello', 'world'
 
   # events from browser client
-  socket.on 'attach', (kegerator_access_key) ->
-    console.log "attach request for #{kegerator_access_key} on socket #{socket.id}"
-    socket.join kegerator_access_key
+  socket.on 'attach', (kegerator_id) ->
+    console.log "attach request for #{kegerator_id} on socket #{socket.id}"
+    socket.join kegerator_id
 
     # get all the rooms this socket is joined to
     # ex. { '': true, '/1111': true }
@@ -465,7 +482,7 @@ io.sockets.on 'connection', (socket) ->
 
     # find all the kegerator rooms that aren't the one we're attaching to
     otherRooms = _.filter _.keys(rooms), (room) ->
-      room.match(/\/\d+/) && room != "/#{kegerator_access_key}"
+      room.match(/\/\d+/) && room != "/#{kegerator_id}"
 
     # leave other kegerator's rooms
     _.each otherRooms, (room) ->
@@ -474,5 +491,5 @@ io.sockets.on 'connection', (socket) ->
       socket.leave roomId
 
     console.log io.sockets.manager.roomClients[socket.id]
-    console.log "attached to #{kegerator_access_key}"
+    console.log "attached to #{kegerator_id}"
     socket.emit 'attached'

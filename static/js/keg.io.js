@@ -56,6 +56,10 @@ $('#kegerator_details .badge.connected').removeClass("red").addClass("yellow on"
   	});
 };
 
+var handleCoasterEvent = function(data) {
+  socketDebug('coaster', data);
+  // TODO: Make the new coaster show up in the UI
+};
 
 var handleTempEvent = function(data) {
   socketDebug('temp', data);
@@ -229,6 +233,7 @@ $(document).ready(function(){
  socket.on('temp', handleTempEvent);
  socket.on('deny', handleDenyEvent);
  socket.on('pour', handlePourEvent);
+ socket.on('coaster', handleCoasterEvent);
  // TODO: add code to handle flow event
 
 });   // document ready

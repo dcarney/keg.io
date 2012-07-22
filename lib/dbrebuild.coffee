@@ -75,7 +75,8 @@ class DbRebuild
         last_name: 'Krauss'
         nickname: ''
         email: 'c4krauss@gmail.com'
-        twitter_handle:  '@unstdio')
+        twitter_handle:  '@unstdio'
+        coasters: [])
 
     users.push(
         rfid: '440055F873'
@@ -83,7 +84,8 @@ class DbRebuild
         last_name: 'Patterson'
         nickname: ''
         email: 'garrett.patterson@vivaki.com'
-        twitter_handle:  '@thegarrettp')
+        twitter_handle:  '@thegarrettp'
+        coasters: [])
 
     pours = []
     pours.push(
@@ -144,7 +146,7 @@ class DbRebuild
         db.dropDatabase cb
 
     # cb = (err)
-    saveObjects = (collectionName, db, objs, cb) ->
+    insertObjects = (collectionName, db, objs, cb) ->
       db.collection collectionName, (err, collection) ->
         return cb err if err?
         console.log "saving objects to: #{collectionName}"
@@ -170,12 +172,12 @@ class DbRebuild
       db.open (err, db) ->
         console.log "opened: #{dbName}"
         workers = [
-          (cb) -> saveObjects 'kegerators', db, kegerators, cb
-          (cb) -> saveObjects 'kegs', db, kegs, cb
-          (cb) -> saveObjects 'users', db, users, cb
-          (cb) -> saveObjects 'temperatures', db, temps, cb
-          (cb) -> saveObjects 'pours', db, pours, cb
-          (cb) -> saveObjects 'coasters', db, coasters, cb]
+          (cb) -> insertObjects 'kegerators', db, kegerators, cb
+          (cb) -> insertObjects 'kegs', db, kegs, cb
+          (cb) -> insertObjects 'users', db, users, cb
+          (cb) -> insertObjects 'temperatures', db, temps, cb
+          (cb) -> insertObjects 'pours', db, pours, cb
+          (cb) -> insertObjects 'coasters', db, coasters, cb]
         async.parallel workers, (err, results) ->
           return cb err if err?
           workers = [

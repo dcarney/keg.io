@@ -20,6 +20,7 @@ KegDb       = require './kegDb'
 Pour        = require './models/pour'
 User        = require './models/user'
 Temperature = require './models/temperature'
+Coaster     = require './models/coaster'
 
 class Keg extends events.EventEmitter
   constructor: (logger, config) ->
@@ -81,7 +82,7 @@ class Keg extends events.EventEmitter
       # store a pour obj to use w/ future flow events
       # TODO: Add the current keg id to the pour event
       if valid
-        @kegerator_last_scans[access_key] = new Pour {rfid: rfid, keg_id: 1} # TODO: this shouldn't be hardcoded
+        @kegerator_last_scans[access_key] = new Pour {rfid: rfid, keg_id: 1, kegerator_id: access_key} # TODO: this shouldn't be hardcoded
         @emit 'scan', access_key, rfid
       else
         @emit 'deny', access_key, rfid
@@ -97,6 +98,37 @@ class Keg extends events.EventEmitter
         @kegerator_last_scans[access_key].addFlow rate
       cb(pour?)
 
+  # emits: 'coaster' if new coaster(s) is/are earned
+  checkForNewCoasters: (pour, volume) =>
+    console.log "checking for new coasters"
+
+    ## get the user's current coasters
+    @db.findUser pour.rfid, (err, user) =>
+      user.coasters ?= []
+
+      # get the user's pour history
+      @db.findPours {rfid: pour.rfid}, (err, pours) =>
+
+        # helper fn
+        saveCoaster = (user, coaster) =>
+          user.coasters.push coaster
+          @db.update 'users', {rfid: user.rfid}, {$set: {coasters: user.coasters}}, () ->
+
+        # welcome coaster
+        unless _.include user.coasters, Coaster.WELCOME
+          @logger.info "#{user.rfid} just earned the 'Welcome' coaster!"
+          @db.findCoasters {id: Coaster.WELCOME}, (err, coaster) =>
+            @emit 'coaster', pour.kegerator_id, coaster unless err?
+            saveCoaster user, Coaster.WELCOME
+
+        # early bird coaster
+        unless _.include user.coasters, Coaster.EARLY_BIRD
+          if moment().hours() < 23  # 3PM
+            @logger.info "#{user.rfid} just earned the 'Early Bird' coaster!"
+            @db.findCoasters {id: Coaster.EARLY_BIRD}, (err, coaster) =>
+              @emit 'coaster', pour.kegerator_id, coaster unless err?
+              saveCoaster user, Coaster.EARLY_BIRD
+
   # cb = (err, savedToDb)
   # emits: 'pour'
   endFlow: (access_key, cb) =>
@@ -110,12 +142,12 @@ class Keg extends events.EventEmitter
     if volume <= 0
       return cb null, false
     else
-      @db.saveObjects 'pours', pour, (err, result) =>
+      @db.insertObjects 'pours', pour, (err, result) =>
         return cb err, false if err?
         @emit 'pour', access_key, volume
 
-        # Gather beer and user info from the DB
-        #kegDb.getActiveKeg(function(rows){
+        # earn a coaster?
+        @checkForNewCoasters pour, volume
 
         # Tweet about it, whydoncha
         #@kegTwit.tweetPour userInfo, ounces, beerInfo
@@ -125,7 +157,7 @@ class Keg extends events.EventEmitter
   # emits 'temp'
   addTemp: (access_key, temp, cb) ->
     t = new Temperature({temperature: temp, kegerator_id: access_key})
-    @db.saveObjects 'temperatures', t, (err, result) =>
+    @db.insertObjects 'temperatures', t, (err, result) =>
       return cb err, false if err?
       @emit 'temp', access_key, temp
       cb null, true
