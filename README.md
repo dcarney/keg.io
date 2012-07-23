@@ -21,38 +21,41 @@ Keg.io can accept multiple connections from both web browsers and kegerators.
 
 - Get the code and install all deps:
 
-    # git clone https://github.com/vnc/keg.io.git
-    # cd keg.io
-    # npm install
+      # git clone https://github.com/vnc/keg.io.git
+
+      # cd keg.io
+
+      # npm install
 
 - Install mongo DB.  On OSX, I like to use [homebrew](http://mxcl.github.com/homebrew/)
 
-    # brew install mongodb
+      # brew install mongodb
 
 - Copy the sample config and key files, and set any necessary configuration options in the resulting files.
   The keys.json file contains a mapping of all the access and secret keys for authorized kegerator clients.
   This file should not be checked in, or made publicly accessible in any way.
 
-    # cp conf/configuration-sample.json conf/configuration.json
-    # vi conf/configuration.json
-    # cp conf/keys-sample.json conf/keys.json
-    # vi conf/keys.json
+      # cp conf/configuration-sample.json conf/configuration.json
+      # vi conf/configuration.json
+      # cp conf/keys-sample.json conf/keys.json
+      # vi conf/keys.json
 
 - Startup up mongo DB:
-    # mongod
+
+      # mongod
 
 - Create an initial database (with some 'seed' data) for keg.io to use.  (This same command can be used for to rebuild the database at any time in the future)
 
-    # keg.io --rebuild
+      # keg.io --rebuild
 
 ##### Running:
 - Run the keg.io server with the default configuration file (conf/configuration.json):
 
-		# keg.io
+      # keg.io
 
 - Get usage/option information:
 
-		# keg.io --help
+      # keg.io --help
 
   (Depending on the port/HW/OS you're running on, you may need sudo privs to get node to open the configured port)
 
