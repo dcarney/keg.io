@@ -1,160 +1,77 @@
 body {
-	background-image: url("/images/wood-texture-background.jpg");
-	background-repeat: repeat;
-	}
-
-	.row div{
-			background: white;
-			-webkit-border-radius: 6px;
--moz-border-radius: 6px;
-border-radius: 6px;
-
-		}
-
-h1 {
-
-	margin-bottom: 0;
-}
-
-
-
-.left{
-	background: url('/images/metal_texture_2_by_wojtar_stock.jpg') no-repeat top left;
-	-webkit-border-radius-topright: 6px;
-	-moz-border-radius-topright: 6px;
-	border-radius-topright: 6px;
-	-webkit-border-radius-bottomright: 6px;
-	-moz-border-radius-bottomright: 6px;
-	border-right-radius-bottomright:6px;
-}
-
-.jewel {
-	height: 60px;
-}
-
-.jewel.locked{
-	background: url('/images/redjewel.png') no-repeat left 0;
-}
-
-.jewel.locked.active{
-	background: url('/images/redjewel.png') no-repeat -61px 0;
-}
-.jewel.open{
-	background: url('/images/greenjewel.png') no-repeat 0 0;
-	background-position: 0 0;
-}
-
-.jewel.open.active {
-	background: url('/images/greenjewel.png') no-repeat -60px 0;
+  background-image: url('../img/wood_pattern.png');
 }
 
 .brand {
-	font-family: 'Cabin Sketch', cursive;
-}
-#logo {
-	font-size: 60px;
-}
-.gauges {
-	background: url('/images/gaugebackground.png') no-repeat -5px -5px;
+  font-family: 'Cabin Sketch', cursive;
 }
 
-.drinker{
-	margin-bottom: 5px;
-	float: left;
+.hero-unit {
+  background: url('http://cdn.coderwall.com/assets/locations/Seattle-23434a74fb83989b8faab496de8a40f9.jpg');
+  color: #ffffff;
 }
 
-.drinker ul{
-	float: left;
-	padding-left: 5px;
+.shadow {
+  -moz-box-shadow:    3px 3px 5px 6px #ccc;
+  -webkit-box-shadow: 3px 3px 5px 6px #ccc;
+  box-shadow:         3px 3px 5px 6px #ccc;
 }
 
-.drinker img.gravatar{
-	float: left;
-	clear: left;
+.card {
+  background: rgba(60, 60, 60, 0.9);
+  padding: 20px 25px;
+  -webkit-border-radius: 5px;
+  -moz-border-radius: 5px;
+  border-radius: 5px;
+  height: 128px;
 }
 
-
-.drinker li{
-	list-style-type: none;
-	margin-left: 0;
+.mini-card {
+  background: rgba(60, 60, 60, 0.7);
+  color: #ffffff;
+  -webkit-border-radius: 5px;
+  -moz-border-radius: 5px;
+  border-radius: 5px;
+  margin-bottom: 20px;
+  padding: 20px;
 }
 
-.drinker img.gravatar {
-	width: 100px;
-	height: 100px;
+.profile {
+  -webkit-border-radius: 6px;
+  -moz-border-radius: 6px;
+  border-radius: 6px;
+  margin-bottom: 15px;
+  margin-right: 25px;
+  /*border: solid 3px #08C;*/
+  float: left;
+  /*padding: 3px;*/
+  /*border: 1px solid #ccc;*/
+  width: 128px;
+  height: 128px;
 }
 
-.drinker {
-	background: white;
-	padding: 4px;
-	line-height: 1;
-	border: 1px solid #DDD;
-	-webkit-border-radius: 4px;
-	-moz-border-radius: 4px;
-	border-radius: 4px;
-	-webkit-box-shadow: 0 1px 1px rgba(0, 0, 0, 0.075);
-	-moz-box-shadow: 0 1px 1px rgba(0, 0, 0, 0.075);
-	box-shadow: 0 1px 1px rgba(0, 0, 0, 0.075);
+.bc-right {
+  /* float: left; */
+  margin: 0 0 15px 30px;
+  width: 300px;
+  /*max-width: 300px;*/
+  overflow: hidden;
+  color: #ffffff;
 }
 
-.drinker.last img.gravatar{
-	width: 160px;
-	height: 160px;
+.user_coasters img {
+  width: 60px;
+  height: 60px;
+  margin: 0 5px;
 }
 
-.statusdisplay {
-    border-style:solid inset;
-    border-width:2px;
-    border-color:#ccd9d8;
-    background-color:#080808;
-    color:#5fba3d;
-    font-family:monospace, prestige;
-    padding: 3px;
-    height: 1.2em;
+.user_coasters img:hover {
+  -webkit-transition-timing-function: ease-out;
+  -webkit-transition-delay: 0.1s;
+  -webkit-transition-duration: 0.2s;
+  -webkit-transform: scale(1.5, 1.5);
 }
 
-.beer_info ul {
-	float: left;
-	width: 150px;
+h2 {
+  color: #ffffff;
 }
-
-.beer_info img{
-	float: left;
-}
-
-	/*
-.insetText {
-        font-family: Consolas, Lucida Console, Courier, Courier New;
-        background-color: #666666;
-text-shadow: 0px -1px 0px #374683;
-}
-
-.tickerlabel{
-	background: #ccc;
-	-moz-box-shadow: 2px -webkit-border-radius: 6px;
--moz-border-radius: 6px;
-border-radius: 6px;2px 2px #888;
--webkit-box-shadow: 2px 2px 2px #888;
-box-shadow: 2px 2px 2px #888;
- text-shadow:#fff 0px 1px 0, #000 0 -1px 0;
- padding: 1em;
-font-family: Consolas, Lucida Console, Courier, Courier New;
-text-transform: uppercase;
-	}
-
-	.row div {
-			background: #ccc;
-	-moz-box-shadow: 2px 2px 2px #888;
--webkit-box-shadow: 2px 2px 2px #888;
-box-shadow: 2px 2px 2px #888;
-padding: .5em;
-		}
-
-		.row{
-			padding: .5em;
-			}
-
-	.inset { text-shadow:#fff 0px 1px 0, #000 0 -1px 0;
-	 line-height:3em; font-size:3em; font-weight:bold; color:#808080;}
-
-	 */
