@@ -17,11 +17,11 @@ var switchKegerator = function(kegeratorId) {
      // Populate some DOM elements w/ info
      $('#kegerator_details').empty();
      $('#kegerator_details').append("<li class='nav-header'>Kegerator</li>");
-     $('#kegerator_details').append('<span class="badge badge-inverse red connected">connected</span>');
-     $('#kegerator_details').append('<span class="badge badge-inverse red pour">pour</span>');
+     $('#kegerator_details').append('<span class="badge badge-important connected">connected</span>');
+     $('#kegerator_details').append('<span class="badge badge-important pour">pour</span>');
      $('#kegerator_details').append("<li><a href='#'>" + kegerator.name + "</a></li>");
      $('#kegerator_details').append("<li><a href='#'>" + kegerator.description + "</a></li>");
-     $('#kegerator_details').append("<li><a href='#'>current beer temperature: <span class='badge' id='kegerator_temp'>--</span></a></li>");
+     $('#kegerator_details').append("<li><a href='#'>current beer temperature: <span class='badge' id='kegerator_temp'>-- &deg;F</span></a></li>");
 
      // Get data about most recent keg on this kegerator
      $.getJSON("/kegerators/" + kegeratorId + "/kegs?limit=1", function(data) {
@@ -38,7 +38,7 @@ var switchKegerator = function(kegeratorId) {
       $('#keg_details').append("<li class='nav-header'>" + keg.brewery + "</li>");
       $('#keg_details').append("<li class='nav-header'>tapped: " + moment(keg.tapped_date).from(moment()) + "</li>");
       $('#keg_details').append("<li><img src='http://images.keg.io/" + keg.image_path + "'></img></li>");
-      
+
      });  // getJSON
 
      // re-connect to the appropriate web socket
@@ -48,12 +48,12 @@ var switchKegerator = function(kegeratorId) {
 
 // Connect to a web socket and listen for events for the given kegerator
 var reattachWebSocket = function(kegeratorId) {
-$('#kegerator_details .badge.connected').removeClass("red").addClass("yellow on");
+$('#kegerator_details .badge.connected').removeClass("badge-important").addClass("badge-warning on");
   socket.emit('attach', kegeratorId);
-  	socket.on('attached', function () { 
-  		$('#kegerator_details .badge.connected').removeClass("yellow").addClass("green");
-  		socketDebug('attached', kegeratorId); 
-  	});
+  socket.on('attached', function () {
+    $('#kegerator_details .badge.connected').removeClass("badge-warning").addClass("badge-success");
+    socketDebug('attached', kegeratorId);
+  });
 };
 
 var handleCoasterEvent = function(data) {
@@ -66,31 +66,26 @@ var handleTempEvent = function(data) {
   temperature = data['data'];
   $('#kegerator_temp').empty();
   $('#kegerator_temp').html(temperature + "&deg;F");
-	$('#kegerator_temp').removeClass("red green yellow");
-  if(temperature < 40){
-  		$('#kegerator_temp').addClass("green on");
-  	}else if(temperature < 50){
-  			$('#kegerator_temp').addClass("yellow on");
-  		}else{
-  				$('#kegerator_temp').addClass("red on");		
+	$('#kegerator_temp').removeClass("badge-important badge-success badge-warning");
+  if(temperature < 40) {
+    $('#kegerator_temp').addClass("badge-success");
+  } else if(temperature < 50) {
+    $('#kegerator_temp').addClass("badge-warning");
+  } else {
+    $('#kegerator_temp').addClass("badge-important");
 	}
-  //$("#kegerator_temp").animate({color: "#000000", backgroundColor: "#FF0000"}, 700);
-  //$("#kegerator_temp").animate({color: "#000000", backgroundColor: "#FFFFFF"}, 700);
 };
 
 var handleDenyEvent=function(data){
-		$("#kegerator_details .badge.pour").removeClass("red").addClass("red on");
-		window.setTimeout(function(){
-			$("#kegerator_details .badge.pour").toggleClass("on");
-			},1500);
-		
-	}
+  $("#kegerator_details .badge.pour").removeClass("badge-important").addClass("badge-important");
+  window.setTimeout(function(){
+    $("#kegerator_details .badge.pour").toggleClass("on");
+  }, 1500);
+};
 
 var handlePourEvent = function(data){
-		$("#kegerator_details .badge.pour").removeClass("red green yellow on").addClass("red");
-}
-	
-
+		$("#kegerator_details .badge.pour").removeClass("badge-important badge-success badge-warning").addClass("badge-important");
+};
 
 var handleScanEvent = function(data) {
   socketDebug('scan', data);
@@ -101,8 +96,8 @@ var handleScanEvent = function(data) {
     if (_.isArray(data)) {
       user = data[0];
     }
-	$("#kegerator_details .badge.pour").removeClass("red").addClass("green on");
-		
+	$("#kegerator_details .badge.pour").removeClass("badge-important").addClass("badge-success on");
+
     if (user) {
       _.each(user.coasters, function(coaster_id) {
         $.getJSON("/coasters/" + coaster_id, function(data) {
@@ -113,38 +108,12 @@ var handleScanEvent = function(data) {
     }
     console.log(user);
 
-    /*
-      <div class="card">
-              <img class="profile" src="http://www.gravatar.com/avatar/a6bb9f750f1a3f52b7bddc5a3f843852?s=128">
-              <div class="bc-right">
-                <h1>Your Mom</h1>
-                <p class="location">Seattle, WA</p>
-                <p class="title" >Solid dude</p>
-              </div>
-            </div>
-
-
-    email: "garrett.patterson@vivaki.com"
-    first_name: "Garrett"
-      gravatar: "http://www.gravatar.com/avatar/576befa3d0acd03ae83895890c17f848?s=256"
-      last_name: "Patterson"
-      nickname: ""
-      rfid: "440055F873"
-      twitter_handle: "@thegarrettp"
-*/
-   // $('#hero').empty();
-
-    /* $('#hero').append("<h1>Hello, " + user.first_name + "!</h1>");
-    $('#hero').append("<p>Pour yourself a tasty beer!</p>");
-    $('#hero').append("<img style='float: right;' src='http://www.gravatar.com/avatar/a6bb9f750f1a3f52b7bddc5a3f843852?s=256' />"); */
-
-	 var newprev = $('<div class="span4"></div>').append($('#hero #user_info').html());
-	 var name = $(newprev).find("h2 .firstname").text() + " " + $(newprev).find("h2 .lastname").text();
-	 $(newprev).find("h2").text(name);
-	 $(newprev).find(".user_coasters").remove();
-	 $(".previous").prepend(newprev.addClass('mini-card'));
-	 $(".previous div.span4").last().remove();
-	 
+    var newprev = $('<div class="span4"></div>').append($('#hero #user_info').html());
+    var name = $(newprev).find("h2 .firstname").text() + " " + $(newprev).find("h2 .lastname").text();
+    $(newprev).find("h2").text(name);
+    $(newprev).find(".user_coasters").remove();
+    $(".previous").prepend(newprev.addClass('mini-card'));
+    $(".previous div.span4").last().remove();
 
     $('#gravatar').attr('src', user.gravatar);
     $('#user_info').empty();
@@ -222,12 +191,13 @@ $(document).ready(function(){
   }); // getJSON
 
  socket = io.connect('http://localhost:8081');
- socket.on('connect', function () { socketDebug('connect', null); 
-		$('.badge.connected').removeClass("red yellow").addClass("green on").text("connected"); 
+ socket.on('connect', function () {
+  socketDebug('connect', null);
+  $('.badge.connected').removeClass("badge-important badge-warning").addClass("badge-success on");//.text("connected");
  });
- socket.on('disconnect', function(){
- 		$('.badge.connected').removeClass("green yellow").addClass("red on").text("disconnected");
- 	});
+ socket.on('disconnect', function() {
+  $('.badge.connected').removeClass("badge-success badge-warning").addClass("badge-important on");//.text("disconnected");
+ });
  socket.on('hello', function (data) { socketDebug('hello', data); });
  socket.on('scan', handleScanEvent);
  socket.on('temp', handleTempEvent);
