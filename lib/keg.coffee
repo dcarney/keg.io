@@ -74,7 +74,7 @@ class Keg extends events.EventEmitter
 
   # cb = (err, valid)
   # emits: 'scan' or 'deny'
-  scanRfid: (access_key, rfid, cb) =>
+  scanRfid: (kegerator_id, rfid, cb) =>
     rfid = rfid.toUpperCase()
     @db.findUser rfid, (err, user) =>
       return cb err, null if err?
@@ -82,20 +82,21 @@ class Keg extends events.EventEmitter
       # store a pour obj to use w/ future flow events
       # TODO: Add the current keg id to the pour event
       if valid
-        @kegerator_last_scans[access_key] = new Pour {rfid: rfid, keg_id: 1, kegerator_id: access_key} # TODO: this shouldn't be hardcoded
-        @emit 'scan', access_key, rfid
+        kegerator_id = parseInt kegerator_id, 10 if _.isString kegerator_id
+        @kegerator_last_scans[kegerator_id] = new Pour {rfid: rfid, keg_id: 1, kegerator_id: kegerator_id} # TODO: this shouldn't be hardcoded
+        @emit 'scan', kegerator_id, rfid
       else
-        @emit 'deny', access_key, rfid
+        @emit 'deny', kegerator_id, rfid
         # invalid rfid; delete any Pour object we might have had for that kegerator
-        delete @kegerator_last_scans[access_key]
+        delete @kegerator_last_scans[kegerator_id]
       cb null, valid
 
   # cb = (valid)
-  addFlow: (access_key, rate, cb) =>
-      pour = @kegerator_last_scans[access_key]
+  addFlow: (kegerator_id, rate, cb) =>
+      pour = @kegerator_last_scans[kegerator_id]
       if pour?
-        @emit 'flow', access_key, rate
-        @kegerator_last_scans[access_key].addFlow rate
+        @emit 'flow', kegerator_id, rate
+        @kegerator_last_scans[kegerator_id].addFlow rate
       cb(pour?)
 
   # emits: 'coaster' if new coaster(s) is/are earned
@@ -123,28 +124,47 @@ class Keg extends events.EventEmitter
 
         # early bird coaster
         unless _.include user.coasters, Coaster.EARLY_BIRD
-          if moment().hours() < 23  # 3PM
+          if moment().hours() < 15  # 3PM
             @logger.info "#{user.rfid} just earned the 'Early Bird' coaster!"
             @db.findCoasters {id: Coaster.EARLY_BIRD}, (err, coaster) =>
               @emit 'coaster', pour.kegerator_id, coaster unless err?
               saveCoaster user, Coaster.EARLY_BIRD
 
+        # party starter coaster
+        unless _.include user.coasters, Coaster.PARTY_STARTER
+          criteria = {id: pour.kegerator_id, limit: 2}
+          # Get last 2 pours for this kegerator (1 is the current pour)
+          @db.findPours criteria, (err, pours) =>
+            now = moment()
+            bothPoursToday = _.all pours, (pour) ->
+              moment(pour.date).date() == now.date() &&
+              moment(pour.date).month() == now.month() &&
+              moment(pour.date).year() == now.year()
+            unless bothPoursToday
+              @logger.info "#{user.rfid} just earned the 'Party Starter' coaster!"
+              @db.findCoasters {id: Coaster.PARTY_STARTER}, (err, coaster) =>
+                @emit 'coaster', pour.kegerator_id, coaster unless err?
+                saveCoaster user, Coaster.PARTY_STARTER
+
+
+
+
   # cb = (err, savedToDb)
   # emits: 'pour'
-  endFlow: (access_key, cb) =>
-    pour = @kegerator_last_scans[access_key]
+  endFlow: (kegerator_id, cb) =>
+    pour = @kegerator_last_scans[kegerator_id]
     return cb 'no valid pour event to end', null unless pour?
 
     # remove the pour obj from memory, calculate the total volume of the pours,
     # and save to the DB and emit if > 0
-    delete @kegerator_last_scans[access_key]
+    delete @kegerator_last_scans[kegerator_id]
     volume = pour.calculateVolume()
     if volume <= 0
       return cb null, false
     else
       @db.insertObjects 'pours', pour, (err, result) =>
         return cb err, false if err?
-        @emit 'pour', access_key, volume
+        @emit 'pour', kegerator_id, volume
 
         # earn a coaster?
         @checkForNewCoasters pour, volume
@@ -155,11 +175,12 @@ class Keg extends events.EventEmitter
 
   # cb = (err, savedToDb)
   # emits 'temp'
-  addTemp: (access_key, temp, cb) ->
-    t = new Temperature({temperature: temp, kegerator_id: access_key})
+  addTemp: (kegerator_id, temp, cb) ->
+    kegerator_id = parseInt kegerator_id, 10 if _.isString kegerator_id
+    t = new Temperature({temperature: temp, kegerator_id: kegerator_id})
     @db.insertObjects 'temperatures', t, (err, result) =>
       return cb err, false if err?
-      @emit 'temp', access_key, temp
+      @emit 'temp', kegerator_id, temp
       cb null, true
 
   # cb= (err, result)
@@ -193,7 +214,7 @@ class Keg extends events.EventEmitter
         coaster.image_path = "#{@config.image_host}#{coaster.image_path}"
         coaster
 
-   kegerators: (num_kegerators, cb) ->
+  kegerators: (num_kegerators, cb) ->
     query = {order: 'created_at DESC'}
     query.limit = num_kegerators if num_kegerators?
     @models.Kegerator.findAll(query).success (kegerators) =>

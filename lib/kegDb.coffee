@@ -121,13 +121,14 @@ class KegDb
   findPours: (criteria, cb) =>
     @getCollection 'pours', (err, collection) =>
       return cb err, null if err?
-      limit = if criteria?.limit? then {limit: criteria.limit} else {}
+      opts = if criteria?.limit? then {limit: criteria.limit} else {}
+      opts['sort'] = [['date' , -1]]
       selector = {}
       if criteria?.id?
         selector = {kegerator_id: parseInt(criteria.id, 10)}
       else if criteria?.rfid?
         selector = {rfid: criteria.rfid}
-      collection.find selector, limit, (err, cursor) =>
+      collection.find selector, opts, (err, cursor) =>
         @handleFind cb, err, cursor
 
   # cb = (err, user)

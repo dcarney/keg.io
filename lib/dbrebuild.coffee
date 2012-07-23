@@ -93,7 +93,7 @@ class DbRebuild
         keg_id: 1
         kegerator_id: 1111
         volume_ounces: 16
-        date: moment().format(@dateFormat))
+        date: moment().add('d', -1).format(@dateFormat))
 
     pours.push(
         rfid: crc.rfid
