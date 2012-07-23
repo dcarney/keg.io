@@ -5,6 +5,7 @@ node.js, and utilizes an [arduino](http://www.arduino.cc/) microcontroller for
 interfacing with various HW and sensors that are attached to the kegerator
 itself.
 
+
 It's got several cool features, including:
 
  * Gravatar support
