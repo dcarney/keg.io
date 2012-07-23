@@ -146,8 +146,19 @@ class Keg extends events.EventEmitter
                 @emit 'coaster', pour.kegerator_id, coaster unless err?
                 saveCoaster user, Coaster.PARTY_STARTER
 
-
-
+        # take the bus home coaster: 48 ounces poured in the last hour
+        unless _.include user.coasters, Coaster.TAKE_THE_BUS_HOME
+          now = moment()
+          ONE_HOUR = 60 * 60 * 1000 # 1 hour in ms
+          # helper fn - sums the volume of pours that occurred in the last hour
+          reducer = (total, pour) ->
+            if now.diff(moment(pour.date)) <= ONE_HOUR then total + pour.volume_ounces else total
+          hour_volume = _.reduce pours, reducer, 0
+          if hour_volume >= 48
+            @logger.info "#{user.rfid} just earned the 'Take the Bus Home' coaster!"
+            @db.findCoasters {id: Coaster.TAKE_THE_BUS_HOME}, (err, coaster) =>
+              @emit 'coaster', pour.kegerator_id, coaster unless err?
+              saveCoaster user, Coaster.TAKE_THE_BUS_HOME
 
   # cb = (err, savedToDb)
   # emits: 'pour'
