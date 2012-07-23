@@ -72,24 +72,24 @@ var handleTempEvent = function(data) {
     $('#kegerator_temp').addClass("badge-warning");
   } else {
     $('#kegerator_temp').addClass("badge-important");
-}
+	}
 };
 
-var handleDenyEvent = function(data) {
+var handleDenyEvent=function(data){
   socketDebug('deny', data);
   $("#kegerator_details .badge.pour").removeClass("badge-important").addClass("badge-important");
-  window.setTimeout(function() {
+  window.setTimeout(function(){
     $("#kegerator_details .badge.pour").toggleClass("on");
   }, 1500);
 };
 
-var handlePourEvent = function(data) {
+var handlePourEvent = function(data){
   socketDebug('pour', data);
   var volumeOunces = data['data'];
   $('#user_info .pour_volume').text("You just poured " + volumeOunces + " ounces!");
   $("#kegerator_details .badge.pour").removeClass("badge-important badge-success badge-warning").addClass("badge-important");
 };
-		
+
 // each obj in pourObjects is a regular pour, with the associated member obj
 // as the .user property.
 // Ex:
@@ -141,11 +141,11 @@ var populateCurrentDrinkerMarkup = function(user) {
 
     $('#gravatar').attr('src', user.gravatar);
     $('#user_info').empty();
-  $('#user_info').append('<h2>Hello, <span class="firstname"> '+ user.first_name + '</span><span class="lastname">'+user.last_name+'</span>!</h2>');
-  $('#user_info').append("<p class='tagline'>Pour yourself a tasty beer!</p>");
+    $('#user_info').append('<h2>Hello, <span class="firstname"> '+ user.first_name + '</span><span class="lastname">'+user.last_name+'</span>!</h2>');
+    $('#user_info').append("<p class='tagline'>Pour yourself a tasty beer!</p>");
   $('#user_info').append("<p class='pour_volume'></p>");
-  $('#user_info').append("<p class='location'>Seattle, WA</p>");
-  $('#user_info').append('<a class="btn rfid" href="#/users/' + user.rfid + '">View Profile</a>');
+    $('#user_info').append("<p class='location'>Seattle, WA</p>");
+    $('#user_info').append('<a class="btn rfid" href="#/users/'+user.rfid+'">View Profile</a>');
 };
 
 // Helper fn for getting a user obj via the API
@@ -234,7 +234,7 @@ $(document).ready(function(){
       var lastPour = pours.shift(); // the 'last' pour is the 0th element!
       getUser(lastPour.rfid, function(user) {
         populateCurrentDrinkerMarkup(user);
-    });
+ });
 
       var pourObjects = [];
       // remove any undefined objecs
@@ -249,7 +249,7 @@ $(document).ready(function(){
             // all done, populate the UI
             populatePreviousDrinkersMarkup(pourObjects);
           }
-});
+ });
       });
 
     }); // getJSON
