@@ -2,7 +2,6 @@
   console.log("socket event: '" + msg + "' data: " + (data === null ? "" : JSON.stringify(data)));
 };
 
-
 var switchKegerator = function(kegeratorId) {
   $.getJSON("/kegerators/" + kegeratorId, function(data) {
      console.log(data);
@@ -76,59 +75,102 @@ var handleTempEvent = function(data) {
 	}
 };
 
-var handleDenyEvent=function(data){
+var handleDenyEvent = function(data) {
+  socketDebug('deny', data);
   $("#kegerator_details .badge.pour").removeClass("badge-important").addClass("badge-important");
-  window.setTimeout(function(){
+  window.setTimeout(function() {
     $("#kegerator_details .badge.pour").toggleClass("on");
   }, 1500);
 };
 
-var handlePourEvent = function(data){
-		$("#kegerator_details .badge.pour").removeClass("badge-important badge-success badge-warning").addClass("badge-important");
+var handlePourEvent = function(data) {
+  socketDebug('pour', data);
+  var volumeOunces = data['data'];
+  $('#user_info .pour_volume').text("You just poured " + volumeOunces + " ounces!");
+  $("#kegerator_details .badge.pour").removeClass("badge-important badge-success badge-warning").addClass("badge-important");
+};
+
+// each obj in pourObjects is a regular pour, with the associated member obj
+// as the .user property.
+// Ex:
+// {
+//  "rfid": "44004C234A",
+//  "keg_id": 1,
+//  "kegerator_id": 1111,
+//  "volume_ounces": 5,
+//  "rates": [],
+//  "date": "2012-07-23T20:17:14-07:00"
+//  "user": <SOME_USER_OBJ>
+//  }
+//
+var populatePreviousDrinkersMarkup = function(pourObjects) {
+  // Clear the previous drinkers rows
+  $(".previous").empty();
+
+  var count = 0;
+  _.each(pourObjects, function(pourObject) {
+    count++;
+    var pour = pourObject;
+    var user = pour.user;
+
+    // Create a fresh new div for holding the markup for a previous drinker
+    var previousCard = $('<div class="span4 mini-card"></div>');
+    previousCard.append("<img id='gravatar' class='profile' src='" + user.gravatar + "'>");
+    previousCard.append('<h2 class=name>' + user.first_name + ' ' + user.last_name + '</h2>');
+    previousCard.append("<p class='pour_volume'>" + pour.volume_ounces + " ounces</p>");
+    previousCard.append("<p class='pour_date'>" + moment(pour.date).fromNow() + "</p>");
+
+    // Put 3 mini-cards per row
+    var domSelector = count <= 3 ? '#previousRowOne' : '#previousRowTwo';
+    $(domSelector).prepend(previousCard);
+  });
+};
+
+// Take a user object and populate various bits of markup with info about them
+var populateCurrentDrinkerMarkup = function(user) {
+  $("#kegerator_details .badge.pour").removeClass("badge-important").addClass("badge-success");
+
+  if (user) {
+    _.each(user.coasters, function(coaster_id) {
+      $.getJSON("/coasters/" + coaster_id, function(data) {
+        var image_path = data.image_path;
+        var description = data.description;
+      });
+    });
+  }
+
+  $('#gravatar').attr('src', user.gravatar);
+  $('#user_info').empty();
+  $('#user_info').append('<h2>Hello, <span class="firstname"> '+ user.first_name + '</span><span class="lastname">'+user.last_name+'</span>!</h2>');
+  $('#user_info').append("<p class='tagline'>Pour yourself a tasty beer!</p>");
+  $('#user_info').append("<p class='pour_volume'></p>");
+  $('#user_info').append("<p class='location'>Seattle, WA</p>");
+  $('#user_info').append('<a class="btn rfid" href="#/users/' + user.rfid + '">View Profile</a>');
+};
+
+// Helper fn for getting a user obj via the API
+// cb = (user)
+var getUser = function(rfid, cb) {
+   $.getJSON("/users/" + rfid, function(data) {
+    var user = null;
+    if (_.isArray(data)) {
+      user = data[0];
+    }
+    return cb(user);
+  });
 };
 
 var handleScanEvent = function(data) {
   socketDebug('scan', data);
-
   rfid = data['data'];
-  $.getJSON("/users/" + rfid, function(data) {
-    var user = data;
-    if (_.isArray(data)) {
-      user = data[0];
-    }
-	$("#kegerator_details .badge.pour").removeClass("badge-important").addClass("badge-success on");
 
-    if (user) {
-      _.each(user.coasters, function(coaster_id) {
-        $.getJSON("/coasters/" + coaster_id, function(data) {
-          var image_path = data.image_path;
-          var description = data.description;
-        });
-      });
-    }
-    console.log(user);
-
-    var newprev = $('<div class="span4"></div>').append($('#hero #user_info').html());
-    var name = $(newprev).find("h2 .firstname").text() + " " + $(newprev).find("h2 .lastname").text();
-    $(newprev).find("h2").text(name);
-    $(newprev).find(".user_coasters").remove();
-    $(".previous").prepend(newprev.addClass('mini-card'));
-    $(".previous div.span4").last().remove();
-
-    $('#gravatar').attr('src', user.gravatar);
-    $('#user_info').empty();
-    $('#user_info').append('<h2>Hello, <span class="firstname"> '+ user.first_name + '</span><span class="lastname">'+user.last_name+'</span>!</h2>');
-    $('#user_info').append("<p class='tagline'>Pour yourself a tasty beer!</p>");
-    $('#user_info').append("<p class='location'>Seattle, WA</p>");
-    $('#user_info').append('<a class="btn rfid" href="#/users/'+user.rfid+'">View Profile</a>');
-    //$('#user_info').append("<p class='title' >Solid dude</p>");
-    // $('#user_coasters').empty();
+  getUser(rfid, function(user) {
+    populateCurrentDrinkerMarkup(user);
 
     $("#hero").animate({backgroundColor: "#FF0000"}, 700);
     $("#hero").animate({backgroundColor: "#FFFFFF"}, 700);
   });
 };
-
 
 var cookieCreate = function createCookie(name,value,days) {
   var expires = "";
@@ -158,6 +200,9 @@ var cookieDelete = function eraseCookie(name) {
 // The web socket
 var socket = null;
 
+// The attached kegerator (if any)
+var currentKegeratorId = null;
+
 $(document).ready(function(){
 
   $('img.coaster').each(function(index, el) {
@@ -170,25 +215,45 @@ $(document).ready(function(){
   // Look for a keg.io cookie, with an all-numeric kegerator ID in it.
   var cookieVal = cookieRead('kegio');
   if ((cookieVal !== null) && (cookieVal.match(/^\d+$/))) {
-    switchKegerator(cookieVal);
+    currentKegeratorId = cookieVal;
+    switchKegerator(currentKegeratorId);
   }
 
   // Get the list of available kegerators, populate the dropdown with them
   $.getJSON("/kegerators", function(kegerators) {
-    console.log(kegerators);
-    console.log(_.pluck(kegerators, 'kegerator_id'));
-
     var ids = _.pluck(kegerators, 'kegerator_id');
-    console.log(ids);
-    //var tmpl = $('#kegerator_template');
-    //console.log(tmpl);
-    //var drinker = $(Mustache.render("<li><a href='#'>{{id}}</a></li>",ids));
-    //console.log(drinker);
-
     _.each(ids, function(id) {
       $('.dropdown-menu').append("<li><a href='#'>" + id + "</a></li>");
     });
   }); // getJSON
+
+  // Populate the 'last drinker' and 'current drinker' cards
+  if (currentKegeratorId !== null) {
+    // limit of 7 = 1 current drinker, 6 previous
+    $.getJSON('/kegerators/' + currentKegeratorId + '/pours?limit=7', function(pours) {
+      var lastPour = pours.shift(); // the 'last' pour is the 0th element!
+      getUser(lastPour.rfid, function(user) {
+        populateCurrentDrinkerMarkup(user);
+      });
+
+      var pourObjects = [];
+      // remove any undefined objecs
+      pours = _.reject(pours, function(pour) { return pour === null; });
+
+      var numPours = pours.length;
+      _.each(pours, function(pour) {
+        getUser(pour.rfid, function(user) {
+          pour['user'] = user;
+          pourObjects.push(pour);
+          if (pourObjects.length === numPours) {
+            // all done, populate the UI
+            populatePreviousDrinkersMarkup(pourObjects);
+          }
+        });
+      });
+
+    }); // getJSON
+  }
 
  socket = io.connect('http://localhost:8081');
  socket.on('connect', function () {

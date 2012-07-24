@@ -36,6 +36,19 @@ body {
   padding: 20px;
 }
 
+.mini-card img.profile {
+  width: 80px;
+  height: 80px;
+}
+
+.mini-card h2.name {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  /* text-overflow: ellipsis comes into play only when the elem has:
+    overflow other than visible and white-space: nowrap. */
+}
+
 .profile {
   -webkit-border-radius: 6px;
   -moz-border-radius: 6px;
