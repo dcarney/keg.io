@@ -50,7 +50,7 @@ class DbRebuild
 
     users = []
     dc =
-      rfid: '44004C234A'
+      rfid: '5100FFED286B'
       first_name: 'Dylan'
       last_name: 'Carney'
       nickname: 'Beardo'
