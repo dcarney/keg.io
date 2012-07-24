@@ -77,7 +77,7 @@ class Keg extends events.EventEmitter
     rfid = rfid.toUpperCase()
     @db.findUser rfid, (err, user) =>
       return cb err, null if err?
-      valid = user? && user.rfid == rfid
+      valid = (user? && (user.rfid == rfid))
       # store a pour obj to use w/ future flow events
       # TODO: Add the current keg id to the pour event
       if valid
