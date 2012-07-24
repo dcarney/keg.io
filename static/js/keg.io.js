@@ -2,6 +2,24 @@
   console.log("socket event: '" + msg + "' data: " + (data === null ? "" : JSON.stringify(data)));
 };
 
+// Returns the client to the "home page" and hides any
+// attached kegerator display info
+var clearKegeratorSelection = function() {
+  currentKegeratorId = null;
+  // hide the intro copy, display the kegerator card
+  $('#hero .card').addClass('hidden');
+  $('#hero .intro_copy').removeClass('hidden');
+  $('.previous').addClass('hidden');
+  $('.row-fluid .span3').hide();
+  $('#main').removeClass("span9");
+  $('#main').addClass("span12");
+
+  // TODO: should we clear the cookie?? I'm leaning towards no
+
+  // stop listening for events on this kegerator
+  detachWebSocket();
+};
+
 var switchKegerator = function(kegeratorId) {
   $.getJSON("/kegerators/" + kegeratorId, function(data) {
      console.log(data);
@@ -12,6 +30,14 @@ var switchKegerator = function(kegeratorId) {
 
      // Save the value in a cookie
      cookieCreate('kegio', kegeratorId, 90);
+
+     // hide the intro copy, display the kegerator card
+     $('#hero .card').removeClass('hidden');
+     $('#hero .intro_copy').addClass('hidden');
+     $('.previous').removeClass('hidden');
+     $('.row-fluid .span3').show();
+     $('#main').addClass("span9");
+     $('#main').removeClass("span12");
 
      // Populate some DOM elements w/ info
      $('#kegerator_details').empty();
@@ -47,11 +73,20 @@ var switchKegerator = function(kegeratorId) {
 
 // Connect to a web socket and listen for events for the given kegerator
 var reattachWebSocket = function(kegeratorId) {
-$('#kegerator_details .badge.connected').removeClass("badge-important").addClass("badge-warning on");
+  $('#kegerator_details .badge.connected').removeClass("badge-important").addClass("badge-warning on");
   socket.emit('attach', kegeratorId);
   socket.on('attached', function () {
     $('#kegerator_details .badge.connected').removeClass("badge-warning").addClass("badge-success");
     socketDebug('attached', kegeratorId);
+  });
+};
+
+// Stop listening for events for the given kegerator.  Web socket remains connected.
+var detachWebSocket = function() {
+  $('#kegerator_details .badge.connected').removeClass("badge-important").addClass("badge-warning on");
+  socket.emit('detach', null);
+  socket.on('detached', function () {
+    socketDebug('detached', null);
   });
 };
 
@@ -205,6 +240,7 @@ var currentKegeratorId = null;
 
 $(document).ready(function(){
 
+  // Add tooltips to each coaster img
   $('img.coaster').each(function(index, el) {
     $(el).on('hover', function() {
       var self = this;
@@ -273,9 +309,15 @@ $(document).ready(function(){
 
 });   // document ready
 
-$('.dropdown-menu').on('click', 'li', function(event){
+// Attach an event handler to each item in the "kegerators" menu
+$('.dropdown-menu').on('click', 'li', function(event) {
   var selectedId = $(event.srcElement).html();
   console.log('New kegerator selected: ' + selectedId);
   switchKegerator(selectedId);
 });
 
+// Attach an event handler to all the "home" links that clears the
+// kegerator selection, and displays the homepage content
+$('.home_link').on('click', function(event) {
+  clearKegeratorSelection();
+});
