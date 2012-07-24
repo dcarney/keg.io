@@ -101,7 +101,7 @@ class Keg extends events.EventEmitter
 
   # emits: 'coaster' if new coaster(s) is/are earned
   checkForNewCoasters: (pour, volume) =>
-    console.log "checking for new coasters"
+    @logger.info "checking for new coasters"
 
     ## get the user's current coasters
     @db.findUser pour.rfid, (err, user) =>
@@ -146,13 +146,24 @@ class Keg extends events.EventEmitter
                 @emit 'coaster', pour.kegerator_id, coaster unless err?
                 saveCoaster user, Coaster.PARTY_STARTER
 
+        # off the wagon coaster: 3 weeks since the user's past pour
+        unless _.include user.coasters, Coaster.OFF_THE_WAGON
+          off_the_wagon = false
+          if pours.length > 1
+            off_the_wagon = moment(pours[0].date).diff(moment(pours[1].date), 'weeks', true) >= 3.0
+          if off_the_wagon
+            @logger.info "#{user.rfid} just earned the 'Off the Wagon' coaster!"
+            @db.findCoasters {id: Coaster.OFF_THE_WAGON}, (err, coaster) =>
+              @emit 'coaster', pour.kegerator_id, coaster unless err?
+              saveCoaster user, Coaster.OFF_THE_WAGON
+
         # take the bus home coaster: 48 ounces poured in the last hour
         unless _.include user.coasters, Coaster.TAKE_THE_BUS_HOME
           now = moment()
           ONE_HOUR = 60 * 60 * 1000 # 1 hour in ms
           # helper fn - sums the volume of pours that occurred in the last hour
           reducer = (total, pour) ->
-            if now.diff(moment(pour.date)) <= ONE_HOUR then total + pour.volume_ounces else total
+            if now.diff(moment(pour.date), 'hours', true) <= 1.0 then total + pour.volume_ounces else total
           hour_volume = _.reduce pours, reducer, 0
           if hour_volume >= 48
             @logger.info "#{user.rfid} just earned the 'Take the Bus Home' coaster!"
