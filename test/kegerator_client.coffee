@@ -88,7 +88,7 @@ class FakeKegerator
   fakePour: () =>
     # Select a random user, using values that we "know" are in the DB,
     # (based on the fact that they're hardcoded into the DB rebuild script)
-    randomUser = Math.floor Math.random() * 6  # between 0-5
+    randomUser = Math.floor Math.random() * 5  # between 0-4
     userRFID = ''
     switch randomUser
       when 0 then userRFID = "44004C234A"  # Dylan
@@ -96,7 +96,6 @@ class FakeKegerator
       when 2 then userRFID = "4400561A0A"  # Carl
       when 3 then userRFID = "440055F873"  # Garrett
       when 4 then userRFID = "DENYTAG544"  # deny user
-      when 5 then userRFID = "DENYTAG546"  # deny user
 
     console.log 'fake pour!!!!!!'
     # send API request
