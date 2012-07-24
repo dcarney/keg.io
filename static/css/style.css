@@ -2,6 +2,10 @@ body {
   background-image: url('../img/wood_pattern.png');
 }
 
+.hidden {
+  display: none;
+}
+
 .brand {
   font-family: 'Cabin Sketch', cursive;
 }
@@ -15,6 +19,14 @@ body {
   -moz-box-shadow:    3px 3px 5px 6px #ccc;
   -webkit-box-shadow: 3px 3px 5px 6px #ccc;
   box-shadow:         3px 3px 5px 6px #ccc;
+}
+
+.intro_copy {
+  background: rgba(60, 60, 60, 0.9);
+  -webkit-border-radius: 5px;
+  -moz-border-radius: 5px;
+  border-radius: 5px;
+  padding: 20px;
 }
 
 .card {
