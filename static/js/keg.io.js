@@ -75,15 +75,15 @@ var handleTempEvent = function(data) {
 	}
 };
 
-var handleDenyEvent=function(data){
+var handleDenyEvent = function(data) {
   socketDebug('deny', data);
   $("#kegerator_details .badge.pour").removeClass("badge-important").addClass("badge-important");
-  window.setTimeout(function(){
+  window.setTimeout(function() {
     $("#kegerator_details .badge.pour").toggleClass("on");
   }, 1500);
 };
 
-var handlePourEvent = function(data){
+var handlePourEvent = function(data) {
   socketDebug('pour', data);
   var volumeOunces = data['data'];
   $('#user_info .pour_volume').text("You just poured " + volumeOunces + " ounces!");
@@ -130,22 +130,22 @@ var populatePreviousDrinkersMarkup = function(pourObjects) {
 var populateCurrentDrinkerMarkup = function(user) {
   $("#kegerator_details .badge.pour").removeClass("badge-important").addClass("badge-success");
 
-    if (user) {
-      _.each(user.coasters, function(coaster_id) {
-        $.getJSON("/coasters/" + coaster_id, function(data) {
-          var image_path = data.image_path;
-          var description = data.description;
-        });
+  if (user) {
+    _.each(user.coasters, function(coaster_id) {
+      $.getJSON("/coasters/" + coaster_id, function(data) {
+        var image_path = data.image_path;
+        var description = data.description;
       });
-    }
+    });
+  }
 
-    $('#gravatar').attr('src', user.gravatar);
-    $('#user_info').empty();
-    $('#user_info').append('<h2>Hello, <span class="firstname"> '+ user.first_name + '</span><span class="lastname">'+user.last_name+'</span>!</h2>');
-    $('#user_info').append("<p class='tagline'>Pour yourself a tasty beer!</p>");
+  $('#gravatar').attr('src', user.gravatar);
+  $('#user_info').empty();
+  $('#user_info').append('<h2>Hello, <span class="firstname"> '+ user.first_name + '</span><span class="lastname">'+user.last_name+'</span>!</h2>');
+  $('#user_info').append("<p class='tagline'>Pour yourself a tasty beer!</p>");
   $('#user_info').append("<p class='pour_volume'></p>");
-    $('#user_info').append("<p class='location'>Seattle, WA</p>");
-    $('#user_info').append('<a class="btn rfid" href="#/users/'+user.rfid+'">View Profile</a>');
+  $('#user_info').append("<p class='location'>Seattle, WA</p>");
+  $('#user_info').append('<a class="btn rfid" href="#/users/' + user.rfid + '">View Profile</a>');
 };
 
 // Helper fn for getting a user obj via the API
