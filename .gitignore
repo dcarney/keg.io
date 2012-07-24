@@ -1,8 +1,5 @@
-/db/kegerator.db.old
-/db/kegerator.db.bak
-/db/kegerator.db
-/lib/node-sqlite
-keg.io.tmproj
+/db/
+/lib/
 /node_modules
 /conf/configuration.json
 /conf/keys.json
