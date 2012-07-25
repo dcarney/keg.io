@@ -86,7 +86,10 @@ var handleDenyEvent = function(data) {
 var handlePourEvent = function(data) {
   socketDebug('pour', data);
   var volumeOunces = data['data'];
-  $('#user_info .pour_volume').text("You just poured " + volumeOunces + " ounces!");
+  var now = new Date();
+  $('#user_info .pour_volume').html("You just poured <span class='badge'>" + volumeOunces + " ounces</span>!");
+  $('#user_info .pour_date').text( moment(now).fromNow());
+  $('#user_info .pour_date').attr('data',now);
   $("#kegerator_details .badge.pour").removeClass("badge-important badge-success badge-warning").addClass("badge-important");
 };
 
@@ -117,7 +120,7 @@ var populatePreviousDrinkersMarkup = function(pourObjects) {
     var previousCard = $('<div class="span4 mini-card"></div>');
     previousCard.append("<img id='gravatar' class='profile' src='" + user.gravatar + "'>");
     previousCard.append('<h2 class=name>' + user.first_name + ' ' + user.last_name + '</h2>');
-    previousCard.append("<p class='pour_volume'>" + pour.volume_ounces + " ounces</p>");
+    previousCard.append("<p class='pour_volume'><span class='badge'>" + pour.volume_ounces + " ounces</span></p>");
     previousCard.append("<p class='pour_date'>" + moment(pour.date).fromNow() + "</p>");
 
     // Put 3 mini-cards per row
@@ -130,11 +133,14 @@ var populatePreviousDrinkersMarkup = function(pourObjects) {
 var populateCurrentDrinkerMarkup = function(user) {
   $("#kegerator_details .badge.pour").removeClass("badge-important").addClass("badge-success");
 
+	$('#user_coasters').empty();
   if (user) {
     _.each(user.coasters, function(coaster_id) {
       $.getJSON("/coasters/" + coaster_id, function(data) {
+        data= data[0];
         var image_path = data.image_path;
         var description = data.description;
+        $('#user_coasters').append('<img class="coaster" title="'+description+'" data-placement="bottom" src="'+image_path+'">');
       });
     });
   }
@@ -142,10 +148,11 @@ var populateCurrentDrinkerMarkup = function(user) {
   $('#gravatar').attr('src', user.gravatar);
   $('#user_info').empty();
   $('#user_info').append('<h2>Hello, <span class="firstname"> '+ user.first_name + '</span><span class="lastname">'+user.last_name+'</span>!</h2>');
-  $('#user_info').append("<p class='tagline'>Pour yourself a tasty beer!</p>");
-  $('#user_info').append("<p class='pour_volume'></p>");
+  //$('#user_info').append("<p class='tagline'>Pour yourself a tasty beer!</p>");
+  $('#user_info').append("<p class='pour_volume'><span class='label label-striped active'>pouring...</span></p>");
+  $('#user_info').append('<p class="pour_date">Pour yourself a tasty beer!</p>');
   $('#user_info').append("<p class='location'>Seattle, WA</p>");
-  $('#user_info').append('<a class="btn rfid" href="#/users/' + user.rfid + '">View Profile</a>');
+  //$('#user_info').append('<a class="btn rfid" href="#/users/' + user.rfid + '">View Profile</a>');
 };
 
 // Helper fn for getting a user obj via the API
@@ -163,7 +170,24 @@ var getUser = function(rfid, cb) {
 var handleScanEvent = function(data) {
   socketDebug('scan', data);
   rfid = data['data'];
+	//var newprev = $('<div class="span4"></div>').append($('#hero #user_info').html());
+	var newprev = $('<div class="span4"></div>').append($('#hero div.card').html().replace(/id\=\"[\w\_\-]+\"/gi,"")); //"
+    var name = $(newprev).find("h2 .firstname").text() + " " + $(newprev).find("h2 .lastname").text();
+    $(newprev).find("h2").text(name);
+    //$(newprev).find(".user_coasters").remove();
+    var pour = $(newprev).find(".pour_volume");
+    pour.html($(pour).find("span"));
+    var prevs = $('.previous div.mini-card').clone();
+    $('.previous div.mini-card').remove();
 
+    $('#previousRowOne').append(newprev.addClass('mini-card'));
+    $('#previousRowOne').append(prevs.slice(0,2));
+    $('#previousRowTwo').append(prevs.slice(2,5));
+    $('.mini-card .pour_date').each(function(index){
+    	$(this).text(moment($(this).attr('data')).fromNow()); 
+    	});
+    //$(".previous div.span4").last().remove();
+    
   getUser(rfid, function(user) {
     populateCurrentDrinkerMarkup(user);
 
