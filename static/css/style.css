@@ -53,7 +53,7 @@ body {
   height: 80px;
 }
 
-.mini-card h2.name {
+.mini-card h2.name, .mini-card h2 {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;

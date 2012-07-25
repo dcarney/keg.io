@@ -21,6 +21,18 @@
       #hero .lastname, #hero .location, #hero .rfid {
         display: none;
       }
+      
+      .mini-card .tagline, .mini-card .user_coasters{
+			display: none;      
+      }
+     
+      
+      .mini-card .bc-right{
+      	width: auto;
+      	height: auto;
+      	float: right;
+      }
+      
     </style>
     <link href="../css/bootstrap-responsive.css" rel="stylesheet">
     <link href="../css/style.css" rel="stylesheet">
@@ -108,11 +120,13 @@
           <div id="hero" class="hero-unit">
             <div class="card hidden">
               <img id="gravatar" class="profile" src=""/>
-              <div id="user_info" class="bc-right" style="float: left;">
-              </div>
+              <span id="user_info">
+              </span>
               <div id="user_coasters" class="user_coasters" style="margin: 10px; float: left;">
+              <!--
                 <img class="coaster" title='Pour a beer before noon.' data-placement='bottom' src="http://images.keg.io/coasters/earlybird.png">
                 <img class="coaster" title='Pour a beer with keg.io!' data-placement='bottom' src="http://images.keg.io/coasters/firstbeer.png">
+                -->
               </div>
             </div>
             <div class="intro_copy">
