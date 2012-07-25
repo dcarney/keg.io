@@ -1,7 +1,6 @@
 /db/
-/lib/
+/log/
 /node_modules
 /conf/configuration.json
 /conf/keys.json
-/lib/keg.io
 /arduino/v2/keg/Credentials.h
