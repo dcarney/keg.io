@@ -493,3 +493,20 @@ io.sockets.on 'connection', (socket) ->
     console.log io.sockets.manager.roomClients[socket.id]
     console.log "attached to #{kegerator_id}"
     socket.emit 'attached'
+
+  socket.on 'detach', () ->
+    console.log "detach request for socket #{socket.id}"
+
+    # get all the rooms this socket is joined to
+    # ex. { '': true, '/1111': true }
+    rooms = io.sockets.manager.roomClients[socket.id]
+
+    # leave them all
+    _.each _.keys(rooms), (room) ->
+      console.log "room"
+      console.log room
+      roomId = room.replace /^\//, '' # remove leading '/'
+      console.log "leaving #{roomId}..."
+      socket.leave roomId
+
+    socket.emit 'detached'
