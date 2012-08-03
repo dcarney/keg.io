@@ -38,6 +38,10 @@ body {
   height: 128px;
 }
 
+.card_content {
+   float: left;
+}
+
 .mini-card {
   background: rgba(60, 60, 60, 0.7);
   color: #ffffff;
