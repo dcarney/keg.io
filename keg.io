@@ -171,7 +171,7 @@ handleResponse = (err, result, req, res) ->
 #   `GET /hello`
 #
 server.get '/hello', (req, res, next) ->
-  res.send 'world', 200
+  respond 200, res, 'world'
 
 # ## UI: get the port to use for web socket connections
 #   `GET /config/socketPort`
@@ -348,8 +348,11 @@ api_middlewares = [middleware.accessKey(), middleware.verify(keys)]
 
 # helper method to format API responses for kegerator clients
 respond = (status_code, res, action_text, response_text) ->
-  res.writeHead status_code, {'Content-Type': 'application/json'}
-  res.end JSON.stringify({ action: action_text, response: response_text })
+  res.writeHead status_code, {'Content-Type': 'text/plain'}
+  message = "KEGIO:#{action_text}"
+  message += ":#{response_text}" if response_text?
+  message += ":::"
+  res.end message
 
 # ## API: verify an RFID card
 #   `GET /api/kegerator/ACCESS_KEY/scan/RFID?signature=....`
