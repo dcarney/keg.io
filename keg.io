@@ -344,11 +344,13 @@ server.get '/coasters/:id?', (req, res, next) ->
 # - 400: Bad request syntax, or signature verfification failed
 # - 401: Unauthorized.  Unknown access key.
 # - 404: Unknown resource requested.  Either the kegerator ID was incorrect or an invalid ACTION was specified.
-api_middlewares = [middleware.accessKey(), middleware.verify(keys)]
+api_middlewares = [middleware.accessKey(), middleware.verify(keys), middleware.removeHeaders()]
 
 # helper method to format API responses for kegerator clients
 respond = (status_code, res, action_text, response_text) ->
-  res.writeHead status_code, {'Content-Type': 'text/plain'}
+  # content-type for these responses is text/plain, but we don't set the header
+  # to cut down on the processing overhead on the arduino
+  # res.writeHead status_code, {'Content-Type': 'text/plain'}
   message = "KEGIO:#{action_text}"
   message += ":#{response_text}" if response_text?
   message += ":::"
@@ -420,7 +422,7 @@ server.put '/api/kegerator/:id/flow/end', api_middlewares, (req, res, next) ->
 server.put '/api/kegerator/:id/temp/:temp', api_middlewares, (req, res, next) ->
   keg.addTemp req.params.id, req.params.temp, (err, valid) ->
     if err? || not valid
-      respond(401, res, 'temp', invalid temp event)
+      respond(401, res, 'temp', 'invalid')
     else
       respond(200, res, 'temp', req.params.temp)
 
