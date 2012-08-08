@@ -3,6 +3,13 @@ url = require 'url'
 sys = require 'util'
 payload    = require './payload'
 
+# remove extraneous headers, to save on arduino reading/processing
+module.exports.removeHeaders = () ->
+  (req, res, next) ->
+    res.removeHeader 'X-Powered-By'
+    res.removeHeader 'Content-Type'
+    next()
+
 # verify the request's signature, based on our signing scheme and a secret key
 module.exports.verify = (keys = {}) ->
   (req, res, next) ->
@@ -17,9 +24,10 @@ module.exports.verify = (keys = {}) ->
         throw Error('Invalid request signature') unless valid
         next()
       catch err
-        # return a 400, with the appropriate message
-        res.writeHead(400, {'Content-Type': 'text/plain'})
-        res.end(err.message)
+        # return a 400, (leaving off any "extraneous" headers)
+        # with the appropriate message
+        res.writeHead 400
+        res.end err.message
 
 # set a 'path' property on the req object (used by verify())
 module.exports.path = () ->
