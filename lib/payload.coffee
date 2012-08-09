@@ -1,6 +1,8 @@
 genPayload = (method, host, path, data) ->
-  payload = "#{method.toUpperCase()} #{host.toLowerCase()}"
-  payload += (if path? then path else '').toLowerCase()
+  method ?= ''
+  host ?= ''
+  path ?= ''
+  payload = "#{method.toUpperCase()} #{host.toLowerCase()}#{path.toLowerCase()}"
   payload += (if data? && data != '' then "?#{data}" else '').toLowerCase()
 
 # Convenince method for generating a payload from one of our reqest objects
