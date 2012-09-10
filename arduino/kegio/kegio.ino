@@ -21,7 +21,7 @@
 #include <sha256.h>
 
 #include <HttpClient.h>
-#include "Credentials.h"
+#include "credentials.h"
 
 // OneWire temp. sensor lib
 // #include <OneWire.h>
