@@ -3,4 +3,4 @@
 /node_modules
 /conf/configuration.json
 /conf/keys.json
-/arduino/v2/keg/Credentials.h
+/arduino/kegio/Credentials.h
