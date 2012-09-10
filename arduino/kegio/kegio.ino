@@ -9,6 +9,7 @@
         noise.  See tmpthirtysix sketch for details.
   TODO: Ignore scan events while the solenoid is open
 */
+#include "kegio.h"
 #include <SoftwareSerial.h>
 
 // Wifly and HTTP stuff
