@@ -1,0 +1,75 @@
+ARDUNO PIN
+
+D13 -------> piezo +
+D12
+D11 -------> 180ohm ------> RGB LED R
+D10 -------> 100ohm ------> RGB LED G
+D9  -------> 100ohm ------> RGB LED B
+D8
+D7  -------> RFID 2
+D6
+D5  -------> 10kohm ------> GND
+      |----> MOSFET G (left)
+      |----> pour LED+
+D4
+D3  -------> flow signal (yellow,mid)
+D2  -------> RFID 9
+D1 (TX)
+D0 (RX)
+RESET -----> push button (left)
+3.3V ------> TEMP Vin (left)
+        |
+AREF <---
+Vin
+A0   ------> TEMP Vout (mid)
+A1
+A2
+A3
+A4
+A5
+5V   --------> RFID 11
+     |-------> flow Vss (red)
+
+GND  -------> piezo -
+     |------> TEMP GND (right)
+     |------> RGB LED GND
+     |-------> RFID 7
+     |-------> RFID 1
+     |-------> 12V GND
+     |-------> MOSFET S (right)
+     |-------> 330ohm -------> pour LED-
+     |-------> push button (right)
+     |-------> flow GND (black)
+12V+ --------> diode (stripe)
+      |------> solenoid +
+
+solenoid(-) -------> diode
+             |-----> MOSFET D (mid)
+
+TEMP = TMP36 temperature sensor
+RFID = ID-20 RFID reader
+piezo = CET 12A3.5 piezo buzzer
+MOSFET = RFP30N06LE MOSFET (N-Channel, 60V 30A)
+diode = 1N4001 diode rectifier (1A, 50V)
+pour LED = 5mm yellow LED
+
+
+
+
+X = RX
+W = TX
+V = 2
+U = 3
+T = 4
+S = 5
+R = 6
+Q = 7
+
+O = 8
+N = 9
+M = 10
+L = 11
+K = 12
+J = 13
+I = GND
+H = AREF
