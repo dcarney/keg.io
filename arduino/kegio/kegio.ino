@@ -49,6 +49,7 @@
 #define FLOW_SENSOR_PIN 3
 #define SOFT_SERIAL_RX_PIN 2
 #define SOFT_SERIAL_TX_PIN 4
+#define OVERRIDE_PIN 11
 #define BEEP_PIN 6
 #define SOLENOID_PIN 5
 #define RFID_RESET_PIN 7
@@ -64,7 +65,9 @@
 #define OFF 4
 int led = 13; // Pin 13 has an LED connected on most Arduino boards.
 
-#define BEEP_HZ 550
+#define BEEP_HZ_LO 440
+#define BEEP_HZ_MID 550
+#define BEEP_HZ_HI 660
 
 // measures the rising edges of the flow sensor's interrupt signal
 volatile int numFlowInterrupts;
@@ -106,6 +109,9 @@ SoftwareSerial rfidSerial(SOFT_SERIAL_RX_PIN, SOFT_SERIAL_TX_PIN);
 WiFlyClient client(KEGIO_DOMAIN, 8081);
 HttpClient http = HttpClient(client);
 
+// For override button
+int overrideButtonState = 0;
+
 // the setup routine runs once when you press reset:
 void setup() {
   pinMode(led, OUTPUT);
@@ -117,6 +123,7 @@ void setup() {
   pinMode(RFID_RESET_PIN, OUTPUT);
   pinMode(BEEP_PIN, OUTPUT);
   pinMode(SOLENOID_PIN, OUTPUT);
+  pinMode(OVERRIDE_PIN, INPUT);
 
   digitalWrite(RED_PIN, LOW);
   digitalWrite(GREEN_PIN, LOW);
@@ -156,6 +163,9 @@ void setup() {
     Serial.println("association failed");
     #endif
     client.stop();
+    tone(BEEP_PIN, BEEP_HZ_MID, 250); // 550hz for 250ms
+    delay(250);
+    tone(BEEP_PIN, BEEP_HZ_LO, 250); // 440hz for 250ms
     while (1) {
       ledStatus(RED, 500);
       ledStatus(OFF, 500);
@@ -172,6 +182,9 @@ void setup() {
     if (client.connect()) {
       // hello out there...
       sendHttp("GET", "/hello");
+      tone(BEEP_PIN, BEEP_HZ_MID, 250);
+      delay(250);
+      tone(BEEP_PIN, BEEP_HZ_HI, 250);
     }
   }
 }
@@ -182,6 +195,7 @@ void setup() {
 #define TEMP_MSG 1
 #define FLOW_MSG 2
 int lastHttpReqAction = INVALID_MSG;
+//int lastHttpReqAction = SCAN_MSG;
 
 // the loop routine runs over and over again forever:
 void loop() {
@@ -198,18 +212,21 @@ void loop() {
     // ACTUALLY, if we wait, too long, the 64 byte (?) buffer will fill up
 
     int responseCode = http.getResponseStatusCode();
+    //int responseCode = 401;
     //Serial.print("res code: "); Serial.println(responseCode);
 
+    overrideButtonState = digitalRead(OVERRIDE_PIN);
     http.readRemainingResponse();
-
-    if ((lastHttpReqAction == SCAN_MSG) && (responseCode == 200)) {
+    if (((lastHttpReqAction == SCAN_MSG) && (responseCode == 200)) || (overrideButtonState == LOW)) {
       Serial.println("Open that damn solenoid");
+      Serial.print("override button: ");
+      Serial.println(overrideButtonState);
       solenoidOpenMs = millis();
       digitalWrite(SOLENOID_PIN, HIGH);
       ledStatus(BLUE);
     }
     /*
-    if (readHttpResponse(httpResponseBuffer, 64)) {
+    if (readHttpResponse(httpResponseBuffer, 64)) {m
       // valid HTTP response! Go purple for .5 seconds
       ledStatus(BLUE, 500);
       ledStatus(GREEN);
@@ -267,13 +284,13 @@ void loop() {
   if (((millis() - lastRfidMs) > RFID_DURATION_MS) && (rfidSerial.available() > 0)) {
     readTag3();
     if (checkTag(tagBuffer)) {
-      tone(BEEP_PIN, BEEP_HZ, 250); // 440hz for 250ms
+      tone(BEEP_PIN, BEEP_HZ_MID, 250); // 440hz for 250ms
       Serial.println(tagBuffer);
       sendSignedHttp("GET", SCAN_MSG, tagBuffer);
     } else {
       Serial.println("Invalid tag");
     }
-    clearBuffer(tagBuffer);
+    clearBuffer2(tagBuffer, 12);
     resetRfidReader();
     lastRfidMs = millis();
   } else if (rfidSerial.available() > 0) {
