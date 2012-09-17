@@ -195,7 +195,6 @@ void setup() {
 #define TEMP_MSG 1
 #define FLOW_MSG 2
 int lastHttpReqAction = INVALID_MSG;
-//int lastHttpReqAction = SCAN_MSG;
 
 // the loop routine runs over and over again forever:
 void loop() {
@@ -212,7 +211,6 @@ void loop() {
     // ACTUALLY, if we wait, too long, the 64 byte (?) buffer will fill up
 
     int responseCode = http.getResponseStatusCode();
-    //int responseCode = 401;
     //Serial.print("res code: "); Serial.println(responseCode);
 
     // TODO: figure out why a full reset is required after override button pushed
