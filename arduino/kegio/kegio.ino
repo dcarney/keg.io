@@ -215,12 +215,16 @@ void loop() {
     //int responseCode = 401;
     //Serial.print("res code: "); Serial.println(responseCode);
 
+    // TODO: figure out why a full reset is required after override button pushed
     overrideButtonState = digitalRead(OVERRIDE_PIN);
+    if (overrideButtonState == LOW) {
+      lastHttpReqAction = SCAN_MSG;
+      responseCode = 200;
+      Serial.println("Solenoid override pushed");
+    }
+
     http.readRemainingResponse();
-    if (((lastHttpReqAction == SCAN_MSG) && (responseCode == 200)) || (overrideButtonState == LOW)) {
-      Serial.println("Open that damn solenoid");
-      Serial.print("override button: ");
-      Serial.println(overrideButtonState);
+    if ((lastHttpReqAction == SCAN_MSG) && (responseCode == 200)) {
       solenoidOpenMs = millis();
       digitalWrite(SOLENOID_PIN, HIGH);
       ledStatus(BLUE);
