@@ -281,7 +281,7 @@ void loop() {
   }
 
   // if there's a byte waiting to be read on the RFID serial port...
-  if (((millis() - lastRfidMs) > RFID_DURATION_MS) && (rfidSerial.available() > 0)) {
+  if (((millis() - lastRfidMs) > RFID_DURATION_MS) && (rfidSerial.available() > 1)) {
     readTag3();
     if (checkTag(tagBuffer)) {
       tone(BEEP_PIN, BEEP_HZ_MID, 250); // 440hz for 250ms
