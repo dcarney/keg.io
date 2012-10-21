@@ -24,7 +24,7 @@
 #include "credentials.h"
 
 // OneWire temp. sensor lib
-// #include <OneWire.h>
+#include <OneWire.h>
 // For debugging
 //#include <MemoryFree.h>
 
@@ -45,11 +45,10 @@
 #define FLOW_SENSOR_INTERRUPT 1
 
 // Arduino pins
-#define TEMPERATURE_SENSOR_PIN 0
+#define TEMPERATURE_SENSOR_PIN 4
 #define FLOW_SENSOR_PIN 3
 #define SOFT_SERIAL_RX_PIN 2
-#define SOFT_SERIAL_TX_PIN 4
-#define OVERRIDE_PIN 11
+//#define SOFT_SERIAL_TX_PIN 4
 #define BEEP_PIN 6
 #define SOLENOID_PIN 5
 #define RFID_RESET_PIN 7
@@ -94,7 +93,7 @@ unsigned long lastTemperatureMs = 0;
 #define SOLENOID_OPEN_DURATION_MS 10000
 unsigned long solenoidOpenMs = 0;
 // For the onewire temp sensor:
-//OneWire ds(TEMPERATURE_SENSOR_PIN);
+OneWire ds(TEMPERATURE_SENSOR_PIN);
 
 // Time between allowed scans - prevents double and triple scans from
 // being read each time a card is near.  By starting lastRfidMs at the duration,
@@ -103,14 +102,11 @@ unsigned long solenoidOpenMs = 0;
 unsigned long lastRfidMs = RFID_DURATION_MS;
 
 // Create a software serial port, to keep the real RX and TX pins free
-SoftwareSerial rfidSerial(SOFT_SERIAL_RX_PIN, SOFT_SERIAL_TX_PIN);
+SoftwareSerial rfidSerial(SOFT_SERIAL_RX_PIN, 0);
 
 // Create WiFly client and our own HTTP client
 WiFlyClient client(KEGIO_DOMAIN, 8081);
 HttpClient http = HttpClient(client);
-
-// For override button
-int overrideButtonState = 0;
 
 // the setup routine runs once when you press reset:
 void setup() {
@@ -123,7 +119,6 @@ void setup() {
   pinMode(RFID_RESET_PIN, OUTPUT);
   pinMode(BEEP_PIN, OUTPUT);
   pinMode(SOLENOID_PIN, OUTPUT);
-  pinMode(OVERRIDE_PIN, INPUT);
 
   digitalWrite(RED_PIN, LOW);
   digitalWrite(GREEN_PIN, LOW);
@@ -177,11 +172,11 @@ void setup() {
     Serial.println("wifi connected");
     Serial.println("client request..");
     #endif
-    ledStatus(GREEN, 1000);
 
     if (client.connect()) {
       // hello out there...
       sendHttp("GET", "/hello");
+      ledStatus(GREEN, 1000);
       tone(BEEP_PIN, BEEP_HZ_MID, 250);
       delay(250);
       tone(BEEP_PIN, BEEP_HZ_HI, 250);
@@ -212,14 +207,6 @@ void loop() {
 
     int responseCode = http.getResponseStatusCode();
     //Serial.print("res code: "); Serial.println(responseCode);
-
-    // TODO: figure out why a full reset is required after override button pushed
-    overrideButtonState = digitalRead(OVERRIDE_PIN);
-    if (overrideButtonState == LOW) {
-      lastHttpReqAction = SCAN_MSG;
-      responseCode = 200;
-      Serial.println("Solenoid override pushed");
-    }
 
     http.readRemainingResponse();
     if ((lastHttpReqAction == SCAN_MSG) && (responseCode == 200)) {
@@ -270,7 +257,8 @@ void loop() {
 
   // If it's time to send a temperature update...
   if ((millis() - lastTemperatureMs) > TEMPERATURE_SEND_INTERVAL_MS) {
-    float temperature = (getTempAnalog() * 1.8) + 32;   // C -> F
+    //float temperature = (getTempAnalog() * 1.8) + 32;   // C -> F
+    float temperature = getTemp();
     if ((temperature >= 0.0) && (temperature <= 120.0)) {
       // Anything outside this range is garbage, plus we're only allocating
       // enough room for 3 chars (e.g. 3 digit integer temp)
@@ -752,7 +740,6 @@ float getTempAnalog() {
   return (voltage - 0.5) * 100;
 }
 
-/*
 //For the OneWire temp. sensor:
 float getTemp(){
   //returns the temperature from one DS18S20 in DEG Celsius
@@ -797,4 +784,3 @@ float getTemp(){
 
   return TemperatureSum;
 }
-*/
