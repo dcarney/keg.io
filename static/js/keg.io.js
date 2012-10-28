@@ -31,22 +31,24 @@ var switchKegerator = function(kegeratorId) {
      // Save the value in a cookie
      cookieCreate('kegio', kegeratorId, 90);
 
-     // hide the intro copy, display the kegerator card
+     // hide the intro copy and previous drinkers, display the kegerator card
      $('#hero .card').removeClass('hidden');
      $('#hero .intro_copy').addClass('hidden');
      $('.previous').removeClass('hidden');
      $('.row-fluid .span3').show();
      $('#main').addClass("span9");
      $('#main').removeClass("span12");
+     $('#previousRowOne').empty();
+     $('#previousRowTwo').empty();
 
      // Populate some DOM elements w/ info
      $('#kegerator_details').empty();
      $('#kegerator_details').append("<li class='nav-header'>Kegerator</li>");
-     $('#kegerator_details').append('<span class="badge badge-important connected">connected</span>');
-     $('#kegerator_details').append('<span class="badge badge-important pour">pour</span>');
-     $('#kegerator_details').append("<li><a href='#'>" + kegerator.name + "</a></li>");
-     $('#kegerator_details').append("<li><a href='#'>" + kegerator.description + "</a></li>");
-     $('#kegerator_details').append("<li><a href='#'>current beer temperature: <span class='badge' id='kegerator_temp'>-- &deg;F</span></a></li>");
+     $('#kegerator_details').append("<p>" + kegerator.name + "</p>");
+     $('#kegerator_details').append("<p>" + kegerator.description + "</p>");
+     $('#kegerator_details').append('<span class="badge badge-important connected">connected</span>&nbsp;');
+     $('#kegerator_details').append('<span class="badge badge-important pour">pour</span>&nbsp;');
+     $('#kegerator_details').append('<span class="badge" id="kegerator_temp">-- &deg;F</span>&nbsp;');
 
      // Get data about most recent keg on this kegerator
      $.getJSON("/kegerators/" + kegeratorId + "/kegs?limit=1", function(data) {
@@ -58,11 +60,12 @@ var switchKegerator = function(kegeratorId) {
       // populate some DOM elements w/ current keg info
       // TODO: Make image_path part of the repsonse, liek we do with gravatar images
       $('#keg_details').empty();
+      $('#keg_details').append("<li class='divider'></li>");
       $('#keg_details').append("<li class='nav-header'>Keg</li>");
-      $('#keg_details').append("<li class='nav-header'>" + keg.beer + ' ' + keg.beer_style + "</li>");
-      $('#keg_details').append("<li class='nav-header'>" + keg.brewery + "</li>");
-      $('#keg_details').append("<li class='nav-header'>tapped: " + moment(keg.tapped_date).from(moment()) + "</li>");
-      $('#keg_details').append("<li><img src='http://images.keg.io/" + keg.image_path + "'></img></li>");
+      $('#keg_details').append("<p>" + keg.beer + ' ' + keg.beer_style + "</li>");
+      $('#keg_details').append("<p>" + keg.brewery + "</p>");
+      $('#keg_details').append("<p>tapped: " + moment(keg.tapped_date).from(moment()) + "</p>");
+      $('#keg_details').append("<li><img src='http://images.keg.io/" + keg.image_path + "'></img></p>");
 
      });  // getJSON
 
@@ -101,7 +104,7 @@ var handleTempEvent = function(data) {
   $('#kegerator_temp').empty();
   $('#kegerator_temp').html(temperature + "&deg;F");
 	$('#kegerator_temp').removeClass("badge-important badge-success badge-warning");
-  if(temperature < 40) {
+  if(temperature < 45) {
     $('#kegerator_temp').addClass("badge-success");
   } else if(temperature < 50) {
     $('#kegerator_temp').addClass("badge-warning");
@@ -154,7 +157,7 @@ var populatePreviousDrinkersMarkup = function(pourObjects) {
     // Create a fresh new div for holding the markup for a previous drinker
     var previousCard = $('<div class="span4 mini-card"></div>');
     previousCard.append("<img id='gravatar' class='profile' src='" + user.gravatar + "'>");
-    previousCard.append('<h2 class=name>' + user.first_name + ' ' + user.last_name + '</h2>');
+    previousCard.append('<h2 class=name>' + user.first_name + '</h2>');
     previousCard.append("<p class='pour_volume'><span class='badge'>" + pour.volume_ounces + " ounces</span></p>");
     previousCard.append("<p class='pour_date'>" + moment(pour.date).fromNow() + "</p>");
 
@@ -172,21 +175,22 @@ var populateCurrentDrinkerMarkup = function(user) {
   if (user) {
     _.each(user.coasters, function(coaster_id) {
       $.getJSON("/coasters/" + coaster_id, function(data) {
-        data= data[0];
-        var image_path = data.image_path;
-        var description = data.description;
-        $('#user_coasters').append('<img class="coaster" title="'+description+'" data-placement="bottom" src="'+image_path+'">');
+        if (!_.isEmpty(data)) {
+          data= data[0];
+          var image_path = data.image_path;
+          var description = data.description;
+          var coaster = $('<img class="coaster" title="'+description+'" data-placement="bottom" src="'+image_path+'">').appendTo('#user_coasters');
+          $(coaster).tooltip();
+        }
       });
     });
   }
 
   $('#gravatar').attr('src', user.gravatar);
   $('#user_info').empty();
-  $('#user_info').append('<h2>Hello, <span class="firstname"> '+ user.first_name + '</span><span class="lastname">'+user.last_name+'</span>!</h2>');
-  //$('#user_info').append("<p class='tagline'>Pour yourself a tasty beer!</p>");
+  $('#user_info').append('<h2>Hello, <span class="firstname"> '+ user.first_name + '</span>!</h2>');
   $('#user_info').append("<p class='pour_volume'><span class='label label-striped active'>pouring...</span></p>");
   $('#user_info').append('<p class="pour_date">Pour yourself a tasty beer!</p>');
-  $('#user_info').append("<p class='location'>Seattle, WA</p>");
   //$('#user_info').append('<a class="btn rfid" href="#/users/' + user.rfid + '">View Profile</a>');
 };
 
@@ -207,8 +211,7 @@ var handleScanEvent = function(data) {
   rfid = data['data'];
 	//var newprev = $('<div class="span4"></div>').append($('#hero #user_info').html());
 	var newprev = $('<div class="span4"></div>').append($('#hero div.card').html().replace(/id\=\"[\w\_\-]+\"/gi,"")); //"
-    var name = $(newprev).find("h2 .firstname").text() + " " + $(newprev).find("h2 .lastname").text();
-    $(newprev).find("h2").text(name);
+    $(newprev).find("h2").text($(newprev).find("h2 .firstname").text());
     //$(newprev).find(".user_coasters").remove();
     var pour = $(newprev).find(".pour_volume");
     pour.html($(pour).find("span"));
@@ -219,10 +222,9 @@ var handleScanEvent = function(data) {
     $('#previousRowOne').append(prevs.slice(0,2));
     $('#previousRowTwo').append(prevs.slice(2,5));
     $('.mini-card .pour_date').each(function(index){
-    	$(this).text(moment($(this).attr('data')).fromNow()); 
-    	});
-    //$(".previous div.span4").last().remove();
-    
+    $(this).text(moment($(this).attr('data')).fromNow());
+  });
+
   getUser(rfid, function(user) {
     populateCurrentDrinkerMarkup(user);
 
@@ -266,9 +268,9 @@ $(document).ready(function(){
 
   // Add tooltips to each coaster img
   $('img.coaster').each(function(index, el) {
-    $(el).on('hover', function() {
-      var self = this;
-      $(self).tooltip();
+    $(el).on('hover', 'img', function(event) {
+      var el = $(event.srcElement);
+      $el.tooltip();
     });
   });
 
@@ -281,9 +283,8 @@ $(document).ready(function(){
 
   // Get the list of available kegerators, populate the dropdown with them
   $.getJSON("/kegerators", function(kegerators) {
-    var ids = _.pluck(kegerators, 'kegerator_id');
-    _.each(ids, function(id) {
-      $('.dropdown-menu').append("<li><a href='#'>" + id + "</a></li>");
+    _.each(kegerators, function(k) {
+      $('.dropdown-menu').append("<li><a id=" + k.kegerator_id + " href='#' onclick='javascript:return false;'>" + k.name + "</a></li>");
     });
   }); // getJSON
 
@@ -333,7 +334,7 @@ $(document).ready(function(){
 
 // Attach an event handler to each item in the "kegerators" menu
 $('.dropdown-menu').on('click', 'li', function(event) {
-  var selectedId = $(event.srcElement).html();
+  var selectedId = $(event.srcElement).attr('id');
   console.log('New kegerator selected: ' + selectedId);
   switchKegerator(selectedId);
 });
