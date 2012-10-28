@@ -30,6 +30,6 @@ class User
   getGravatar: (cb) =>
     return cb '' unless @email? && @email.length > 0
     md5hash = crypto.createHash('md5').update(@email).digest("hex")
-    cb "http://www.gravatar.com/avatar/#{md5hash}?s=128"
+    cb "http://www.gravatar.com/avatar/#{md5hash}?s=256"
 
 module.exports = User
