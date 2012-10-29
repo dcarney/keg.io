@@ -258,7 +258,7 @@ void loop() {
   // If it's time to send a temperature update...
   if ((millis() - lastTemperatureMs) > TEMPERATURE_SEND_INTERVAL_MS) {
     //float temperature = (getTempAnalog() * 1.8) + 32;   // C -> F
-    float temperature = getTemp();
+    float temperature = (getTemp()*1.8)+32;
     if ((temperature >= 0.0) && (temperature <= 120.0)) {
       // Anything outside this range is garbage, plus we're only allocating
       // enough room for 3 chars (e.g. 3 digit integer temp)
