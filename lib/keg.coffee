@@ -29,7 +29,7 @@ class Keg extends events.EventEmitter
     @adminUiPassword = config.adminUiPassword
     @highTempThreshold = config.highTempThreshold
 
-    @db = new KegDb(@config.mongo)
+    @db = new KegDb(@config.mongo, process.env.KEGIO_MONGO_USERNAME, process.env.KEGIO_MONGO_PASSWORD)
     @db.connect (err) =>
       @db.findKeg 1, (err, keg) ->
       console.log "ERR" if err?
