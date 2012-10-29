@@ -80,7 +80,8 @@ Config.image_host += '/' unless /\/$/.test Config.image_host
 unless path.existsSync 'conf/keys.json'
   console.error 'conf/keys.json not found'
   process.exit 1
-keys = JSON.parse(fs.readFileSync('conf/keys.json').toString())
+# keys = JSON.parse(fs.readFileSync('conf/keys.json').toString())
+keys = JSON.parse(process.env.KEGIO_KEYS)
 
 # The logging verbosity (particularly to the console for debugging) can be changed via the
 # **conf/log4js.json** configuration file, using standard log4js log levels:
@@ -92,7 +93,7 @@ for k, v of Config
 
 keg = new Keg(logger, Config)
 
-db = new KegDb(Config.mongo)
+db = new KegDb(Config.mongo, process.env.KEGIO_MONGO_USERNAME, process.env.KEGIO_MONGO_PASSWORD)
 db.connect (err) =>
   if err?
     logger.error 'Failed to connect to keg.io DB.'
@@ -441,6 +442,12 @@ server.listen Config.http_port
 #  console.log('  \033[90m%s \033[36m%s\033[0m', route.method.toUpperCase(), route.path)
 
 io = socket_io.listen(server)
+
+# This configuration is needed to run on Heroku.
+# Websockets aren't supported so we have to use long polling
+io.configure ->
+  io.set "transports", ["xhr-polling"]
+  io.set "polling duration", 10
 
 sendToAllSockets = (event, data) ->
   #logger.debug "pushing #{event} event to all sockets"
