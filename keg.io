@@ -77,9 +77,9 @@ unless Config?
 Config.image_host += '/' unless /\/$/.test Config.image_host
 
 # Load access/secret keys from disk:
-unless path.existsSync 'conf/keys.json'
-  console.error 'conf/keys.json not found'
-  process.exit 1
+# unless path.existsSync 'conf/keys.json'
+#   console.error 'conf/keys.json not found'
+#   process.exit 1
 # keys = JSON.parse(fs.readFileSync('conf/keys.json').toString())
 keys = JSON.parse(process.env.KEGIO_KEYS)
 
