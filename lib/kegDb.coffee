@@ -14,9 +14,11 @@ class KegDb
                     "port": 27017}]
       }
   ###
-  constructor: (@mongoConfig) ->
+  constructor: (@mongoConfig, mongoUsername, mongoPassword) ->
     @db = null
     @servers = null # single server or repl set
+    @username = mongoUsername
+    @password = mongoPassword
 
   # cb = (err)
   getServers: () =>
@@ -36,17 +38,30 @@ class KegDb
     db = new Db @mongoConfig.db, @servers, {}
     db.open (err, db) =>
       return cb err if err?
-      @db = db
-      cb()
+      if @username? and @password?
+        db.authenticate @username, @password, (err, replies) =>
+          return cb err if err?
+          @db = db
+          cb()
+      else
+        @db = db
+        cb()
 
   # cb = (err, bool)
   exists: (dbName, cb) =>
     db = new Db 'admin', @getServers()
     db.open (err, db) ->
       return cb err, null if err?
-      db.admin().listDatabases (err, dbs) ->
-        return cb err, null if err?
-        cb(null, _.any(dbs.databases, (db) -> db.name == dbName))
+      if @username? and @password?
+        db.authenticate @username, @password, (err, replies) =>
+          return cb err if err?
+          db.admin().listDatabases (err, dbs) ->
+            return cb err, null if err?
+            cb(null, _.any(dbs.databases, (db) -> db.name == dbName))
+      else
+        db.admin().listDatabases (err, dbs) ->
+          return cb err, null if err?
+          cb(null, _.any(dbs.databases, (db) -> db.name == dbName))
 
   # Performs an insert for each of the given objects into the specified
   # collection
