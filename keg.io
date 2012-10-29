@@ -178,7 +178,8 @@ server.get '/hello', (req, res, next) ->
 #   `GET /config/socketPort`
 #
 server.get '/config/socketPort', (req, res, next) ->
-  res.send Config.socket_client_connect_port.toString(), 200
+  # res.send Config.socket_client_connect_port.toString(), 200
+  res.send process.env.PORT, 200
 
 # ## UI: get kegerators
 #   `GET /kegerators/ID?`
@@ -435,7 +436,8 @@ server.use middleware.path()											# parse url path
 server.use express.static(__dirname + '/static') 	# static file handling
 server.use server.router                          # UI and API routing
 
-server.listen Config.http_port
+# server.listen Config.http_port
+server.listen process.env.PORT
 
 # dump a list of all the available routes to stdout (for debugging)
 #server.routes.all().forEach (route) ->
