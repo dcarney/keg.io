@@ -316,7 +316,7 @@ $(document).ready(function(){
     }); // getJSON
   }
 
- socket = io.connect('http://localhost:8081');
+ socket = io.connect('http://kegio.herokuapp.com');
  socket.on('connect', function () {
   socketDebug('connect', null);
   $('.badge.connected').removeClass("badge-important badge-warning").addClass("badge-success on");//.text("connected");
