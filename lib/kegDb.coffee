@@ -121,7 +121,9 @@ class KegDb
     @getCollection 'kegs', (err, collection) =>
       return cb err, null if err?
       limit = if criteria?.limit? then {limit: criteria.limit} else {}
-      selector = if criteria?.id? then {kegerator_id: parseInt(criteria.id, 10)} else {}
+      selector = {}
+      if criteria?.id? then selector.kegerator_id = parseInt(criteria.id, 10)
+      if criteria?.active? then selector.active = criteria.active
       collection.find selector, limit, (err, cursor) =>
         @handleFind cb, err, cursor
 

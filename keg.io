@@ -273,6 +273,7 @@ server.get '/kegerators/:id/pours', (req, res, next) ->
 server.get '/kegerators/:id/kegs', (req, res, next) ->
   criteria = {id: req.params.id}
   criteria.limit = req.query['limit']
+  criteria.active = req.query['active']
   keg.db.findKegs criteria, (err, result) ->
     handleResponse err, result, req, res
 
