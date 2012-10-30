@@ -66,6 +66,7 @@ var switchKegerator = function(kegeratorId) {
       $('#keg_details').append("<p>" + keg.beer + ' ' + keg.beer_style + "</li>");
       $('#keg_details').append("<p>" + keg.brewery + "</p>");
       $('#keg_details').append("<p>tapped: " + moment(keg.tapped_date).from(moment()) + "</p>");
+      $('#keg_details').append("<p style='font-style:italic;'>" + keg.description + "</p>");
       $('#keg_details').append("<li><img src='http://images.keg.io/" + keg.image_path + "'></img></p>");
 
      });  // getJSON
