@@ -52,7 +52,7 @@ var switchKegerator = function(kegeratorId) {
      $('#kegerator_details').append('<span class="badge" id="kegerator_temp">-- &deg;F</span>&nbsp;');
 
      // Get data about most recent keg on this kegerator
-     $.getJSON("/kegerators/" + kegeratorId + "/kegs?limit=1", function(data) {
+     $.getJSON("/kegerators/" + kegeratorId + "/kegs?limit=1&active=true", function(data) {
       keg = data;
       if (_.isArray(data)) {
         keg = data[0];
