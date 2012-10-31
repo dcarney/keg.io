@@ -2,6 +2,9 @@ signer = require 'string-signer' # used to sign each HTTP request
 url = require 'url'
 sys = require 'util'
 payload    = require './payload'
+moment = require 'moment'
+
+heartbeats = {}
 
 # remove extraneous headers, to save on arduino reading/processing
 module.exports.removeHeaders = () ->
@@ -43,3 +46,14 @@ module.exports.accessKey = () ->
     match = /\/kegerator\/([0-9]+)\//i.exec(req.url)
     req.accessKey = match[1] if match
     next()
+
+# record the time that an arduino client was last heard from
+module.exports.captureHeartbeat = () ->
+  (req, res, next) ->
+    throw Error('Request is missing an accessKey') unless req.accessKey?
+    heartbeats[req.accessKey] = moment()
+    next()
+
+# not strictly a middleware, but an accessor for getting the heartbeats obj
+module.exports.getHeartbeats = () ->
+  return heartbeats

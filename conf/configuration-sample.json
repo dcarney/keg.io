@@ -43,6 +43,12 @@
 	/* This is a hack to try to improve stability. */
 	"temp_update_threshold": "120000",
 
+    /* Duration in seconds, after which we should consider the arduino */
+    /* client to be "dead" or "disconnected".  In other words, the server */
+    /* needs to see a request (any request) from each arduino client within */
+    /* this duration */
+    "arduino_hearbeat_threshold_in_sec": "45",
+
     /* location where images for kegs and coasters are stored */
     "image_host": "http://images.keg.io/"
 }

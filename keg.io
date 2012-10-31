@@ -7,6 +7,7 @@ express     = require 'express'
 fs          = require 'fs'
 http        = require 'http'
 log4js      = require 'log4js'
+moment      = require 'moment'
 OptParse    = require 'optparse'
 path        = require 'path'
 querystring = require 'querystring'
@@ -346,7 +347,7 @@ server.get '/coasters/:id?', (req, res, next) ->
 # - 400: Bad request syntax, or signature verfification failed
 # - 401: Unauthorized.  Unknown access key.
 # - 404: Unknown resource requested.  Either the kegerator ID was incorrect or an invalid ACTION was specified.
-api_middlewares = [middleware.accessKey(), middleware.verify(keys), middleware.removeHeaders()]
+api_middlewares = [middleware.accessKey(), middleware.verify(keys), middleware.removeHeaders(), middleware.captureHeartbeat()]
 
 # helper method to format API responses for kegerator clients
 respond = (status_code, res, action_text, response_text) ->
@@ -462,6 +463,17 @@ sendToSocket = (socket, event, data) ->
 sendToAttachedSockets = (attachment, event, data) ->
   logger.debug "pushing #{event} event to sockets attached to #{attachment}"
   io.sockets.in(attachment).emit event, {data: data}
+
+# check each known kegerator, and send a socket message indicating it's
+# heartbeat "status".
+checkHeartbeats = () ->
+  now = moment()
+  for kegerator_id, momnt of middleware.getHeartbeats()
+    alive = now.diff(momnt, 'seconds') <= Config.arduino_hearbeat_threshold_in_sec
+    sendToAttachedSockets kegerator_id, 'heartbeat', alive
+
+# run it every 10 seconds
+setInterval checkHeartbeats, 10000
 
 keg.on 'scan', (kegerator_id, rfid) ->
   sendToAttachedSockets kegerator_id, 'scan', rfid
