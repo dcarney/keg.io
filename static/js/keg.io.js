@@ -46,7 +46,8 @@ var switchKegerator = function(kegeratorId) {
      $('#kegerator_details').append("<li class='nav-header'>Kegerator</li>");
      $('#kegerator_details').append("<p>" + kegerator.name + "</p>");
      $('#kegerator_details').append("<p>" + kegerator.description + "</p>");
-     $('#kegerator_details').append('<span class="badge badge-important connected">connected</span>&nbsp;');
+     $('#kegerator_details').append('<span class="badge badge-important connected">web socket</span>&nbsp;');
+     $('#kegerator_details').append('<span class="badge badge-important heartbeat">keg heartbeat</span>&nbsp;');
      $('#kegerator_details').append('<span class="badge badge-important pour">pour</span>&nbsp;');
      $('#kegerator_details').append('<span class="badge" id="kegerator_temp">-- &deg;F</span>&nbsp;');
 
@@ -96,6 +97,17 @@ var detachWebSocket = function() {
 var handleCoasterEvent = function(data) {
   socketDebug('coaster', data);
   // TODO: Make the new coaster show up in the UI
+};
+
+var handleHeartbeatEvent = function(data) {
+  socketDebug('heartbeat', data);
+  var validHeartbeat = ((data !== null) && (data['data'] === true));
+  if (validHeartbeat) {
+    $('#kegerator_details .badge.heartbeat').removeClass("badge-warning").addClass("badge-success");
+  } else  {
+    $('#kegerator_details .badge.heartbeat').removeClass("badge-success").addClass("badge-important on");
+  }
+
 };
 
 var handleTempEvent = function(data) {
@@ -330,6 +342,7 @@ $(document).ready(function(){
  socket.on('deny', handleDenyEvent);
  socket.on('pour', handlePourEvent);
  socket.on('coaster', handleCoasterEvent);
+ socket.on('heartbeat', handleHeartbeatEvent);
  // TODO: add code to handle flow event
 
 });   // document ready
