@@ -27,6 +27,7 @@
 		"access_token_secret": "INSERT_VALUE_HERE"
 	},
 
+    /* 'username' and 'password' attributes are optional */
     "mongo": {
       "db": "kegio",
       "servers": [{ "host": "alex.mongohq.com", "port": 10034 }]

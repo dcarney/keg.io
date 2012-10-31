@@ -27,6 +27,7 @@
 		"access_token_secret": "INSERT_VALUE_HERE"
 	},
 
+    /* Add 'username' and 'password' attributes if using mongo auth */
     "mongo": {
       "db": "kegio",
       "servers": [{ "host": "localhost", "port": 27017 }]

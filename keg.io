@@ -69,7 +69,7 @@ Parser.parse process.argv
 
 # use the default config file, if no override was given
 unless Config?
-  unless path.existsSync defaultConfigPath
+  unless fs.existsSync defaultConfigPath
     console.error "#{defaultConfigPath} not found.  Create or specify a different config."
     process.exit 1
   Config = parseConfig defaultConfigPath
@@ -77,12 +77,17 @@ unless Config?
 # some simple configuration cleansing, to take care of common mistakes
 Config.image_host += '/' unless /\/$/.test Config.image_host
 
-# Load access/secret keys from disk:
-# unless path.existsSync 'conf/keys.json'
-#   console.error 'conf/keys.json not found'
-#   process.exit 1
-# keys = JSON.parse(fs.readFileSync('conf/keys.json').toString())
-keys = JSON.parse(process.env.KEGIO_KEYS)
+# Load access/secret keys from disk, then do any necessary overrides from the
+# appropriate env var
+if fs.existsSync 'conf/keys.json'
+  keys = JSON.parse(fs.readFileSync('conf/keys.json').toString())
+
+if process.env.KEGIO_KEYS?
+  _.extend keys, JSON.parse(process.env.KEGIO_KEYS)
+
+if _.isEmpty keys
+  console.error 'keys not found in conf/keys.json config or KEGIO_KEYS env var'
+  process.exit 1
 
 # The logging verbosity (particularly to the console for debugging) can be changed via the
 # **conf/log4js.json** configuration file, using standard log4js log levels:
@@ -94,7 +99,12 @@ for k, v of Config
 
 keg = new Keg(logger, Config)
 
-db = new KegDb(Config.mongo, process.env.KEGIO_MONGO_USERNAME, process.env.KEGIO_MONGO_PASSWORD)
+# env var values for username and password override the config file's values
+if process.env.KEGIO_MONGO_USERNAME? and process.env.KEGIO_MONGO_PASSWORD?
+  Config.mongo.username = process.env.KEGIO_MONGO_USERNAME
+  Config.mongo.password = process.env.KEGIO_MONGO_PASSWORD
+
+db = new KegDb(Config.mongo)
 db.connect (err) =>
   if err?
     logger.error 'Failed to connect to keg.io DB.'
@@ -179,8 +189,9 @@ server.get '/hello', (req, res, next) ->
 #   `GET /config/socketPort`
 #
 server.get '/config/socketPort', (req, res, next) ->
-  # res.send Config.socket_client_connect_port.toString(), 200
-  res.send process.env.PORT, 200
+  # env var overrides static config file's value
+  port = Config.socket_client_connect_port?.toString() ? process.env.PORT
+  res.send port, 200
 
 # ## UI: get kegerators
 #   `GET /kegerators/ID?`
