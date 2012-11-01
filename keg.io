@@ -448,8 +448,8 @@ server.use middleware.path()											# parse url path
 server.use express.static(__dirname + '/static') 	# static file handling
 server.use server.router                          # UI and API routing
 
-# server.listen Config.http_port
-server.listen process.env.PORT
+
+server.listen process.env.PORT ? Config.http_port
 
 # dump a list of all the available routes to stdout (for debugging)
 #server.routes.all().forEach (route) ->
