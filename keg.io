@@ -97,14 +97,14 @@ logger = log4js.getLogger()
 for k, v of Config
   logger.debug "#{k}:#{v}"
 
-keg = new Keg(logger, Config)
-
 # env var values for username and password override the config file's values
 if process.env.KEGIO_MONGO_USERNAME? and process.env.KEGIO_MONGO_PASSWORD?
   Config.mongo.username = process.env.KEGIO_MONGO_USERNAME
   Config.mongo.password = process.env.KEGIO_MONGO_PASSWORD
 
+keg = new Keg(logger, Config)
 db = new KegDb(Config.mongo)
+
 db.connect (err) =>
   if err?
     logger.error 'Failed to connect to keg.io DB.'
@@ -459,9 +459,10 @@ io = socket_io.listen(server)
 
 # This configuration is needed to run on Heroku.
 # Websockets aren't supported so we have to use long polling
-io.configure ->
-  io.set "transports", ["xhr-polling"]
-  io.set "polling duration", 10
+if Config.heroku_deployment
+  io.configure ->
+    io.set "transports", ["xhr-polling"]
+    io.set "polling duration", 10
 
 sendToAllSockets = (event, data) ->
   #logger.debug "pushing #{event} event to all sockets"
