@@ -50,7 +50,7 @@ class KegDb
   # cb = (err, bool)
   exists: (dbName, cb) =>
     db = new Db 'admin', @getServers()
-    db.open (err, db) ->
+    db.open (err, db) =>
       return cb err, null if err?
       if @mongoConfig.username? and @mongoConfig.password?
         db.authenticate @mongoConfig.username, @mongoConfig.password, (err, replies) =>

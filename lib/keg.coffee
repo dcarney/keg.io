@@ -23,14 +23,13 @@ Temperature = require './models/temperature'
 Coaster     = require './models/coaster'
 
 class Keg extends events.EventEmitter
-  constructor: (logger, config) ->
+  constructor: (logger, @config) ->
     events.EventEmitter.call this
     @logger = logger;
     @adminUiPassword = config.adminUiPassword
     @highTempThreshold = config.highTempThreshold
-    @config = config
 
-    @db = new KegDb(@config.mongo, process.env.KEGIO_MONGO_USERNAME, process.env.KEGIO_MONGO_PASSWORD)
+    @db = new KegDb(@config.mongo)
     @db.connect (err) =>
       @db.findKeg 1, (err, keg) ->
       console.log "ERR" if err?
