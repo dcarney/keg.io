@@ -218,15 +218,6 @@ void loop() {
       digitalWrite(SOLENOID_PIN, HIGH);
       ledStatus(BLUE);
     }
-    /*
-    if (readHttpResponse(httpResponseBuffer, 64)) {m
-      // valid HTTP response! Go purple for .5 seconds
-      ledStatus(BLUE, 500);
-      ledStatus(GREEN);
-    }
-    // TODO: Should we do this here, or in readHttpResponse?
-    clearBuffer2(httpResponseBuffer, 63);
-    */
   }
 
   // If it's time to close the solenoid (and it was open)
