@@ -91,7 +91,7 @@ class FakeKegerator
     randomUser = Math.floor Math.random() * 5  # between 0-4
     userRFID = ''
     switch randomUser
-      when 0 then userRFID = "5100FFED286B"  # Dylan
+      when 0 then userRFID = "44004C234A"  # Dylan
       when 1 then userRFID = "44004C3A1A"  # Chris
       when 2 then userRFID = "4400561A0A"  # Carl
       when 3 then userRFID = "440055F873"  # Garrett
