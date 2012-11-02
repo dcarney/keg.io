@@ -329,7 +329,7 @@ $(document).ready(function(){
     }); // getJSON
   }
 
- socket = io.connect('http://kegio.herokuapp.com');
+ socket = io.connect('http://' + window.location.hostname);
  socket.on('connect', function () {
   socketDebug('connect', null);
   $('.badge.connected').removeClass("badge-important badge-warning").addClass("badge-success on");//.text("connected");
