@@ -21,7 +21,7 @@ fermata       = require 'fermata'       # used to make easy REST HTTP requests
 signedRequest = require 'string-signer' # used to sign each HTTP request
 payload       = require '../lib/payload'
 
-HOST = 'kegio.herokuapp.com'
+HOST = 'localhost'
 KEGERATOR_ID = if (process.argv.length > 2) then process.argv[2] else '1111'
 PORT = '80'
 # password with which to sign requests. should *never* be transferred over the wire.
