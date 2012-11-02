@@ -4,13 +4,13 @@
        /dev/ttyUSB0                 (typical device under Ubuntu)
        This setting is ignored when keg.io is run in 'dev mode'
     */
-    // "device": "/dev/ttyUSB0",
+    /* "device": "/dev/ttyUSB0", */
 
     /* Port to listen on for web socket communication */
-    // "socket_listen_port": "8888",
+    /* "socket_listen_port": "8888", */
 
     /* Port to tell the client (aka browser) to connect to for web socket communication */
-    // "socket_client_connect_port": "8888",
+    /* "socket_client_connect_port": "8888", */
 
     /* Port to serve regular HTTP content on */
     "http_port": "8081",
