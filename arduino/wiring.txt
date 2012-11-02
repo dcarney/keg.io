@@ -1,26 +1,30 @@
 ARDUNO PIN
 
-D13 -------> piezo +
-D12
-D11 -------> 180ohm ------> RGB LED R
-D10 -------> 100ohm ------> RGB LED G
+D13 (used by WiFly)
+D12 (used by WiFly)
+D11 (used by WiFly)
+D10 -------> 100ohm ------> RGB LED G (also used by WiFly)
 D9  -------> 100ohm ------> RGB LED B
-D8
+D8  -------> 180ohm ------> RGB LED R
 D7  -------> RFID 2
-D6
+D6  -------> piezo +
 D5  -------> 10kohm ------> GND
       |----> MOSFET G (left)
       |----> pour LED+
-D4
+
+D4  -------> temp (white)
+      |
+    4.7k ohm
+      |
+5V <---
+
 D3  -------> flow signal (yellow,mid)
 D2  -------> RFID 9
 D1 (TX)
 D0 (RX)
 RESET -----> push button (left)
-3.3V ------> TEMP Vin (left)
-        |
-AREF <---
-Vin
+
+Vin  ------> diode (stripe) -----> solenoid + (requires arduino plugged in to 12v)
 A0   ------> TEMP Vout (mid)
 A1
 A2
@@ -29,9 +33,12 @@ A4
 A5
 5V   --------> RFID 11
      |-------> flow Vss (red)
+     |-------> temp (red)
+     |-------> override button ------> MOSFET G (left)
+                                 |---> pour LED+
 
 GND  -------> piezo -
-     |------> TEMP GND (right)
+     |------> temp GND (black)
      |------> RGB LED GND
      |-------> RFID 7
      |-------> RFID 1
@@ -40,21 +47,20 @@ GND  -------> piezo -
      |-------> 330ohm -------> pour LED-
      |-------> push button (right)
      |-------> flow GND (black)
-12V+ --------> diode (stripe)
-      |------> solenoid +
+     |-------> reset button -------> RESET pin
 
 solenoid(-) -------> diode
              |-----> MOSFET D (mid)
 
-TEMP = TMP36 temperature sensor
-RFID = ID-20 RFID reader
+temp = DS18B20 1-wire temperature sensor (https://www.sparkfun.com/products/11050)
+RFID = ID-12 RFID reader
 piezo = CET 12A3.5 piezo buzzer
 MOSFET = RFP30N06LE MOSFET (N-Channel, 60V 30A)
 diode = 1N4001 diode rectifier (1A, 50V)
 pour LED = 5mm yellow LED
 
 
-
+/* Below here is Dylan's old shit that can prolly be deleted */
 
 X = RX
 W = TX
