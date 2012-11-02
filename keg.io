@@ -81,6 +81,8 @@ Config.image_host += '/' unless /\/$/.test Config.image_host
 # appropriate env var
 if fs.existsSync 'conf/keys.json'
   keys = JSON.parse(fs.readFileSync('conf/keys.json').toString())
+else
+  keys = {}
 
 if process.env.KEGIO_KEYS?
   _.extend keys, JSON.parse(process.env.KEGIO_KEYS)
