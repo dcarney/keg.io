@@ -367,7 +367,7 @@ api_middlewares = [middleware.accessKey(), middleware.verify(keys), middleware.r
 respond = (status_code, res, action_text, response_text) ->
   # content-type for these responses is text/plain, but we don't set the header
   # to cut down on the processing overhead on the arduino
-  # res.writeHead status_code, {'Content-Type': 'text/plain'}
+  res.writeHead status_code, {'Content-Type': 'text/plain'}
   message = "KEGIO:#{action_text}"
   message += ":#{response_text}" if response_text?
   message += ":::"
@@ -388,30 +388,28 @@ respond = (status_code, res, action_text, response_text) ->
 #
 server.get '/api/kegerator/:accessKey/scan/:rfid', api_middlewares, (req, res, next) ->
   keg.scanRfid req.params.accessKey, req.params.rfid, (err, valid) ->
-    if valid?
+    if valid? and valid
       respond(200, res, 'scan', req.params.rfid)
     else
       respond(401, res, 'scan', "#{req.params.rfid} is invalid")
 
 
-# ## API: report the current flow rate
-#   `PUT /api/kegerator/ACCESS_KEY/flow/RATE`
+# TODO: Change this to 'pour'??
+# ## API: report the volume for a pour
+#   `PUT /api/kegerator/ACCESS_KEY/flow/VOLUME`
 #
 #    Where **ACCESS_KEY** is an access key registered with the keg.io server
-#    and **RATE** is a the current flow rate of the kegerator in liters/min
-#
-# This and all subsequent flow requests are associated with the last rfid seen
-# on the given kegerator until the special "flow/end" request is received
+#    and **VOLUME** is the volume in US fluid ounces of the pour
 #
 # #### Examples:
-# ##### Report a flow of 12 liters/min on kegerator 1111:
+# ##### Report a flow of 12 fl. oz. on kegerator 1111:
 #     PUT http://keg.io/kegerator/1111/flow/12
 server.put /^\/api\/kegerator\/([\d]+)\/flow\/([\d]+)$/, api_middlewares, (req, res, next) ->
   access_key = req.params[0]
-  rate = req.params[1]
-  keg.addFlow access_key, rate, (valid) ->
+  volume = req.params[1]
+  keg.endFlow access_key, volume, (valid) ->
     if valid
-      respond(200, res, 'flow', rate)
+      respond(200, res, 'flow', volume)
     else
       respond(401, res, 'flow', 'invalid flow event (a valid scan may not have been received)')
 
