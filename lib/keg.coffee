@@ -82,21 +82,13 @@ class Keg extends events.EventEmitter
       # TODO: Add the current keg id to the pour event
       if valid
         kegerator_id = parseInt kegerator_id, 10 if _.isString kegerator_id
-        @kegerator_last_scans[kegerator_id] = new Pour {rfid: rfid, keg_id: 1, kegerator_id: kegerator_id} # TODO: this shouldn't be hardcoded
+        @kegerator_last_scans[kegerator_id] = rfid
         @emit 'scan', kegerator_id, rfid
       else
         @emit 'deny', kegerator_id, rfid
         # invalid rfid; delete any Pour object we might have had for that kegerator
         delete @kegerator_last_scans[kegerator_id]
       cb null, valid
-
-  # cb = (valid)
-  addFlow: (kegerator_id, rate, cb) =>
-      pour = @kegerator_last_scans[kegerator_id]
-      if pour?
-        @emit 'flow', kegerator_id, rate
-        @kegerator_last_scans[kegerator_id].addFlow rate
-      cb(pour?)
 
   # emits: 'coaster' if new coaster(s) is/are earned
   checkForNewCoasters: (pour, volume) =>
@@ -172,14 +164,21 @@ class Keg extends events.EventEmitter
 
   # cb = (err, savedToDb)
   # emits: 'pour'
-  endFlow: (kegerator_id, cb) =>
-    pour = @kegerator_last_scans[kegerator_id]
-    return cb 'no valid pour event to end', null unless pour?
+  endFlow: (kegerator_id, volume, cb) =>
+    rfid = @kegerator_last_scans[kegerator_id]
+    return cb 'no valid pour event to end', null unless rfid?
 
-    # remove the pour obj from memory, calculate the total volume of the pours,
-    # and save to the DB and emit if > 0
+    # remove the rfid from memory, and save the pour to the DB and emit if > 0
     delete @kegerator_last_scans[kegerator_id]
-    volume = pour.calculateVolume()
+
+    pour =
+      date: moment().format 'YYYY-MM-DDTHH:mm:ssZ' #ISO8601
+      rfid: rfid
+      keg_id: 1   # TODO: hardcoded
+      kegerator_id: kegerator_id
+      volume_ounces: volume
+
+    # save to the DB and emit if > 0
     if volume <= 0
       return cb null, false
     else

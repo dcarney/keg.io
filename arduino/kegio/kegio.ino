@@ -75,6 +75,7 @@ volatile int numFlowInterrupts;
 char tagBuffer[13];
 //char httpResponseBuffer[64];
 char temperatureBuffer[4];
+char flowBuffer[4];
 
 // Register your RFID tags here
 char tag0[13] =  "51007BC3BD54";
@@ -92,6 +93,9 @@ unsigned long lastTemperatureMs = 0;
 
 #define SOLENOID_OPEN_DURATION_MS 10000
 unsigned long solenoidOpenMs = 0;
+float totalFlow = 0.0;
+unsigned long lastFlowMillis = 0;
+
 // For the onewire temp sensor:
 OneWire ds(TEMPERATURE_SENSOR_PIN);
 
@@ -204,13 +208,13 @@ void loop() {
     // the buffer.  If we read too quickly, we won't find/parse the entire msg
     // delay(100);
     // ACTUALLY, if we wait, too long, the 64 byte (?) buffer will fill up
-
     int responseCode = http.getResponseStatusCode();
-    //Serial.print("res code: "); Serial.println(responseCode);
 
     http.readRemainingResponse();
     if ((lastHttpReqAction == SCAN_MSG) && (responseCode == 200)) {
       solenoidOpenMs = millis();
+      lastFlowMillis = solenoidOpenMs;
+      totalFlow = 0.0;
       digitalWrite(SOLENOID_PIN, HIGH);
       ledStatus(BLUE);
     }
@@ -228,10 +232,12 @@ void loop() {
   // If it's time to close the solenoid (and it was open)
   if ((solenoidOpenMs > 0) &&
       (millis() - solenoidOpenMs) > SOLENOID_OPEN_DURATION_MS) {
-    Serial.println("Close that damn solenoid");
     ledStatus(GREEN);
     digitalWrite(SOLENOID_PIN, LOW);
     solenoidOpenMs = 0;
+    lastFlowMillis = 0;
+    sendSignedHttp("PUT", FLOW_MSG, itoa((int)totalFlow, flowBuffer, 10));
+    totalFlow = 0.0;
   } else if (solenoidOpenMs > 0) {
     // solenoid is open.  sample the flow rate for 1 second
     numFlowInterrupts = 0;
@@ -240,15 +246,21 @@ void loop() {
     delay (1000);   // Wait 1 second
     //noInterrupts(); // Disable interrupts
 
+    // flow rate in L/hr
     float flowRate = ((float) numFlowInterrupts * 60) / 7.5;
-    // Serial.print(flowRate, DEC); Serial.println(" L/hour");
 
-    // 1 liter per minute = 0.000563567045 US fluid ounces per millisecond
-    // 1 liter per hour = 0.00939278408 US fluid ounces per second
-    flowRate = flowRate * 0.00939278408;
+    // 1 L = 33.814022702 fl oz
+    // 1 L/hr  = 0.00000939278408 US fluid ounces per millisecond
+    // 1 L/min = 0.000563567045 US fluid ounces per millisecond
+    flowRate = flowRate * 0.00000939278408;
+
     Serial.print(flowRate, DEC);
     Serial.print(" oz/sec at ");
-    Serial.println(millis());
+    totalFlow = totalFlow + (flowRate * (millis() - lastFlowMillis));
+    lastFlowMillis = millis();
+    Serial.println(lastFlowMillis);
+    Serial.print("total flow:");
+    Serial.println(totalFlow, DEC);
   }
 
   // memory debugging
