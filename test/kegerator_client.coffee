@@ -3,15 +3,17 @@
 ###
 Simulates a kegerator client, for development without the physical hardware.
 
-Usage: kegerator_client.coffee [access_key] [secret_key]
+Usage: kegerator_client.coffee [host] [port] [access_key] [secret_key]
 
 Options:
+  [host]       : the keg.io api hostname (defaults to 'localhost')
+  [port]       : the keg.io api port (defaults to '8081')
   [access_key] : the 'public key' for the desired kegerator (defaults to '1111')
   [secret_key] : the 'secret key' for the desired kegerator (defaults to 's3cr3t')
 
   remember to quote any access/secret keys that contain special characters:
 
-  Ex. node kegerator_client.coffee 2222 'p@$$w3rd'
+  Ex. node kegerator_client.coffee localhost 8081 2222 'p@$$w3rd'
 ###
 
 # this allows us to require coffeescript files as if they were .js files
@@ -21,11 +23,13 @@ fermata       = require 'fermata'       # used to make easy REST HTTP requests
 signedRequest = require 'string-signer' # used to sign each HTTP request
 payload       = require '../lib/payload'
 
-HOST = 'localhost'
-KEGERATOR_ID = if (process.argv.length > 2) then process.argv[2] else '1111'
-PORT = '80'
+arg = (index, defaultValue) -> process.argv[2 + index] ? defaultValue
+
+HOST = arg(0, 'localhost')
+PORT = arg(1, '8081')
+KEGERATOR_ID = arg(2, '1111')
 # password with which to sign requests. should *never* be transferred over the wire.
-SECRET = if (process.argv.length > 3) then process.argv[3] else 's3cr3t'
+SECRET = arg(3, 's3cr3t')
 
 console.log "Using kegerator id: #{KEGERATOR_ID} w/ secret key: #{SECRET}"
 
