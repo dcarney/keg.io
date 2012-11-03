@@ -38,7 +38,7 @@
 #define END 3
 
 // HTTP request consts
-#define PATH "/api/kegerator/1111"
+char PATH[20] = "/api/kegerator/";
 
 // The Arduino we're using has interrupt 0 ob digital pin 2 and interrupt 1
 // on digital pin 3.  Insure that the pin assignment matches the interrupt
@@ -114,6 +114,10 @@ HttpClient http = HttpClient(client);
 
 // the setup routine runs once when you press reset:
 void setup() {
+
+  // build the full path to the kegerator, using the credentials.h info
+  strlcat(PATH, clientId, sizeof(PATH));
+
   pinMode(led, OUTPUT);
   pinMode(FLOW_SENSOR_PIN, INPUT);
   attachInterrupt(FLOW_SENSOR_INTERRUPT, onFlowSensorInterrupt, RISING);
@@ -132,6 +136,7 @@ void setup() {
   rfidSerial.begin(SERIAL_BAUD);
 
   Serial.println("booting..");
+  Serial.println(PATH);
 
   lastTemperatureMs = millis();
 
