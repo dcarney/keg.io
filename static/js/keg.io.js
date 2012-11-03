@@ -138,7 +138,7 @@ var handlePourEvent = function(data) {
   socketDebug('pour', data);
   var volumeOunces = data['data'];
   var now = new Date();
-  $('#user_info .pour_volume').html("You just poured <span class='badge'>" + volumeOunces + " ounces</span>!");
+  $('#user_info .pour_volume').html("You poured <span class='badge'>" + volumeOunces + " ounces</span>");
   $('#user_info .pour_date').text( moment(now).fromNow());
   $('#user_info .pour_date').attr('data',now);
 };
@@ -200,8 +200,8 @@ var populateCurrentDrinkerMarkup = function(user) {
   $('#gravatar').attr('src', user.gravatar);
   $('#user_info').empty();
   $('#user_info').append('<h2>Hello, <span class="firstname"> '+ user.first_name + '</span>!</h2>');
-  $('#user_info').append("<p class='pour_volume'><span class='label label-striped active'>pouring...</span></p>");
-  $('#user_info').append('<p class="pour_date">Pour yourself a tasty beer!</p>');
+  $('#user_info').append("<p class='pour_volume'></p>");
+  $('#user_info').append('<p class="pour_date"></p>');
   //$('#user_info').append('<a class="btn rfid" href="#/users/' + user.rfid + '">View Profile</a>');
 };
 
@@ -222,22 +222,24 @@ var handleScanEvent = function(data) {
   rfid = data['data'];
 	//var newprev = $('<div class="span4"></div>').append($('#hero #user_info').html());
 	var newprev = $('<div class="span4"></div>').append($('#hero div.card').html().replace(/id\=\"[\w\_\-]+\"/gi,"")); //"
-    $(newprev).find("h2").text($(newprev).find("h2 .firstname").text());
-    //$(newprev).find(".user_coasters").remove();
-    var pour = $(newprev).find(".pour_volume");
-    pour.html($(pour).find("span"));
-    var prevs = $('.previous div.mini-card').clone();
-    $('.previous div.mini-card').remove();
+  $(newprev).find("h2").text($(newprev).find("h2 .firstname").text());
+  //$(newprev).find(".user_coasters").remove();
+  var pour = $(newprev).find(".pour_volume");
+  pour.html($(pour).find("span"));
+  var prevs = $('.previous div.mini-card').clone();
+  $('.previous div.mini-card').remove();
 
-    $('#previousRowOne').append(newprev.addClass('mini-card'));
-    $('#previousRowOne').append(prevs.slice(0,2));
-    $('#previousRowTwo').append(prevs.slice(2,5));
-    $('.mini-card .pour_date').each(function(index){
+  $('#previousRowOne').append(newprev.addClass('mini-card'));
+  $('#previousRowOne').append(prevs.slice(0,2));
+  $('#previousRowTwo').append(prevs.slice(2,5));
+  $('.mini-card .pour_date').each(function(index) {
     $(this).text(moment($(this).attr('data')).fromNow());
   });
 
   getUser(rfid, function(user) {
     populateCurrentDrinkerMarkup(user);
+    $('#user_info p.pour_volume').append("<span class='label label-striped active'>pouring...</span>");
+
 
     $("#hero").animate({backgroundColor: "#FF0000"}, 700);
     $("#hero").animate({backgroundColor: "#FFFFFF"}, 700);
