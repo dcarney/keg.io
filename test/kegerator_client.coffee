@@ -92,7 +92,7 @@ class FakeKegerator
     kegioAPI.scan(userRFID).get (err, result) =>
       if !err
         console.log "scan user: #{userRFID}, server responded with: #{result}"
-        @fakeFlow()
+        delay 5000, @fakeFlow # pouring a beer takes about 5 seconds
       else
         console.log "ERROR: error sending scan request for user: #{userRFID} #{result}"
 
