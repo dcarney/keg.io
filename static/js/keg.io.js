@@ -44,8 +44,9 @@ var switchKegerator = function(kegeratorId) {
      // Populate some DOM elements w/ info
      $('#kegerator_details').empty();
      $('#kegerator_details').append("<li class='nav-header'>Kegerator</li>");
-     $('#kegerator_details').append("<p>" + kegerator.name + "</p>");
-     $('#kegerator_details').append("<p>" + kegerator.description + "</p>");
+     //$('#kegerator_details').append("<p><span class='kegerator'>" + kegerator.name + "</span></p>");
+     $('#kegerator_details').append("<h1>" + kegerator.name + "</h1>");
+     $('#kegerator_details').append("<h3>" + kegerator.description + "</h3  >");
      $('#kegerator_details').append('<span class="badge badge-important connected">web socket</span>&nbsp;');
      $('#kegerator_details').append('<span class="badge badge-important heartbeat">keg heartbeat</span>&nbsp;');
      $('#kegerator_details').append('<span class="badge badge-important pour">pour</span>&nbsp;');
@@ -63,11 +64,11 @@ var switchKegerator = function(kegeratorId) {
       $('#keg_details').empty();
       $('#keg_details').append("<li class='divider'></li>");
       $('#keg_details').append("<li class='nav-header'>Keg</li>");
-      $('#keg_details').append("<p>" + keg.beer + ' ' + keg.beer_style + "</li>");
-      $('#keg_details').append("<p>" + keg.brewery + "</p>");
+      $('#keg_details').append("<h3>" + keg.beer + ' ' + keg.beer_style + "</h3>");
+      $('#keg_details').append("<h3>" + keg.brewery + "</h3>");
       $('#keg_details').append("<p>tapped: " + moment(keg.tapped_date).from(moment()) + "</p>");
       $('#keg_details').append("<p style='font-style:italic;'>" + keg.description + "</p>");
-      $('#keg_details').append("<li><img src='http://images.keg.io/" + keg.image_path + "'></img></p>");
+      $('#keg_details').append("<img src='http://images.keg.io/" + keg.image_path + "'></img>");
 
      });  // getJSON
 
