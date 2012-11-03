@@ -175,8 +175,8 @@ class Keg extends events.EventEmitter
       date: moment().format 'YYYY-MM-DDTHH:mm:ssZ' #ISO8601
       rfid: rfid
       keg_id: 1   # TODO: hardcoded
-      kegerator_id: kegerator_id
-      volume_ounces: volume
+      kegerator_id: parseInt kegerator_id, 10
+      volume_ounces: parseInt volume, 10
 
     # save to the DB and emit if > 0
     if volume <= 0
