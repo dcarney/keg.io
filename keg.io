@@ -407,8 +407,8 @@ server.get '/api/kegerator/:accessKey/scan/:rfid', api_middlewares, (req, res, n
 server.put /^\/api\/kegerator\/([\d]+)\/flow\/([\d]+)$/, api_middlewares, (req, res, next) ->
   access_key = req.params[0]
   volume = req.params[1]
-  keg.endFlow access_key, volume, (valid) ->
-    if valid
+  keg.endFlow access_key, volume, (err, savedToDb) ->
+    if !err
       respond(200, res, 'flow', volume)
     else
       respond(401, res, 'flow', 'invalid flow event (a valid scan may not have been received)')
