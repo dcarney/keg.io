@@ -47,10 +47,9 @@ var switchKegerator = function(kegeratorId) {
      //$('#kegerator_details').append("<p><span class='kegerator'>" + kegerator.name + "</span></p>");
      $('#kegerator_details').append("<h1>" + kegerator.name + "</h1>");
      $('#kegerator_details').append("<h3>" + kegerator.description + "</h3  >");
-     $('#kegerator_details').append('<span class="badge badge-important connected">web socket</span>&nbsp;');
-     $('#kegerator_details').append('<span class="badge badge-important heartbeat">keg heartbeat</span>&nbsp;');
-     $('#kegerator_details').append('<span class="badge badge-important pour">pour</span>&nbsp;');
-     $('#kegerator_details').append('<span class="badge" id="kegerator_temp">-- &deg;F</span>&nbsp;');
+     $('#kegerator_details').append('<span class="badge badge-important connected">server</span> ');
+     $('#kegerator_details').append('<span class="badge badge-important heartbeat">kegerator</span> ');
+     $('#kegerator_details').append('<span class="badge" id="kegerator_temp">-- &deg;F</span>');
 
      // Get data about most recent keg on this kegerator
      $.getJSON("/kegerators/" + kegeratorId + "/kegs?limit=1&active=true", function(data) {
@@ -142,7 +141,6 @@ var handlePourEvent = function(data) {
   $('#user_info .pour_volume').html("You just poured <span class='badge'>" + volumeOunces + " ounces</span>!");
   $('#user_info .pour_date').text( moment(now).fromNow());
   $('#user_info .pour_date').attr('data',now);
-  $("#kegerator_details .badge.pour").removeClass("badge-important badge-success badge-warning").addClass("badge-important");
 };
 
 // each obj in pourObjects is a regular pour, with the associated member obj
@@ -183,7 +181,6 @@ var populatePreviousDrinkersMarkup = function(pourObjects) {
 
 // Take a user object and populate various bits of markup with info about them
 var populateCurrentDrinkerMarkup = function(user) {
-  $("#kegerator_details .badge.pour").removeClass("badge-important").addClass("badge-success");
 
 	$('#user_coasters').empty();
   if (user) {
