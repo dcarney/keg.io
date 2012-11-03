@@ -12,14 +12,14 @@ class DbRebuild
   rebuild: (dbName, server, port, cb) ->
     kegerators = []
     kegerators.push(
-        kegerator_id: 2222
-        name: 'VNC Seattle'
-        description: 'The original home of keg.io'
-        owner_email: 'chris.castle@vivaki.com')
+        kegerator_id: 1111
+        name: 'Simply Measured'
+        description: 'Excel and stuff'
+        owner_email: 'keg.io@crc.io')
 
     kegerators.push(
-        kegerator_id: 1111
-        name: 'zulily, Seattle WA'
+        kegerator_id: 2222
+        name: 'zulily'
         description: 'Baby clothes for the win'
         owner_email: 'dcarney@gmail.com')
 
@@ -27,26 +27,26 @@ class DbRebuild
     kegs.push(
       keg_id: 1
       kegerator_id: 1111
-      beer: "Manny's"
-      brewery: 'Georgetown Brewery'
+      beer: "Universal"
+      brewery: 'Fremont Brewery'
       beer_style: 'Pale Ale'
-      description: 'A solid pale ale, brewed in Seattle least-douchey neighborhood.'
-      tapped_date: '2011-03-12T01:23:45Z'
+      description: 'A distinctive Northwest twist on the classic pale ale, using a select blend of pale roasted malt and Old World malts balanced with classic Northwest hops to achieve a heavenly beer of rich malt flavor and hop spice. Pale, Special Aromatic & Melanoidin malts with Columbus, Centennial & Cascade hops. 5.6% ABV'
+      tapped_date: '2012-10-10T01:23:45Z'
       volume_gallons: '15.5'
-      active: 'false'
-      image_path: 'MannysPint3.gif')
+      active: 'true'
+      image_path: 'universal-pale-ale.jpg')
 
     kegs.push(
       keg_id: 2
       kegerator_id: 2222
-      beer: "Immortal"
-      brewery: 'Elysian Brewery'
-      beer_style: 'IPA'
-      description: 'A Northwest interpretation of a classic English style, golden copper in color and loaded with New World hop flavor and aroma.'
-      tapped_date: '2011-04-12T01:23:45Z'
-      volume_gallons: '15.5'
-      active: 'false'
-      image_path: 'immortal.jpg')
+      beer: "Roger's"
+      brewery: 'Georgetown Brewery'
+      beer_style: 'Pilsner'
+      description: 'Yakima grown Czech-style Sterling hops give this refreshing pilsner a spicy and earthy hop aroma. Malt character is accentuated by a German Lager Yeast that ferments dry but round and complex.'
+      tapped_date: '2012-11-02T01:23:45Z'
+      volume_gallons: '7.5'
+      active: 'true'
+      image_path: 'rogers.jpg')
 
     users = []
     dc =
@@ -68,6 +68,16 @@ class DbRebuild
       twitter_handle:  '@crc'
       coasters: [0]
     users.push crc
+
+    users.push(
+      rfid: '540029D0FE53'
+      first_name: 'Steve'
+      last_name: 'Reed'
+      nickname: 'Anarchist Hacker'
+      email: 'sreed@zulily.com'
+      twitter_handle: ''
+      coasters: []
+      )
 
     users.push(
         rfid: '4400561A0A'
