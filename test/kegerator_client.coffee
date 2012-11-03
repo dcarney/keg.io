@@ -64,29 +64,15 @@ class FakeKegerator
     @fakeTemp()
 
   # Produces a fake "flow" event on a given interval, used in development mode
-  fakeFlow: (flowsLeft) =>
-    if (flowsLeft > 0)
-      randomFlow = (Math.floor(Math.random() * 61)) + 30  # between 30-90
+  fakeFlow: () =>
+    randomFlow = (Math.floor(Math.random() * 13)) + 8  # between 8-20
 
-      # send API request
-      kegioAPI.flow(randomFlow).put (err, result) ->
-        if !err
-          console.log "flow sent: #{randomFlow}, server responded with: #{result}"
-        else
-          console.log "ERROR: error sending flow request: #{result}"
-
-      # repeat every second, until the pour is done
-      delay 1000, () =>
-        @fakeFlow flowsLeft - 1
-
-    else
-      # (In Fred Armisen from Portandia voice): "This flow is **OVER**!!!"
-      # send API request
-      kegioAPI.flow.end.put (err, result) ->
-        if !err
-          console.log "flow ended, server responded with: #{result}"
-        else
-          console.log "ERROR: error sending flow end request: #{result}"
+    # send API request
+    kegioAPI.flow(randomFlow).put (err, result) ->
+      if !err
+        console.log "flow sent: #{randomFlow}, server responded with: #{result}"
+      else
+        console.log "ERROR: error sending flow request: #{result}"
 
   # Produces a fake "pour" event on a given interval, used in development mode
   fakePour: () =>
@@ -106,7 +92,7 @@ class FakeKegerator
     kegioAPI.scan(userRFID).get (err, result) =>
       if !err
         console.log "scan user: #{userRFID}, server responded with: #{result}"
-        @fakeFlow 7   # flow for 7 seconds
+        @fakeFlow()
       else
         console.log "ERROR: error sending scan request for user: #{userRFID} #{result}"
 
