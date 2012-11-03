@@ -405,8 +405,8 @@ server.get '/api/kegerator/:accessKey/scan/:rfid', api_middlewares, (req, res, n
 # ##### Report a flow of 12 fl. oz. on kegerator 1111:
 #     PUT http://keg.io/kegerator/1111/flow/12
 server.put /^\/api\/kegerator\/([\d]+)\/flow\/([\d]+)$/, api_middlewares, (req, res, next) ->
-  access_key = req.params[1]
-  volume = req.params[2]
+  access_key = req.params[0]
+  volume = req.params[1]
   keg.endFlow access_key, volume, (valid) ->
     if valid
       respond(200, res, 'flow', volume)
