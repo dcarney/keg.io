@@ -65,7 +65,7 @@ var switchKegerator = function(kegeratorId) {
       $('#keg_details').append("<li class='nav-header'>Keg</li>");
       $('#keg_details').append("<h3>" + keg.beer + ' ' + keg.beer_style + "</h3>");
       $('#keg_details').append("<h3>" + keg.brewery + "</h3>");
-      $('#keg_details').append("<p>tapped: " + moment(keg.tapped_date).from(moment()) + "</p>");
+      $('#keg_details').append("<p>Tapped <span data-livestamp='" + keg.tapped_date + "'></span></p>");
       $('#keg_details').append("<p style='font-style:italic;'>" + keg.description + "</p>");
       $('#keg_details').append("<img src='http://images.keg.io/" + keg.image_path + "'></img>");
 
@@ -139,7 +139,7 @@ var handlePourEvent = function(data) {
   var volumeOunces = data['data'];
   var now = new Date();
   $('#user_info .pour_volume').html("You poured <span class='badge'>" + volumeOunces + " ounces</span>");
-  $('#user_info .pour_date').text( moment(now).fromNow());
+  $('#user_info .pour_date').attr('data-livestamp', new Date());
   $('#user_info .pour_date').attr('data',now);
   if (_gaq) _gaq.push(['_trackEvent', 'pours', 'pour', cookieRead('kegio'), volumeOunces]);
 };
@@ -168,11 +168,11 @@ var populatePreviousDrinkersMarkup = function(pourObjects) {
     var user = pour.user;
 
     // Create a fresh new div for holding the markup for a previous drinker
-    var previousCard = $('<div class="span4 mini-card"></div>');
+    var previousCard = $('<li class="mini-card" data-id="' + (new Date(pour.date)).getTime() + '"></div>');
     previousCard.append("<img id='gravatar' class='profile' src='" + user.gravatar + "'>");
     previousCard.append('<h2 class=name>' + user.first_name + '</h2>');
     previousCard.append("<p class='pour_volume'><span class='badge'>" + pour.volume_ounces + " ounces</span></p>");
-    previousCard.append("<p class='pour_date'>" + moment(pour.date).fromNow() + "</p>");
+    previousCard.append("<p class='pour_date' data-livestamp='" + pour.date + "'></p>");
 
     // Put 3 mini-cards per row
     var domSelector = count <= 3 ? '#previousRowOne' : '#previousRowTwo';
@@ -182,6 +182,7 @@ var populatePreviousDrinkersMarkup = function(pourObjects) {
 
 // Take a user object and populate various bits of markup with info about them
 var populateCurrentDrinkerMarkup = function(user) {
+  $('#hero div.card').attr('data-id', (new Date()).getTime());
 
 	$('#user_coasters').empty();
   if (user) {
@@ -309,6 +310,7 @@ $(document).ready(function(){
       var lastPour = pours.shift(); // the 'last' pour is the 0th element!
       getUser(lastPour.rfid, function(user) {
         populateCurrentDrinkerMarkup(user);
+        $('#hero div.card p.pour_date').attr('data-livestamp', lastPour.date);
       });
 
       var pourObjects = [];
