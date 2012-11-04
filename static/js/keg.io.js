@@ -162,6 +162,7 @@ var populatePreviousDrinkersMarkup = function(pourObjects) {
   $(".previous").empty();
 
   var count = 0;
+  pourObjects = pourObjects.sort(function(a,b) { return Date.parse(b.date) - Date.parse(a.date); });
   _.each(pourObjects, function(pourObject) {
     count++;
     var pour = pourObject;
