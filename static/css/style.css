@@ -22,6 +22,7 @@ body {
 }
 
 .intro_copy {
+  background: rgb(60, 60, 60);
   background: rgba(60, 60, 60, 0.9);
   -webkit-border-radius: 5px;
   -moz-border-radius: 5px;
@@ -30,6 +31,7 @@ body {
 }
 
 .card {
+  background: rgb(60, 60, 60);
   background: rgba(60, 60, 60, 0.9);
   padding: 20px 25px;
   -webkit-border-radius: 5px;
@@ -103,10 +105,23 @@ body {
 }
 
 .user_coasters img:hover {
+  -o-transition-timing-function: ease-out;
+  -o-transition-delay: 0.1s;
+  -o-transition-duration: 0.2s;
+  -o-transform: scale(1.5, 1.5);
+  -ms-transition-timing-function: ease-out;
+  -ms-transition-delay: 0.1s;
+  -ms-transition-duration: 0.2s;
+  -ms-transform: scale(1.5, 1.5);
+  -moz-transition-timing-function: ease-out;
+  -moz-transition-delay: 0.1s;
+  -moz-transition-duration: 0.2s;
+  -moz-transform: scale(1.5, 1.5);
   -webkit-transition-timing-function: ease-out;
   -webkit-transition-delay: 0.1s;
   -webkit-transition-duration: 0.2s;
   -webkit-transform: scale(1.5, 1.5);
+  transform: scale(1.5, 1.5);
 }
 
 h2 {
