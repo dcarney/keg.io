@@ -202,7 +202,7 @@ var populateCurrentDrinkerMarkup = function(user) {
 
   $('#gravatar').attr('src', user.gravatar);
   $('#user_info').empty();
-  $('#user_info').append('<h2>Hello, <span class="firstname"> '+ user.first_name + '</span>!</h2>');
+  $('#user_info').append('<h2>Hello, <span class="firstname">'+ user.first_name + '</span></h2>');
   $('#user_info').append("<p class='pour_volume'></p>");
   $('#user_info').append('<p class="pour_date"></p>');
   //$('#user_info').append('<a class="btn rfid" href="#/users/' + user.rfid + '">View Profile</a>');
