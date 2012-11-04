@@ -178,9 +178,14 @@ class Keg extends events.EventEmitter
       kegerator_id: parseInt kegerator_id, 10
       volume_ounces: parseInt volume, 10
 
-    # save to the DB and emit if > 0
+    # save to the DB and emit
+    # if pour_volume < 0, set it to 0 and also don't check for new costers
     if volume <= 0
-      return cb null, false
+      pour.volume_ounces = 0
+      @db.insertObjects 'pours', pour, (err, result) =>
+        return cb err, false if err?
+        @emit 'pour', kegerator_id, 0
+        cb null, true
     else
       @db.insertObjects 'pours', pour, (err, result) =>
         return cb err, false if err?
