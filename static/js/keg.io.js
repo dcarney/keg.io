@@ -175,8 +175,8 @@ var populatePreviousDrinkersMarkup = function(pourObjects) {
     previousCard.append("<p class='pour_date' data-livestamp='" + pour.date + "'></p>");
 
     // Put 3 mini-cards per row
-    var domSelector = count <= 3 ? '#previousRowOne' : '#previousRowTwo';
-    $(domSelector).prepend(previousCard);
+    // var domSelector = count <= 3 ? '#previousRowOne' : '#previousRowTwo';
+    $('#previousRow').append(previousCard);
   });
 };
 
@@ -222,25 +222,36 @@ var getUser = function(rfid, cb) {
 var handleScanEvent = function(data) {
   socketDebug('scan', data);
   rfid = data['data'];
-	//var newprev = $('<div class="span4"></div>').append($('#hero #user_info').html());
-	var newprev = $('<div class="span4"></div>').append($('#hero div.card').html().replace(/id\=\"[\w\_\-]+\"/gi,"")); //"
-  $(newprev).find("h2").text($(newprev).find("h2 .firstname").text());
-  //$(newprev).find(".user_coasters").remove();
-  var pour = $(newprev).find(".pour_volume");
-  pour.html($(pour).find("span"));
-  var prevs = $('.previous div.mini-card').clone();
-  $('.previous div.mini-card').remove();
 
-  $('#previousRowOne').append(newprev.addClass('mini-card'));
-  $('#previousRowOne').append(prevs.slice(0,2));
-  $('#previousRowTwo').append(prevs.slice(2,5));
-  $('.mini-card .pour_date').each(function(index) {
-    $(this).text(moment($(this).attr('data')).fromNow());
+  hero = $('#hero div.card').clone();
+  var newprev = $('<li class="mini-card"></div>').append($(hero).children());
+  userInfo = newprev.find('#user_info').children();
+  newprev.find('div.card_content').remove();
+  newprev.append(userInfo);
+  newprev.find('h2').text(newprev.find('h2').text().replace('Hello, ',''));
+  newprev.attr('data-id', $('#hero div.card').attr('data-id'));
+  newprev.find('#user_coasters').remove();
+
+  var previousRow = $('#previousRow');
+  var newRow = previousRow.clone();
+
+  // remove last element
+  newRow.find('li:last').remove();
+
+  // add new first element
+  newRow.prepend(newprev);
+
+  $('#previousRow').quicksand(newRow.children(), function() {
+    // TODO: re-apply livestamp with data-id
+    $('#previousRow li').each(function(idx, el) {
+      date = new Date(parseInt($(el).attr('data-id'), 10));
+      $(el).find('p.pour_date').attr('data-livestamp', date);
+    });
   });
 
   getUser(rfid, function(user) {
     populateCurrentDrinkerMarkup(user);
-    $('#user_info p.pour_volume').append("<span class='label label-striped active'>pouring...</span>");
+    $('#hero div.card p.pour_volume').append("<span class='label label-striped active'>pouring...</span>");
 
 
     $("#hero").animate({backgroundColor: "#FF0000"}, 700);
@@ -310,6 +321,7 @@ $(document).ready(function(){
       var lastPour = pours.shift(); // the 'last' pour is the 0th element!
       getUser(lastPour.rfid, function(user) {
         populateCurrentDrinkerMarkup(user);
+        $('#hero div.card p.pour_volume').append("You poured <span class='badge'>" + lastPour.volume_ounces + " ounces</span>");
         $('#hero div.card p.pour_date').attr('data-livestamp', lastPour.date);
       });
 
