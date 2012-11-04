@@ -141,6 +141,7 @@ var handlePourEvent = function(data) {
   $('#user_info .pour_volume').html("You poured <span class='badge'>" + volumeOunces + " ounces</span>");
   $('#user_info .pour_date').text( moment(now).fromNow());
   $('#user_info .pour_date').attr('data',now);
+  if (_gaq) _gaq.push(['_trackEvent', 'pours', 'pour', cookieRead('kegio'), volumeOunces]);
 };
 
 // each obj in pourObjects is a regular pour, with the associated member obj
@@ -350,6 +351,7 @@ $(document).ready(function(){
 $('.dropdown-menu').on('click', 'li', function(event) {
   var selectedId = $(event.srcElement).attr('id');
   console.log('New kegerator selected: ' + selectedId);
+  if (_gaq) _gaq.push(['_trackEvent', 'kegerators', 'switch', selectedId]);
   switchKegerator(selectedId);
 });
 
