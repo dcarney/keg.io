@@ -146,6 +146,30 @@ class DbRebuild
         description: 'Pour a beer before noon.'
         image_path: 'coasters/earlybird.png')
 
+    coasters.push(
+        coaster_id: 4
+        name: 'Keg Mayor'
+        description: 'Top drinker of a keg!'
+        image_path: 'coasters/kegmayor.png')
+
+    coasters.push(
+        coaster_id: 5
+        name: 'Party Starter'
+        description: 'First beer of the day!'
+        image_path: 'coasters/first.png')
+
+    coasters.push(
+        coaster_id: 7
+        name: 'Wagon'
+        description: 'You fell off the wagon!'
+        image_path: 'coasters/wagon.png')
+
+    coasters.push(
+        coaster_id: 8
+        name: 'Bus'
+        description: "You're drunk! Take the bus home!"
+        image_path: 'coasters/bus.png')
+
     # cb: (err, result)
     dropDb = (dbName, cb) ->
       console.log "dropping: #{dbName}"
