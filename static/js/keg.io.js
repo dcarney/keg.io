@@ -175,8 +175,6 @@ var populatePreviousDrinkersMarkup = function(pourObjects) {
     previousCard.append("<p class='pour_volume'><span class='badge'>" + pour.volume_ounces + " ounces</span></p>");
     previousCard.append("<p class='pour_date' data-livestamp='" + pour.date + "'></p>");
 
-    // Put 3 mini-cards per row
-    // var domSelector = count <= 3 ? '#previousRowOne' : '#previousRowTwo';
     $('#previousRow').append(previousCard);
   });
 };
@@ -243,7 +241,6 @@ var handleScanEvent = function(data) {
   newRow.prepend(newprev);
 
   $('#previousRow').quicksand(newRow.children(), function() {
-    // TODO: re-apply livestamp with data-id
     $('#previousRow li').each(function(idx, el) {
       date = new Date(parseInt($(el).attr('data-id'), 10));
       $(el).find('p.pour_date').attr('data-livestamp', date);
