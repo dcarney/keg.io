@@ -181,8 +181,6 @@ var populatePreviousDrinkersMarkup = function(pourObjects) {
 
 // Take a user object and populate various bits of markup with info about them
 var populateCurrentDrinkerMarkup = function(user) {
-  $('#hero div.card').attr('data-id', (new Date()).getTime());
-
 	$('#user_coasters').empty();
   if (user) {
     _.each(user.coasters, function(coaster_id) {
@@ -250,6 +248,9 @@ var handleScanEvent = function(data) {
   getUser(rfid, function(user) {
     populateCurrentDrinkerMarkup(user);
     $('#hero div.card p.pour_volume').append("<span class='label label-striped active'>pouring...</span>");
+    var pourDate = new Date();
+    $('#hero div.card').attr('data-id', pourDate.getTime());
+    $('#hero div.card p.pour_date').attr('data-livestamp', pourDate);
 
 
     $("#hero").animate({backgroundColor: "#FF0000"}, 700);
@@ -321,6 +322,7 @@ $(document).ready(function(){
         populateCurrentDrinkerMarkup(user);
         $('#hero div.card p.pour_volume').append("You poured <span class='badge'>" + lastPour.volume_ounces + " ounces</span>");
         $('#hero div.card p.pour_date').attr('data-livestamp', lastPour.date);
+        $('#hero div.card').attr('data-id', (new Date(lastPour.date)).getTime());
       });
 
       var pourObjects = [];
