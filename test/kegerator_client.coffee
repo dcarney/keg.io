@@ -65,7 +65,8 @@ class FakeKegerator
 
   # Produces a fake "flow" event on a given interval, used in development mode
   fakeFlow: () =>
-    randomFlow = (Math.floor(Math.random() * 13)) + 8  # between 8-20
+    randomFlow = (Math.floor(Math.random() * 13)) + 8  # between 8-20 oz
+    randomFlow = randomFlow * 100 # convert to "centi-liters"
 
     # send API request
     kegioAPI.flow(randomFlow).put (err, result) ->
