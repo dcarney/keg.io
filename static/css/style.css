@@ -127,3 +127,11 @@ body {
 h2 {
   color: #ffffff;
 }
+
+h3 {
+  margin-bottom: 10px;
+}
+
+.badge {
+  font-size: 125%;
+}
