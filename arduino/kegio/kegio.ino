@@ -1,30 +1,25 @@
-/*
-* TODO: Fix LED colors (green pin always seems high?!)
-* TODO: Set LED high on 200 resp w/ scan req
-* TODO: Make arduino code cope w/ keg.io going down, then back up
-* TODO: Add piezo buzzer on succesful card scan (before req)
-* TODO: Add timeout to prevent double/triple scans
-* TODO: Add reset button
-* TODO: Make arduino submit average of several temps, to help smooth out
-        noise.  See tmpthirtysix sketch for details.
-  TODO: Ignore scan events while the solenoid is open
-*/
+// keg.io!!!
 #include "kegio.h"
+
+
+// serial lib for use with RFID pins
 #include <SoftwareSerial.h>
 
 // Wifly and HTTP stuff
 #include <SPI.h>
 #include <SC16IS750.h>
 #include <WiFly.h>
+#include <HttpClient.h>
 
 // hashing
 #include <sha256.h>
 
-#include <HttpClient.h>
+// More keg.io stuff!! Remember, order is important with #includes
 #include "credentials.h"
 
 // OneWire temp. sensor lib
 #include <OneWire.h>
+
 // For debugging
 //#include <MemoryFree.h>
 
@@ -71,17 +66,10 @@ int led = 13; // Pin 13 has an LED connected on most Arduino boards.
 // measures the rising edges of the flow sensor's interrupt signal
 volatile int numFlowInterrupts;
 
-// vars for reading tag/temp values
+// vars for reading tag/temp/flow values
 char tagBuffer[13];
-//char httpResponseBuffer[64];
 char temperatureBuffer[4];
 char flowBuffer[4];
-
-// Register your RFID tags here
-char tag0[13] =  "51007BC3BD54";
-char tag1[13] =  "5100FFED286B";
-char tag2[13] =  "51007BA19A11";
-char tag3[13] =  "51007BC3BD54";
 
 int inByte = 0;
 
@@ -91,7 +79,6 @@ int inByte = 0;
 #define TEMP_SENSOR_ERROR -1000 // Used by the OneWire sensor
 unsigned long lastTemperatureMs = 0;
 
-#define SOLENOID_OPEN_DURATION_MS 10000
 unsigned long solenoidOpenMs = 0;
 float totalFlow = 0.0;
 unsigned long lastFlowMillis = 0;
@@ -109,7 +96,7 @@ unsigned long lastRfidMs = RFID_DURATION_MS;
 SoftwareSerial rfidSerial(SOFT_SERIAL_RX_PIN, 0);
 
 // Create WiFly client and our own HTTP client
-WiFlyClient client(KEGIO_DOMAIN, 8081);
+WiFlyClient client(KEGIO_DOMAIN, KEGIO_PORT);
 HttpClient http = HttpClient(client);
 
 // the setup routine runs once when you press reset:
@@ -206,7 +193,6 @@ void loop() {
   // If there are a few bytes waiting on the WiFly shield...
   // If there's less than 4, chances are we don't want to parse just yet
   // HTTP/1.1 200 OK
-
    if (client.available()) {
 
     // Wait 100ms.  We want to give the rest of the msg a chance to arrive in
@@ -232,6 +218,9 @@ void loop() {
     digitalWrite(SOLENOID_PIN, LOW);
     solenoidOpenMs = 0;
     lastFlowMillis = 0;
+    totalFlow = totalFlow * FLOW_METER_COEFFICIENT; // correction
+    // multiply by 100 so we don't lose too much precision when truncating to an int
+    totalFlow = totalFlow * 100.0;
     sendSignedHttp("PUT", FLOW_MSG, itoa((int)totalFlow, flowBuffer, 10));
     totalFlow = 0.0;
   } else if (solenoidOpenMs > 0) {
