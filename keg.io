@@ -399,34 +399,22 @@ server.get '/api/kegerator/:accessKey/scan/:rfid', api_middlewares, (req, res, n
 #   `PUT /api/kegerator/ACCESS_KEY/flow/VOLUME`
 #
 #    Where **ACCESS_KEY** is an access key registered with the keg.io server
-#    and **VOLUME** is the volume in US fluid ounces of the pour
+#    and **VOLUME** is the volume in US fluid "centi-ounces" of the pour
 #
 # #### Examples:
 # ##### Report a flow of 12 fl. oz. on kegerator 1111:
-#     PUT http://keg.io/kegerator/1111/flow/12
+#     PUT http://keg.io/kegerator/1111/flow/1200
 server.put /^\/api\/kegerator\/([\d]+)\/flow\/([\d]+)$/, api_middlewares, (req, res, next) ->
   access_key = req.params[0]
   volume = req.params[1]
+  # convert to ounces.  This is done, so that the arduino can have greater
+  # precision, while still using an int to send the flow volume
+  volume = volume / 100.0
   keg.endFlow access_key, volume, (err, savedToDb) ->
     if !err
       respond(200, res, 'flow', volume)
     else
       respond(401, res, 'flow', 'invalid flow event (a valid scan may not have been received)')
-
-# ## API: report an end to the current flow
-#   `PUT /api/kegerator/ID/flow/end`
-#
-#    Where **ID** is an access key registered with the keg.io server
-#
-# Reports that the flow for the most recent RFID has completed on this
-# kegerator.  Any subsequnt 'flow' requests after this request, but before
-# another successful 'scan' request will be ignored.
-server.put '/api/kegerator/:id/flow/end', api_middlewares, (req, res, next) ->
-  keg.endFlow req.params.id, (err, savedToDb) ->
-    if err?
-      respond(401, res, 'flow', 'invalid flow event')
-    else
-      respond(200, res, 'flow', 'end')
 
 # ## API: report the current kegerator temperature
 #   `PUT /api/kegerator/ID/temp/TEMP`
