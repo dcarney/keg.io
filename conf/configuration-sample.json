@@ -13,6 +13,10 @@
 	/* Port to tell the client (aka browser) to connect to for web socket communication */
 	"socket_client_connect_port": "8888",
 
+    /* The amount of detail that the socket.io server should output to the logger */
+    /* 0 - error, 1 - warn, 2 - info, 3 - debug */
+    "socket_log_level": 3,
+
 	/* Port to serve regular HTTP content on */
 	"http_port": "8081",
 

@@ -2,6 +2,7 @@
 
 # Setup dependencies
 async       = require 'async'
+coffeecup   = require 'coffeecup'
 exec        = require('child_process').exec
 express     = require 'express'
 fs          = require 'fs'
@@ -147,10 +148,24 @@ if Options.rebuild
     process.exit 1 if err?
     process.exit 0
 
-server = express.createServer()
+server = express()
 # the logger middleware has to be added here first, not down with the rest of
 # the middleware
 server.use express.logger('dev')
+
+# setup coffeekup
+server.set 'view engine', 'coffee'
+server.engine '.coffee', coffeecup.__express
+server.set 'views', "#{__dirname}/views"
+server.set "view options", { layout: false }
+
+# create the http server, load up our middleware stack, start listening
+server.use express.favicon(__dirname + '/static/favicon.ico', {maxAge: 2592000000})
+server.use express.static(__dirname + '/static')  # static file handling
+server.use express.query() # parse query string
+server.use middleware.path() # parse url path
+server.use express.bodyParser()                   # parse request bodies
+server.use server.router
 
 # can be used with/without handleResponse
 handleError = (err, req, res) ->
@@ -185,6 +200,7 @@ handleResponse = (err, result, req, res) ->
 #   `GET /hello`
 #
 server.get '/hello', (req, res, next) ->
+  res.setHeader 'Connection', 'close'
   respond 200, res, 'world'
 
 # ## UI: get the port to use for web socket connections
@@ -295,6 +311,27 @@ server.get '/users/:rfid?', (req, res, next) ->
   keg.findUsers criteria, (err, result) ->
     handleResponse err, result, req, res
 
+
+# ## UI: register a new user
+#   `POST /users`
+#
+# Where **RFID** is the (optional) rfid assigned to the desired user
+#
+# Optional params: limit=N
+#   where **N** is the number of temperatures to retrieve, in reverse
+#   chronological order
+#
+server.post '/users', (req, res, next) ->
+  console.log req.body
+  console.log req.body?.foo?
+  console.log req.data?
+  console.log req.params?
+  console.log req.params
+
+
+  return handleResponse 'No user data defined', '', req, res
+
+
 # ## UI: get info about all of a user's pours
 #   `GET /users/RFID/pours`
 #
@@ -361,7 +398,7 @@ server.get '/coasters/:id?', (req, res, next) ->
 # - 400: Bad request syntax, or signature verfification failed
 # - 401: Unauthorized.  Unknown access key.
 # - 404: Unknown resource requested.  Either the kegerator ID was incorrect or an invalid ACTION was specified.
-api_middlewares = [middleware.accessKey(), middleware.verify(keys), middleware.removeHeaders(), middleware.captureHeartbeat()]
+api_middlewares = [middleware.accessKey(), middleware.verify(keys), middleware.modifyHeaders(), middleware.captureHeartbeat()]
 
 # helper method to format API responses for kegerator clients
 respond = (status_code, res, action_text, response_text) ->
@@ -429,22 +466,28 @@ server.put '/api/kegerator/:id/temp/:temp', api_middlewares, (req, res, next) ->
     else
       respond(200, res, 'temp', req.params.temp)
 
-# create the http server, load up our middleware stack, start listening
+server.get '/signup', (req, res) ->
+  user =
+    role: 'admin'
+  res.render 'signup', {user: user, layout: 'layout'}
 
-server.use express.favicon(__dirname + '/static/favicon.ico', {maxAge: 2592000000})
-server.use express.query() 												# parse query string
-server.use middleware.path()											# parse url path
-server.use express.static(__dirname + '/static') 	# static file handling
-server.use server.router                          # UI and API routing
+###
+server.use (req, res, next) ->
+  data=''
+  req.setEncoding('utf8')
+  req.on 'data', (chunk) ->
+     data += chunk
 
+  req.on 'end', () ->
+      req.body = JSON.parse data
+      next()
+###
 
-server.listen process.env.PORT ? Config.http_port
+httpserver = http.createServer(server)
+httpserver.listen process.env.PORT ? Config.http_port
 
-# dump a list of all the available routes to stdout (for debugging)
-#server.routes.all().forEach (route) ->
-#  console.log('  \033[90m%s \033[36m%s\033[0m', route.method.toUpperCase(), route.path)
-
-io = socket_io.listen(server)
+io = socket_io.listen(httpserver)
+io.set 'log level', Config.socket_log_level ? 3
 
 # This configuration is needed to run on Heroku.
 # Websockets aren't supported so we have to use long polling
