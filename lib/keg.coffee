@@ -53,14 +53,6 @@ class Keg extends events.EventEmitter
         result[attr_name] = model[attr_name] if model[attr_name]?
       result
 
-    # associations
-    #@models.Kegerator.hasMany(@models.Keg, {foreignKey: 'kegerator_id'})
-    #@models.Kegerator.hasMany(@models.Temperature, {foreignKey: 'kegerator_id'})
-    #@models.Keg.hasMany(@models.Pour, {foreignKey: 'keg_id'})
-    #@models.User.hasMany(@models.Pour, {foreignKey: 'rfid'})
-    #@models.Coaster.hasMany(@models.User)
-    #@models.User.hasMany(@models.Coaster)
-
     if config? && config.twitter? && config.twitter.enabled
       # Initialize the Twitter module, passing in all the necessary config
       # values (that represent our API keys)
