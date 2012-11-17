@@ -55,7 +55,11 @@ class KegTwitter
   tweetPour: (userInfo, ounces, beerInfo) =>
     name = @getTwitterName userInfo
 
-    pouredText = " just poured #{ounces} oz of "
+    if volume > 0
+      pouredText = " just poured #{ounces} oz of "
+    else
+      pouredText = " just poured some "
+
     if beerInfo?
       longBeerText = "tasty #{beerInfo.beer} #{beerInfo.beer_style}"
     shortBeerText = 'tasty beer'
