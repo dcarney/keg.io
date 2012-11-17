@@ -56,16 +56,14 @@ class KegTwitter
     name = @getTwitterName userInfo
 
     pouredText = " just poured #{ounces} oz of "
-    longBeerText = "tasty #{beerInfo.beer} #{beerInfo.beer_style}"
-    shortBeerText = 'tasty, tasty beer'
-    shortShortBeerText = 'tasty beer'
+    if beerInfo?
+      longBeerText = "tasty #{beerInfo.beer} #{beerInfo.beer_style}"
+    shortBeerText = 'tasty beer'
 
-    if @isTweetLength(name + pouredText + longBeerText)
+    if longBeerText? and @isTweetLength(name + pouredText + longBeerText)
       @tweet(name + pouredText + longBeerText)
-    else if @isTweetLength(name + pouredText + shortBeerText)
+    else
       @tweet(name + pouredText + shortBeerText)
-    else if @isTweetLength(name + pouredText + shortShortBeerText)
-      @tweet(name + pouredText + shortShortBeerText)
 
   tweetCoaster: (userInfo, coasterInfo) ->
     name = getTwitterName userInfo

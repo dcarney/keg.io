@@ -194,9 +194,16 @@ class Keg extends events.EventEmitter
         # earn a coaster?
         @checkForNewCoasters pour, volume
 
-        # Tweet about it, whydoncha
-        #@kegTwit.tweetPour userInfo, ounces, beerInfo
-        cb null, true
+        ## get the user's info
+        @db.findUser pour.rfid, (err, user) =>
+
+          # Tweet about it, whydoncha
+          if !err and user?
+            @kegTwit.tweetPour user, parseInt(volume, 10)
+          else
+            @kegTwit.tweet "Whoa, someone just poured themselves a beer!"
+
+          cb null, true
 
   # cb = (err, savedToDb)
   # emits 'temp'
