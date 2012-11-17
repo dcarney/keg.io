@@ -190,9 +190,9 @@ class Keg extends events.EventEmitter
         @db.findUser pour.rfid, (err, user) =>
 
           # Tweet about it, whydoncha
-          if !err and user?
+          if !err and user? and @kegTwit?
             @kegTwit.tweetPour user, parseInt(volume, 10)
-          else
+          else if @kegTwit?
             @kegTwit.tweet "Whoa, someone just poured themselves a beer!"
 
           cb null, true
