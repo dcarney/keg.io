@@ -1,12 +1,4 @@
 {
-    /* /dev/cu.usbserial-A400fGxO   (spare arduino in OS X)
-	   /dev/cu.usbserial-A400fOlX	(arduino on kegerator)
-	   /dev/ttyUSB0					(typical device under Ubuntu)
-
-	   This setting is ignored when keg.io is run in 'dev mode'
-	*/
-	"device": "/dev/ttyUSB0",
-
     /* Port to listen on for web socket communication */
 	"socket_listen_port": "8888",
 
