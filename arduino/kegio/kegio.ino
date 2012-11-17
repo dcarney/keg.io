@@ -82,6 +82,8 @@ unsigned long lastTemperatureMs = 0;
 unsigned long solenoidOpenMs = 0;
 float totalFlow = 0.0;
 unsigned long lastFlowMillis = 0;
+unsigned long lastHttpOkMs = 0;
+unsigned long lastHttpAttemptMs = 0;
 
 // For the onewire temp sensor:
 OneWire ds(TEMPERATURE_SENSOR_PIN);
@@ -129,7 +131,7 @@ void setup() {
 
   // Show red while booting
   ledStatus(OFF, 1000);
-  ledStatus(RED);
+  ledStatus(BLUE);
 
   // Set up RFID
   #if KEGIO_VERBOSE_DEBUGGING
@@ -172,12 +174,13 @@ void setup() {
     if (client.connect()) {
       // hello out there...
       sendHttp("GET", "/hello");
-      ledStatus(GREEN, 1000);
       tone(BEEP_PIN, BEEP_HZ_MID, 250);
       delay(250);
       tone(BEEP_PIN, BEEP_HZ_HI, 250);
     }
   }
+
+  lastHttpOkMs = millis();
 }
 
 // The signed HTTP requests that we actually care about
@@ -200,21 +203,25 @@ void loop() {
     // delay(100);
     // ACTUALLY, if we wait, too long, the 64 byte (?) buffer will fill up
     int responseCode = http.getResponseStatusCode();
-
     http.readRemainingResponse();
+
+    // Track the last time we successfully contacted the server via HTTP
+    if (responseCode == 200) {
+      lastHttpOkMs = millis();
+      ledStatus(GREEN);
+    }
+
     if ((lastHttpReqAction == SCAN_MSG) && (responseCode == 200)) {
       solenoidOpenMs = millis();
       lastFlowMillis = solenoidOpenMs;
       totalFlow = 0.0;
       digitalWrite(SOLENOID_PIN, HIGH);
-      ledStatus(BLUE);
     }
   }
 
   // If it's time to close the solenoid (and it was open)
   if ((solenoidOpenMs > 0) &&
       (millis() - solenoidOpenMs) > SOLENOID_OPEN_DURATION_MS) {
-    ledStatus(GREEN);
     digitalWrite(SOLENOID_PIN, LOW);
     solenoidOpenMs = 0;
     lastFlowMillis = 0;
@@ -254,7 +261,6 @@ void loop() {
 
   // If it's time to send a temperature update...
   if ((millis() - lastTemperatureMs) > TEMPERATURE_SEND_INTERVAL_MS) {
-    //float temperature = (getTempAnalog() * 1.8) + 32;   // C -> F
     float temperature = (getTemp()*1.8)+32;
     if ((temperature >= 0.0) && (temperature <= 120.0)) {
       // Anything outside this range is garbage, plus we're only allocating
@@ -265,6 +271,20 @@ void loop() {
     }
 
     lastTemperatureMs = millis();
+  }
+
+  if ((millis() - lastHttpOkMs) > WIFLY_RESET_INTERVAL_MS) {
+    if (millis() - lastHttpAttemptMs > WIFLY_RESET_ATTEMPT_INTERVAL_MS) {
+      lastHttpAttemptMs = millis();
+      // attempt a reconnect
+      ledStatus(PURPLE);
+      Serial.println("reconnecting");
+      client.flush();
+      client.stop();
+      if (client.connect()) {
+        Serial.println("reconnected");
+      }
+    }
   }
 
   // if there's a byte waiting to be read on the RFID serial port...
@@ -364,24 +384,6 @@ bool readTag() {
   }
   Serial.println("yyyy");
   return false;
-}
-
-void readTag2() {
-  boolean reading = false;
-  int index = 0;
-  while(rfidSerial.available()) { // && (index < sizeof(tagBuffer))) {
-    int readByte = rfidSerial.read();
-    if(readByte == START) { reading = true; }
-    if(readByte == END) { reading = false; }
-
-    if(reading && readByte != CR && readByte != LF){
-      //store the tag
-      tagBuffer[index] = readByte;
-      index++;
-    }
-  }
-
-  //return true;
 }
 
 void readTag3() {
@@ -524,13 +526,6 @@ boolean compareTag(char one[], char two[]){
   return true; //no mismatches
 }
 
-// Does the byte represent a valid hex byte?
-bool byteIsHex(int b) {
-  // 48 = '0', 57 = '9'
-  // 65 = 'A', 70 = 'F'
-  return (b >= 48 && b <= 57) || (b >= 65  && b <= 70);
-}
-
 // zeroes out the char[] used to store the scanned card ID
 void clearBuffer(char buffer[]) {
   //for(int i=0; i<sizeof(buffer); i++) { buffer[i] = 0; }
@@ -613,6 +608,7 @@ char* getHttpActionStr(int action) {
 
 // Send HTTP request with HmacSha256 signature
 void sendSignedHttp(char* httpMethod, int action, char* actionValue) {
+
   #if KEGIO_VERBOSE_DEBUGGING
   Serial.print("send signed HTTP req..");
   #endif
@@ -692,18 +688,6 @@ void calcHash(uint8_t secret[], int secretLength, char str[], char sig[]) {
   getHash2(Sha256.resultHmac(), sig);
 }
 
-// Put hash as char[] of hex values in sig[] parameter
-void getHash(uint8_t* hash, char sig[]) {
-  String stringOne = "";
-  int i;
-  for (i=0; i<32; i++) {
-    stringOne+=("0123456789abcdef"[hash[i]>>4]);  // convert upper 4 bits to char
-    stringOne+=("0123456789abcdef"[hash[i]&0xf]); // convert lower 4 bits
-  }
-  clearBuffer(sig);
-  stringOne.toCharArray(sig, 65);
-}
-
 void getHash2(uint8_t* hash, char sig[]) {
   int i;
   for (i=0; i<32; i++) {
@@ -726,16 +710,6 @@ void byteToChars(uint8_t byte, char* out) {
   }
 }
 
-float getTempAnalog() {
-  int reading = analogRead(TEMPERATURE_SENSOR_PIN);
-  // converting that reading to voltage, for 3.3v arduino use 3.3
-  float voltage = reading * 5.0;
-  voltage /= 1024.0;
-
-  // convert from 10 mv per degree w/ 500 mV offset
-  // to degrees C ((voltage - 500mV) * 100)
-  return (voltage - 0.5) * 100;
-}
 
 //For the OneWire temp. sensor:
 float getTemp(){
