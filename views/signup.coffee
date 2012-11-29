@@ -102,7 +102,6 @@ html lang: "en", ->
             error: (jqxhr) ->
               console.log "ERROR: #{jqxhr.status}"
             success: (response) ->
-              alert 'asdf'
               $('#email').val('')
               $('#rfid').val('')
               $('#first_name').val('')
