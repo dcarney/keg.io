@@ -315,22 +315,17 @@ server.get '/users/:rfid?', (req, res, next) ->
 # ## UI: register a new user
 #   `POST /users`
 #
-# Where **RFID** is the (optional) rfid assigned to the desired user
-#
-# Optional params: limit=N
-#   where **N** is the number of temperatures to retrieve, in reverse
-#   chronological order
+# where the user data is contained in the (JSON) body of the request
 #
 server.post '/users', (req, res, next) ->
-  console.log req.body
-  console.log req.body?.foo?
-  console.log req.data?
-  console.log req.params?
-  console.log req.params
-
-
-  return handleResponse 'No user data defined', '', req, res
-
+  return handleResponse 'No user data defined', '', req, res unless req.body?
+  user = req.body
+  keg.addUser user, (err, valid) ->
+    if err? and err == 'invalid RFID'
+      err =
+        message: err
+        responseCode: 400
+    handleResponse err, valid, req, res
 
 # ## UI: get info about all of a user's pours
 #   `GET /users/RFID/pours`

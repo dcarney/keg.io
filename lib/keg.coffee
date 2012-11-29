@@ -207,6 +207,14 @@ class Keg extends events.EventEmitter
       @emit 'temp', kegerator_id, temp
       cb null, true
 
+  # cb = (err, savedToDb)
+  addUser: (user, cb) ->
+    validHex = /^(?:[A-F]|[0-9]){6,10}$/;
+    return cb 'invalid RFID', null unless user?.rifd? and validHex.test user.rfid
+    @db.insertObjects 'users', user, (err, result) =>
+      return cb err, false if err?
+      cb null, true
+
   # cb= (err, result)
   findUser: (rfid, cb) =>
     @db.findUser rfid, (err, user) =>

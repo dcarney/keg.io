@@ -348,9 +348,11 @@ $(document).ready(function(){
  socket.on('connect', function () {
   socketDebug('connect', null);
   $('.badge.connected').removeClass("badge-important badge-warning").addClass("badge-success on");//.text("connected");
-}); socket.on('disconnect', function() {
+ });
+ socket.on('disconnect', function() {
   $('.badge.connected').removeClass("badge-success badge-warning").addClass("badge-important on");//.text("disconnected");
-}); socket.on('hello', function (data) { socketDebug('hello', data); });
+ });
+ socket.on('hello', function (data) { socketDebug('hello', data); });
  socket.on('scan', handleScanEvent);
  socket.on('temp', handleTempEvent);
  socket.on('deny', handleDenyEvent);

@@ -7,10 +7,15 @@ moment = require 'moment'
 heartbeats = {}
 
 # remove extraneous headers, to save on arduino reading/processing
-module.exports.removeHeaders = () ->
+# also, disable any keepalives, since the arduino seems unable to
+# re-establish a new TCP connection when necessary
+module.exports.modifyHeaders = () ->
   (req, res, next) ->
     res.removeHeader 'X-Powered-By'
     res.removeHeader 'Content-Type'
+    # From the node docs: 'This should only be disabled for testing; HTTP
+    # requires the Date header in responses.'  <-- The arduino doesn't seem to care
+    res.sendDate = false
     next()
 
 # verify the request's signature, based on our signing scheme and a secret key
