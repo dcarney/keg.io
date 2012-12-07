@@ -77,6 +77,8 @@ html lang: "en", ->
                 a href: "http://keg.io", target: "_blank", "about"
               li ->
                 a href: "https://github.com/dcarney/keg.io", target: "_blank", "github"
+              li ->
+                a href: '/signup', 'signup!'
           comment "/.nav-collapse"
     div ->
       @body
