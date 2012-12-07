@@ -101,12 +101,14 @@ html lang: "en", ->
             dataType: "json"
             error: (jqxhr) ->
               console.log "ERROR: #{jqxhr.status}"
+              alert 'Hmmm...that didn\'t work.  Did you enter the correct RFID tag?'
             success: (response) ->
               $('#email').val('')
               $('#rfid').val('')
               $('#first_name').val('')
               $('#last_name').val('')
               $('#twitter').val('')
+              alert 'Thanks for signing up!'
 
           return false
 
