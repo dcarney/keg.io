@@ -89,8 +89,8 @@ html lang: "en", ->
           user =
             email: $('#email').val()
             rfid: $('#rfid').val()
-            firstName: $('#first_name').val()
-            lastName: $('#last_name').val()
+            first_name: $('#first_name').val()
+            last_name: $('#last_name').val()
             twitter: $('#twitter').val()
 
           $.ajax
