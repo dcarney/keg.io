@@ -68,11 +68,11 @@ html lang: "en", ->
             span class: 'icon-bar'
             span class: 'icon-bar'
             span class: 'icon-bar'
-          a class: 'home_link brand', href: "#", "keg.io"
+          a class: 'home_link brand', href: "/", "keg.io"
           div class: 'nav-collapse', ->
             ul class: 'nav', ->
               li class: 'home_link active', ->
-                a href: "#", 'home'
+                a href: "/", 'home'
               li class: 'dropdown', ->
                 a class: 'dropdown-toggle', "data-toggle": "dropdown", href: "#", ->
                   text " kegerators "
