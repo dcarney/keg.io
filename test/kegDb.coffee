@@ -10,8 +10,7 @@ describe 'KegDb', ->
 
   multiConfig = {
     "db": "kegio",
-    "servers": [{ "host": "test1", "port": 2}, { "host": "test2", "port": 3}],
-    "replSet": true
+    "servers": [{ "host": "test1", "port": 2}, { "host": "test2", "port": 3}]
   }
 
   it 'should get replicaset', ->
