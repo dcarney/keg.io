@@ -24,7 +24,7 @@ class KegDb
 
   # cb = (err)
   getServers: () =>
-    if @mongoConfig.replSet?
+    if @mongoConfig.servers.length > 1
       serverConnections = []
       _.each @mongoConfig.servers, (server) ->
         do (server) ->
