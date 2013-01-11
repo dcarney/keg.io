@@ -1,4 +1,3 @@
-
 doctype 5
 html lang: "en", ->
   head ->
@@ -91,7 +90,7 @@ html lang: "en", ->
             rfid: $('#rfid').val()
             first_name: $('#first_name').val()
             last_name: $('#last_name').val()
-            twitter: $('#twitter').val()
+            twitter_handle: $('#twitter').val()
 
           $.ajax
             type: 'POST'
