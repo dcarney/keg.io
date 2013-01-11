@@ -70,7 +70,7 @@ Parser.parse process.argv
 
 # use the default config file, if no override was given
 unless Config?
-  unless fs.existsSync defaultConfigPath
+  unless typeof fs.existsSync != 'undefined' and fs.existsSync defaultConfigPath
     console.error "#{defaultConfigPath} not found.  Create or specify a different config."
     process.exit 1
   Config = parseConfig defaultConfigPath
@@ -80,10 +80,11 @@ Config.image_host += '/' unless /\/$/.test Config.image_host
 
 # Load access/secret keys from disk, then do any necessary overrides from the
 # appropriate env var
-if fs.existsSync 'conf/keys.json'
-  keys = JSON.parse(fs.readFileSync('conf/keys.json').toString())
-else
-  keys = {}
+if typeof fs.existsSync != 'undefined'
+	if fs.existsSync 'conf/keys.json'
+  		keys = JSON.parse(fs.readFileSync('conf/keys.json').toString())
+	else
+  		keys = {}
 
 if process.env.KEGIO_KEYS?
   _.extend keys, JSON.parse(process.env.KEGIO_KEYS)
