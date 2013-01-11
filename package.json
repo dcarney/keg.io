@@ -53,7 +53,8 @@
     "socket.io": "0.9.6",
     "ntwitter": "0.3.1",
     "string-signer": "https://github.com/crcastle/nodejs-string-signer/tarball/master",
-    "underscore": "*"
+    "underscore": "*",
+    "node-untappd":"*"
   },
   "noAnalyze": true,
   "devDependencies": {

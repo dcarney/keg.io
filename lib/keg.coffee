@@ -9,6 +9,7 @@ sys         = require 'util'
 events      = require 'events'
 util        = require if process.binding('natives').util then 'util' else 'sys'
 KegTwitter  = require './keg.twitter'
+Untappd     = require './untappd.coffee'
 socketio    = require 'socket.io'
 http        = require 'http'
 moment      = require 'moment'
@@ -57,6 +58,9 @@ class Keg extends events.EventEmitter
       # Initialize the Twitter module, passing in all the necessary config
       # values (that represent our API keys)
       @kegTwit = new KegTwitter(@logger, config.twitter)
+      
+    if config? && config.untappd
+      @untappd = new Untappd(@logger, config.untappd)
 
   rebuildDb: (cb) =>
     console.log 'Rebuilding the keg.io DB...'

@@ -111,9 +111,29 @@ html lang: "en", ->
               alert 'Thanks for signing up!'
 
           return false
+          
+        untappdLookup = () ->
+          search= $('#untappd_user').val()
+          
+          $.ajax 
+            url:'/untappd/user/'+search
+            success: (response)->
+              if response.meta && response.meta.code == 500
+                $('.control-group.untappd').removeClass('success').addClass('warning')
+                $('.control-group.untappd span.help-inline').text('This was not a valid untappd user')
+              if response.uid
+                $('.control-group.untappd')
+                  .removeClass('warning')
+                  .addClass('success')
+                  .find('span.help-inline')
+                  .text("Valid untappd id:" + response.user_name)
+                $('.control-group.untappd').append('<img src="'+response.user_avatar+'"/>')
+            
+          return false
 
         $(document).ready ->
           $('#signup').click onSignup
+          $('#verifyUntappd').click untappdLookup
           return false
 
       form class: 'form-horizontal', ->
@@ -156,6 +176,21 @@ html lang: "en", ->
                 p class: "help-block", ->
                   a href:'https://twitter.com/keg_io', -> 'keg.io will mention you '
                   span -> 'in relevant tweets!'
+                  
+          div class: "control-group untappd", ->
+             label class: "control-label"
+             div class:"controls",->
+               div class:"input-append",->
+                span class:"add-on",->
+                  img src:"http://untappd.com/favicon.ico", style:"border-radius:5px"
+                input class:"span3", id:"untappd_user", placeholder:"type to search for Untappd user", type:"text"
+                button id:"verifyUntappd", class:"btn",->
+                  text "Check"
+                span class:"help-inline"
+                p class:"help-block",->
+                  a href:"http://untappd.com/", target:"_blank", -> "Untappd social drinking app, "
+                  text "keg.io will check you into brews at this keg"
+               
 
           div class: "control-group", ->
             label class: 'control-label'

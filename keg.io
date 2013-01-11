@@ -312,6 +312,8 @@ server.get '/users/:rfid?', (req, res, next) ->
     handleResponse err, result, req, res
 
 
+
+
 # ## UI: register a new user
 #   `POST /users`
 #
@@ -326,6 +328,7 @@ server.post '/users', (req, res, next) ->
         message: err
         responseCode: 400
     handleResponse err, valid, req, res
+	
 
 # ## UI: get info about all of a user's pours
 #   `GET /users/RFID/pours`
@@ -340,6 +343,14 @@ server.get '/users/:rfid/pours', (req, res, next) ->
   criteria = {rfid: req.params.rfid}
   criteria.limit = req.query['limit']
   keg.db.findPours criteria, (err, result) ->
+    handleResponse err, result, req, res
+
+
+# ## UI: validate untapp username
+#   `GET /untappd/user/:user`
+#
+server.get '/untappd/user/:user', (req, res, next) ->
+  keg.untappd.searchUser req.params.user, (err, result) ->
     handleResponse err, result, req, res
 
 # ## UI: get info about all coasters

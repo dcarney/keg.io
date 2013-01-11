@@ -309,7 +309,7 @@ $(document).ready(function(){
   // Get the list of available kegerators, populate the dropdown with them
   $.getJSON("/kegerators", function(kegerators) {
     _.each(kegerators, function(k) {
-      $('.dropdown-menu').append("<li><a id=" + k.kegerator_id + " href='#' onclick='javascript:return false;'>" + k.name + "</a></li>");
+      $('.nav .dropdown-menu').append("<li><a id=" + k.kegerator_id + " href='#' onclick='javascript:return false;'>" + k.name + "</a></li>");
     });
   }); // getJSON
 
