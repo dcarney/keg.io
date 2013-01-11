@@ -53,6 +53,7 @@ html lang: "en", ->
 
     script src: 'http://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js'
     script src: '../js/bootstrap.js'
+    script src: '../js/bootbox.min.js'
     script src: '../js/underscore-min.js'
     script src: '../js/moment.min.js'
     script src: '../js/jquery.color.js'
@@ -122,14 +123,27 @@ html lang: "en", ->
                 $('.control-group.untappd').removeClass('success').addClass('warning')
                 $('.control-group.untappd span.help-inline').text('This was not a valid untappd user')
               if response.uid
-                $('.control-group.untappd')
-                  .removeClass('warning')
-                  .addClass('success')
-                  .find('span.help-inline')
-                  .text("Valid untappd id:" + response.user_name)
-                $('.control-group.untappd').append('<img src="'+response.user_avatar+'"/>')
-            
+                untappdConfirm response
           return false
+          
+        untappdConfirm = (user) ->
+          bootbox.confirm 'Found user:' + user.user_name + '<br /><img src="'+user.user_avatar+'"/>' , (result) ->
+            if result==true
+              $('.control-group.untappd').removeClass('warning').addClass('success')
+              $('.control-group.untappd span.help-inline').text("Sucessfully mapped untappd user");
+              $('#untappd_user').val(user.user_name)
+            else
+              bootbox.prompt 'Try again?', (result) ->
+                if result != null
+                  $.ajax
+                    url:'/untappd/user/'+result
+                    success: (response) ->
+                      if response.uid
+                        untappdConfirm response
+                else
+                  $('.control-group.untappd').removeClass('success').addClass('warning')
+                  $('.control-group.untappd span.help-inline').text('Unsucessful untappd user lookup')
+                  $('#untappd_user').val('')
 
         $(document).ready ->
           $('#signup').click onSignup

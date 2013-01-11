@@ -48,6 +48,7 @@ html lang: "en", ->
 
     script src: 'http://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js'
     script src: '../js/bootstrap.js'
+    script src: '../js/bootbox.min.js'
     script src: '../js/underscore-min.js'
     script src: '../js/moment.min.js'
     script src: '../js/jquery.color.js'

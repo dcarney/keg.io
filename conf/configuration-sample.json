@@ -22,6 +22,12 @@
 		"access_token_key": "INSERT_VALUE_HERE",
 		"access_token_secret": "INSERT_VALUE_HERE"
 	},
+	
+	"untappd":{
+		"debug":true,
+		"client_id":"INSERT_UNTAPPD_CLIENT_ID",
+      "client_secret":"INSERT_UNTAPPD_CLIENT_SECRET" 
+	},
 
     /* Add 'username' and 'password' attributes if using mongo auth */
     "mongo": {
