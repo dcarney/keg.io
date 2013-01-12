@@ -12,6 +12,7 @@ class Keg
      @tapped_date
      @volume_gallons
      @active
-     @image_path} = db_obj
+     @image_path
+     @untappd_beer_id} = db_obj
 
 module.exports = Keg

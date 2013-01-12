@@ -34,7 +34,8 @@ class DbRebuild
       tapped_date: '2012-10-10T01:23:45Z'
       volume_gallons: '15.5'
       active: 'true'
-      image_path: 'universal-pale-ale.jpg')
+      image_path: 'universal-pale-ale.jpg'
+      untappd_beer_id:29958)
 
     kegs.push(
       keg_id: 2
@@ -46,7 +47,8 @@ class DbRebuild
       tapped_date: '2012-11-02T01:23:45Z'
       volume_gallons: '7.5'
       active: 'true'
-      image_path: 'rogers.jpg')
+      image_path: 'rogers.jpg'
+      untappd_beer_id:6962)
 
     users = []
     dc =
@@ -56,6 +58,7 @@ class DbRebuild
       nickname: 'Beardo'
       email: 'dcarney@gmail.com'
       twitter_handle:  '@_dcarney_'
+      untappd_username:''
       coasters: [0,1]
     users.push dc
 
@@ -66,6 +69,7 @@ class DbRebuild
       nickname: ''
       email: 'crcastle@gmail.com'
       twitter_handle:  '@crc'
+      untappd_username:''
       coasters: [0]
     users.push crc
 
@@ -76,6 +80,7 @@ class DbRebuild
       nickname: 'Anarchist Hacker'
       email: 'sreed@zulily.com'
       twitter_handle: ''
+      untappd_username:''
       coasters: []
       )
 
@@ -86,6 +91,7 @@ class DbRebuild
         nickname: ''
         email: 'c4krauss@gmail.com'
         twitter_handle:  '@unstdio'
+        untappd_username:''
         coasters: [])
 
     users.push(
@@ -94,7 +100,8 @@ class DbRebuild
         last_name: 'Patterson'
         nickname: ''
         email: 'garrett.patterson@vivaki.com'
-        twitter_handle:  '@thegarrettp'
+        twitter_handle:  '@punkassrookie'
+        untappd_username:'punkassrookie'
         coasters: [])
 
     pours = []

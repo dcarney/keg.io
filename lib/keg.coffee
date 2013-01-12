@@ -270,7 +270,12 @@ class Keg extends events.EventEmitter
       @models.Keg.findAll(query).success (kegs) =>
         kegs = (@models.mapAttribs(k) for k in kegs)
         for k in kegs
-          k.image_path = "#{@config.image_host}#{k.image_path}"
+          if k.untappd_beer_id > 0
+            k = @untappd.getBeer k.untappd_beer_id, (beer)=>
+              if beer
+                return k = beer
+          else
+            k.image_path = "#{@config.image_host}#{k.image_path}"
         cb(kegs)
 
   kegeratorUsers: (access_key, num_pours, cb) ->

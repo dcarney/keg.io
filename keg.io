@@ -16,6 +16,7 @@ socket_io 	= require 'socket.io'
 _           = require 'underscore'
 url         = require 'url'
 sys         = require 'util'
+Untappd     = require './lib/untappd.coffee'
 
 Keg 			  = require './lib/keg'
 middleware  = require './lib/middleware'
@@ -107,6 +108,7 @@ if process.env.KEGIO_MONGO_USERNAME? and process.env.KEGIO_MONGO_PASSWORD?
 
 keg = new Keg(logger, Config)
 db = new KegDb(Config.mongo)
+untappd = new Untappd(logger, Config.untappd)
 
 db.connect (err) =>
   if err?
@@ -293,7 +295,12 @@ server.get '/kegerators/:id/kegs', (req, res, next) ->
   criteria.limit = req.query['limit']
   criteria.active = req.query['active']
   keg.db.findKegs criteria, (err, result) ->
-    handleResponse err, result, req, res
+	async.forEach result, (item,callback) ->
+		logger.debug item
+		return callback
+	, (err,result,req,res)->
+		logger.debug "done"
+		return handleResponse err, result, req, res
 
 # ## UI: get info about all users
 #   `GET /users/RFID?`
