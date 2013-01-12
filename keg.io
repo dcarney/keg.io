@@ -295,12 +295,13 @@ server.get '/kegerators/:id/kegs', (req, res, next) ->
   criteria.limit = req.query['limit']
   criteria.active = req.query['active']
   keg.db.findKegs criteria, (err, result) ->
-	async.forEach result, (item,callback) ->
-		logger.debug item
-		return callback
-	, (err,result,req,res)->
-		logger.debug "done"
-		return handleResponse err, result, req, res
+    async.forEach result, (k,callback) ->
+      untappd.getBeer k.untappd_beer_id, (beer, callback) ->
+        k.image_path = beer.beer_label
+        k.beer_style = beer.beer_style
+        callback
+      , (err) ->
+      return handleResponse err, result, req, res
 
 # ## UI: get info about all users
 #   `GET /users/RFID?`
