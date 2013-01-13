@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>keg.io</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="">
+    <meta name="author" content="Garrett" >
+
+    <!-- Le styles -->
+    <link href="../css/bootstrap.css" rel="stylesheet">
+    <style type="text/css">
+      body {
+        padding-top: 60px;
+        padding-bottom: 40px;
+      }
+      .sidebar-nav {
+        padding: 9px 0;
+      }
+
+      #hero .lastname, #hero .location, #hero .rfid {
+        display: none;
+      }
+
+      .mini-card .tagline, .mini-card .user_coasters{
+      display: none;
+      }
+
+      #main-content {
+        background-color: #f5f5f5;
+        padding: 1em;
+        -webkit-border-radius: 5px;
+        -moz-border-radius: 5px;
+        border-radius: 5px;
+        margin: 0 20px;
+      }
+
+
+      .mini-card .bc-right{
+        width: auto;
+        height: auto;
+        float: right;
+      }
+
+      .user-info{
+        background-color: #efefef;
+        padding: 1em;
+        -webkit-border-radius: 5px;
+        -moz-border-radius: 5px;
+        border-radius: 5px;
+        margin: 10px 0px 10px 0px;
+      }
+
+      .names{
+        padding: 10px;
+        font-size: 18px;
+      }
+
+    </style>
+    <link href="../css/bootstrap-responsive.css" rel="stylesheet">
+    <link href="../css/style.css" rel="stylesheet">
+
+    <!-- Le HTML5 shim, for IE6-8 support of HTML5 elements -->
+    <!--[if lt IE 9]>
+      <script src="http://html5shim.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+
+    <!-- fonts -->
+    <link href='http://fonts.googleapis.com/css?family=Cabin+Sketch:bold' rel='stylesheet' type='text/css'>
+
+    <!-- Le fav and touch icons -->
+    <link rel="shortcut icon" href="favicon.ico">
+    <link rel="apple-touch-icon-precomposed" sizes="144x144" href="../ico/apple-touch-icon-144-precomposed.png">
+    <link rel="apple-touch-icon-precomposed" sizes="114x114" href="../ico/apple-touch-icon-114-precomposed.png">
+    <link rel="apple-touch-icon-precomposed" sizes="72x72" href="../ico/apple-touch-icon-72-precomposed.png">
+    <link rel="apple-touch-icon-precomposed" href="../ico/apple-touch-icon-57-precomposed.png">
+  </head>
+
+  <body>
+    <div class="navbar navbar-fixed-top">
+      <div class="navbar-inner">
+        <div class="container-fluid">
+          <a class="btn btn-navbar" data-toggle="collapse" data-target=".nav-collapse">
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+          </a>
+          <a class="home_link brand" href="/">keg.io</a>
+          <div class="nav-collapse">
+            <ul class="nav">
+              <li><a class="home_link" href="/">home</a></li>
+              <li class="active"><a class="home_link" href="/hardware.html">about</a></li>
+              <li><a href="https://github.com/dcarney/keg.io" target="_blank">github</a></li>
+              <li><a href="/signup">signup!</a></li>
+            </ul>
+          </div><!--/.nav-collapse -->
+        </div>
+      </div>
+    </div>
+    <div class="container-fluid">
+      <div class="row-fluid">
+        <div class="span3">
+          <div class="well sidebar-nav">
+            <ul id="kegerator_details" class="nav nav-list">
+              <li class="nav-header">About</li>
+              <li class="active"><a href="/hardware.html">Hardware</a></li>
+              <li><a href="team.html">Team</a></li>
+            </ul>
+          </div><!--/.well -->
+        </div><!--/span-->
+
+        <div id="main-content" class="span8 offset1">
+          <h1>Hardware V2</h1>
+          <br />
+          <p>
+          We are still deciding a few of the components for V2. Here is the list so far:
+          </p>
+          <p>
+            <h3>Microcontroller</h3>
+            <ul>
+              <li><strong><a href="http://www.sparkfun.com/products/11021">Arduino Uno - R3</a></strong></li>
+            <ul>
+              <li><u>Source:</u> <b><img src="http://www.sparkfun.com/favicon.ico" />SparkFun</b></li>
+            </ul>
+            </ul>
+          </p>
+          <p>
+            <h3>Communication</h3>
+            <ul>
+              <li><strong><a href="http://www.sparkfun.com/products/9954">WiFly Shield</a></strong></li>
+            <ul>
+              <li><u>Source:</u> <b><img src="http://www.sparkfun.com/favicon.ico" />SparkFun</b></li>
+            </ul>
+            </ul>
+          </p>
+          <p>
+            <h3>Temperature Sensor</h3>
+            <ul>
+              <li><strong><a href="http://www.sparkfun.com/products/245">One Wire Digital Temperature Sensor – DS18B20</a></strong></li>
+            <ul>
+              <li><u>Source:</u> <b><img src="http://www.sparkfun.com/favicon.ico" />SparkFun</b></li>
+            </ul>
+            </ul>
+          </p>
+          <p>
+            <h3>Liquid Flow Sensor</h3>
+            <ul>
+              <li><strong><a href="http://www.seeedstudio.com/depot/g12-water-flow-sensor-p-635.html">G1/2 Water Flow sensor</a></strong></li>
+            <ul>
+              <li><u>Source:</u> <b><img src="http://www.seeedstudio.com/favicon.ico" />Seeed Studio</b></li>
+            </ul>
+            </ul>
+          </p>
+          <p>
+            <h3>Electric Solenoid</h3>
+            <ul>
+              <li><strong>1/4" Electric Solenoid Valve 12-volt</strong></li>
+            <ul>
+              <li><u>Source:</u> <b><img src="http://www.ebay.com/favicon.ico" />eBay</b></li>
+            </ul>
+            </ul>
+          </p>
+          <p>
+            <h3>RFID Reader</h3>
+            <ul>
+              <li><strong><a href="http://www.sparkfun.com/products/8628">RFID Reader ID-20 (125 kHz)</a></strong></li>
+            <ul>
+              <li><u>Source:</u> <b><img src="http://www.sparkfun.com/favicon.ico" />SparkFun</b></li>
+            </ul>
+            </ul>
+          </p>
+          <p>
+            <h3><span class="brand">keg.io</span> Shield</h3>
+            <ul>
+              <li><strong>Custom <span class="brand">keg.io</span> Shield</strong></li>
+            <ul>
+              <li><u>Source:</u> <span class="brand">keg.io</span></li>
+            </ul>
+            </ul>
+          </p>
+          <br />
+          <hr />
+          <h1>Hardware V1</h1>
+          <br />
+          <p>This is a list of the hardware that was used in the first version of keg.io</p>
+          <p>
+            <h3>Kegerator</h3>
+            <ul>
+              <li><strong><a href="http://www.amazon.com/Nostalgia-KRS-2100-Refrigerated-Beverage-Dispenser/dp/B000HJVYDQ/ref=sr_1_3?ie=UTF8&qid=1306257637&sr=8-3">Nostalgia KRS-2100 Keg-O-Rator</a></strong></li>
+            <ul>
+              <li><u>Source:</u> <b><img src="http://www.amazon.com/favicon.ico" height="16" width="16"/>Amazon</b></li>
+            </ul>
+            </ul>
+          </p>
+          <p>
+            <h3>Microcontroller</h3>
+            <ul>
+              <li><strong><a href="http://www.sparkfun.com/products/666">Arduino Duemilanove</a></strong></li>
+            <ul>
+              <li><u>Source:</u> <b><img src="http://www.sparkfun.com/favicon.ico" />SparkFun</b></li>
+            </ul>
+            </ul>
+          </p>
+          <p>
+            <h3>Temperature Sensor</h3>
+            <ul>
+              <li><strong> <a href="http://www.sparkfun.com/products/245">One Wire Digital Temperature Sensor – DS18B20</a></strong></li>
+            <ul>
+              <li><u>Source:</u> <b><img src="http://www.sparkfun.com/favicon.ico" />SparkFun</b></li>
+            </ul>
+            </ul>
+          </p>
+          <p>
+            <h3>Liquid Flow Sensor</h3>
+            <ul>
+              <li><strong><a href="http://www.seeedstudio.com/depot/g12-water-flow-sensor-p-635.html">G1/2 Water Flow sensor</a></strong></li>
+            <ul>
+              <li><u>Source:</u> <b><img src="http://www.seeedstudio.com/favicon.ico" />Seeed Studio</b></li>
+            </ul>
+            </ul>
+          </p>
+          <p>
+            <h3>Electric Solenoid</h3>
+            <ul>
+              <li><strong>1/4" Electric Solenoid Valve 12-volt</strong></li>
+            <ul>
+              <li><u>Source:</u> <b><img src="http://www.ebay.com/favicon.ico" />eBay</b></li>
+            </ul>
+            </ul>
+          </p>
+          <p>
+            <h3>RFID Reader</h3>
+            <ul>
+              <li><strong><a href="http://www.parallax.com/tabid/768/ProductID/114/Default.aspx">Parallax RFID Card Reader Serial</a></strong></li>
+            <ul>
+              <li><u>Source:</u> <b><img src="http://www.ebay.com/favicon.ico" />eBay</b></li>
+            </ul>
+            </ul>
+          </p>
+        </div><!-- .span8 offset2 -->
+      </div>
+    </div>
+  <footer>
+  <hr>
+    <p>&copy; keg.io 2013</p>
+  </footer>
+
+  <!-- GA code -->
+  <script type="text/javascript">
+
+    var _gaq = _gaq || [];
+    _gaq.push(['_setAccount', 'UA-36037091-2']);
+    _gaq.push(['_trackPageview']);
+
+    (function() {
+      var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+      ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+      var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+    })();
+
+  </script>
+</body>
+</html>

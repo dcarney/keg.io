@@ -70,7 +70,7 @@ html lang: "en", ->
           a class: 'home_link brand', href: "/", "keg.io"
           div class: 'nav-collapse', ->
             ul class: 'nav', ->
-              li class: 'home_link active', ->
+              li class: 'home_link', ->
                 a href: "/", 'home'
               li class: 'dropdown', ->
                 a class: 'dropdown-toggle', "data-toggle": "dropdown", href: "#", ->
@@ -78,9 +78,11 @@ html lang: "en", ->
                   span class: 'caret'
                 ul class: 'dropdown-menu', ->
               li ->
-                a href: "http://keg.io", target: "_blank", "about"
+                a href: "/hardware.html", "about"
               li ->
                 a href: "https://github.com/dcarney/keg.io", target: "_blank", "github"
+              li class: 'active', ->
+                a href: '/signup', 'signup!'
           comment "/.nav-collapse"
     div ->
       coffeescript ->
@@ -107,7 +109,7 @@ html lang: "en", ->
               $('#first_name').val('')
               $('#last_name').val('')
               $('#twitter').val('')
-              alert 'Thanks for signing up!'
+              alert 'Thanks for signing up! Now select a kegerator from the top menu.'
 
           return false
 
