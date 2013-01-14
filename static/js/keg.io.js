@@ -64,11 +64,13 @@ var switchKegerator = function(kegeratorId) {
       $('#keg_details').append("<li class='divider'></li>");
       $('#keg_details').append("<li class='nav-header'>Keg</li>");
       $('#keg_details').append("<h3>" + keg.beer + ' ' + keg.beer_style + "</h3>");
-      $('#keg_details').append("<h3>" + keg.brewery + "</h3>");
+      $('#keg_details').append("<h3>" + keg.brewery + "</h3>"+(keg.brewery_location?'<p>'+keg.brewery_location+'</p>':''));
       $('#keg_details').append("<p>Tapped <span data-livestamp='" + keg.tapped_date + "'></span></p>");
       $('#keg_details').append("<p style='font-style:italic;'>" + keg.description + "</p>");
-      $('#keg_details').append("<img src='http://images.keg.io/" + keg.image_path + "'></img>");
-
+      $('#keg_details').append('<img src="'+(keg.image_path.indexOf("http")!=-1?keg.image_path:("http://images.keg.io/" + keg.image_path)) + '"></img>');
+	  if(keg.fromUntappd){
+	  	$('#keg_details').append('<br /><span class=""><img src="http://untappd.com/favicon.ico" />Additional beer data provided by Untappd</span>');
+	  }
      });  // getJSON
 
      // re-connect to the appropriate web socket

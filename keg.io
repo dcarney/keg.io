@@ -290,18 +290,31 @@ server.get '/kegerators/:id/pours', (req, res, next) ->
 #   where **N** is the number of temperatures to retrieve, in reverse
 #   chronological order
 #
-server.get '/kegerators/:id/kegs', (req, res, next) ->
-  criteria = {id: req.params.id}
-  criteria.limit = req.query['limit']
-  criteria.active = req.query['active']
-  keg.db.findKegs criteria, (err, result) ->
-	async.forEach result, (item,callback) ->
-		logger.debug item
-		return callback
-	, (err,result,req,res)->
-		logger.debug "done"
-		return handleResponse err, result, req, res
 
+server.get "/kegerators/:id/kegs", (req, res, next) ->
+  criteria = undefined
+  criteria = id: req.params.id
+  getUntappdBeer = (item, callback) ->
+    if item.untappd_beer_id > 0
+      untappd.getBeer item.untappd_beer_id, (beer) ->
+        logger.debug "got beer from UNTAPPD"
+        item.image_path = beer.beer_label
+        item.beer = beer.beer_name
+        item.beer_style = beer.beer_style
+        item.brewery = beer.brewery.brewery_name
+        item.description = beer.beer_description
+        item["brewery_location"] = beer.brewery.location.brewery_city + ", " + beer.brewery.location.brewery_state
+        item["fromUntappd"] = true
+        callback()
+
+    logger.debug "IN getUntappdBeer"
+
+  criteria.limit = req.query["limit"]
+  criteria.active = req.query["active"]
+  keg.db.findKegs criteria, (err, result) ->
+    async.forEach result, getUntappdBeer, (err) ->
+      handleResponse err, result, req, res
+      
 # ## UI: get info about all users
 #   `GET /users/RFID?`
 #
