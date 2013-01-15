@@ -26,7 +26,6 @@ class Untappd
     @untappd.beerInfo (err,obj)=>
       if obj.meta and obj.meta.code==200
         cb obj.response.beer
-        @logger.info obj.response.beer
       else
         cb null
     , beerid
