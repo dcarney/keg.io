@@ -331,7 +331,17 @@ server.get '/users/:rfid?', (req, res, next) ->
   keg.findUsers criteria, (err, result) ->
     handleResponse err, result, req, res
 
-
+server.get '/users/:rfid/untappd', (req,res,next) ->
+	apicode = req.query['code']
+	rfid = req.params.rfid
+	apiurl= 'http://untappd.com/oauth/authorize/?client_id='+Config.untappd.client_id+'&client_secret='+Config.untappd.client_secret+'&response_type=code&redirect_url=http://localhost:8081/users/'+rfid+'/untappd&code='+apicode
+	logger.log apiurl
+	http.get apiurl, (resauth) ->
+		if res.statusCode == 200
+			logger.log JSON.parse(resauth.responseText)
+			logger.log rfid+" auth key is : " + resauth.access_token
+			handleResponse null, true, req, res
+	
 
 
 # ## UI: register a new user

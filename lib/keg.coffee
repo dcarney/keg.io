@@ -217,7 +217,7 @@ class Keg extends events.EventEmitter
     return cb 'invalid RFID', null unless user?.rfid? and validHex.test user.rfid
     @db.insertObjects 'users', user, (err, result) =>
       return cb err, false if err?
-      cb null, true
+      cb null, user
 
   # cb= (err, result)
   findUser: (rfid, cb) =>

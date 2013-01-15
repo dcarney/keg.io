@@ -93,6 +93,7 @@ html lang: "en", ->
             first_name: $('#first_name').val()
             last_name: $('#last_name').val()
             twitter: $('#twitter').val()
+            untappd_username:$('#untappd_user').val()
 
           $.ajax
             type: 'POST'
@@ -104,6 +105,8 @@ html lang: "en", ->
               console.log "ERROR: #{jqxhr.status}"
               alert 'Hmmm...that didn\'t work.  Did you enter the correct RFID tag?'
             success: (response) ->
+              if response.untappd_username
+                authorizeUntappd(user)
               $('#email').val('')
               $('#rfid').val('')
               $('#first_name').val('')
@@ -125,6 +128,12 @@ html lang: "en", ->
               if response.uid
                 untappdConfirm response
           return false
+          
+        authorizeUntappd = (user) ->
+        	 #$('#authorizeUntappd').modal('show')
+        	 #$('#authorizeUntappd iframe').attr('src','https://untappd.com/oauth/authenticate/?client_id=CCB4D76D28137142C30DABB44E9B3F3ECD2654D8&client_secret=5C8A258F1799389A874C997922F8B7C96086EE79&response_type=token&redirect_url=http://localhost:8081/signup');
+        	 window.open 'https://untappd.com/oauth/authenticate/?client_id=CCB4D76D28137142C30DABB44E9B3F3ECD2654D8&client_secret=5C8A258F1799389A874C997922F8B7C96086EE79&response_type=code&redirect_url=http://localhost:8081/users/'+user.rfid+'/untappd&code=COD', 'untappd'
+        	 
           
         untappdConfirm = (user) ->
           bootbox.confirm 'Found user:' + user.user_name + '<br /><img src="'+user.user_avatar+'"/>' , (result) ->
@@ -148,6 +157,7 @@ html lang: "en", ->
         $(document).ready ->
           $('#signup').click onSignup
           $('#verifyUntappd').click untappdLookup
+          $('#linkUntappd').click authorizeUntappd
           return false
 
       form class: 'form-horizontal', ->
@@ -204,9 +214,13 @@ html lang: "en", ->
                 p class:"help-block",->
                   a href:"http://untappd.com/", target:"_blank", -> "Untappd social drinking app, "
                   text "keg.io will check you into brews at this keg"
-               
 
-          div class: "control-group", ->
-            label class: 'control-label'
-            div class: 'controls', ->
-              button id:'signup', type: 'button', class:'btn btn-success', 'Sign up!'
+         div class: "control-group untappd", ->
+            label class: "control-label"
+            div class:"controls",->
+            	button id:'linkUntappd', type: 'button', class:'btn', '<img src="http://untappd.com/favicon.ico" /> Link Untappd'
+			
+			div class: "control-group", ->
+           label class: 'control-label'
+           div class: 'controls', ->
+             button id:'signup', type: 'button', class:'btn btn-success', 'Sign up!'
