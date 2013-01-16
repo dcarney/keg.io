@@ -89,6 +89,7 @@ class KegDb
 
   # cb = (err, entity)
   handleFindOne: (cb, err, entity) ->
+    console.log "handleFindOne:"+entity
     return cb err if err?
     return cb() unless entity?
     cb null, entity
@@ -113,7 +114,7 @@ class KegDb
   findKeg: (kegId, cb) =>
     @getCollection 'kegs', (err, collection) =>
       return cb err, null if err?
-      collection.findOne {kegId: kegId}, {}, (err, entity) =>
+      collection.findOne {keg_id: kegId}, {}, (err, entity) =>
         @handleFindOne cb, err, entity
 
   # cb = (err, kegs)
