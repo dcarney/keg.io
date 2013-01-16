@@ -5,7 +5,7 @@ crypto      = require 'crypto'
 #
 class User
   constructor: (db_obj) ->
-    {@rfid, @first_name, @last_name, @nickname, @email, @twitter_handle, @untappd_username, @coasters} = db_obj
+    {@rfid, @first_name, @last_name, @nickname, @email, @twitter_handle, @untappd_username, @coasters, @tokens} = db_obj
 
   # gets a name appropriate for displaying on Twitter: if the user has no
   # Twitter handle, a combination of name and nickname is used

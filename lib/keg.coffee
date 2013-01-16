@@ -198,6 +198,13 @@ class Keg extends events.EventEmitter
             @kegTwit.tweetPour user, parseInt(volume, 10)
           else if @kegTwit?
             @kegTwit.tweet "Whoa, someone just poured themselves a beer!"
+            
+          @logger.info "checkin to untappd?"+user.tokens.untappd
+          @untappd.userCheckin null, null
+          if user.tokens.untappd
+            @db.findKeg pour.keg_id, (beer,user)->
+              @untappd.userCheckin user, beer
+            
 
           cb null, true
 
@@ -218,6 +225,13 @@ class Keg extends events.EventEmitter
     @db.insertObjects 'users', user, (err, result) =>
       return cb err, false if err?
       cb null, user
+      
+  setUserToken:(rfid, token, value, cb)->
+    @logger.log rfid + ","+ token+","+ value
+    @db.update 'users', {"rfid":rfid}, {$set:{tokens:{ token : value } } }, (err, result) ->
+      return cb err, false if err?
+      cb null, "<html><body>Close this thing<scr" + "ipt>window.close()</scr" + "ipt></body></html>"
+    #@db.update 'users', {rfid: user.rfid}, {$set: {coasters: user.coasters}}, () ->
 
   # cb= (err, result)
   findUser: (rfid, cb) =>

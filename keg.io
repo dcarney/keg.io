@@ -7,6 +7,7 @@ exec        = require('child_process').exec
 express     = require 'express'
 fs          = require 'fs'
 http        = require 'http'
+https		= require 'https'
 log4js      = require 'log4js'
 moment      = require 'moment'
 OptParse    = require 'optparse'
@@ -334,13 +335,25 @@ server.get '/users/:rfid?', (req, res, next) ->
 server.get '/users/:rfid/untappd', (req,res,next) ->
 	apicode = req.query['code']
 	rfid = req.params.rfid
-	apiurl= 'http://untappd.com/oauth/authorize/?client_id='+Config.untappd.client_id+'&client_secret='+Config.untappd.client_secret+'&response_type=code&redirect_url=http://localhost:8081/users/'+rfid+'/untappd&code='+apicode
+	apiurl= 'https://untappd.com/oauth/authorize/?client_id='+Config.untappd.client_id+'&client_secret='+Config.untappd.client_secret+'&response_type=code&redirect_url=http://localhost:8081/users/'+rfid+'/untappd&code='+apicode
 	logger.log apiurl
-	http.get apiurl, (resauth) ->
-		if res.statusCode == 200
-			logger.log JSON.parse(resauth.responseText)
-			logger.log rfid+" auth key is : " + resauth.access_token
-			handleResponse null, true, req, res
+	#http.get apiurl, (resauth) ->
+	#  console.log sys.inspect resauth
+	apireq = https.get(apiurl, (apires) ->
+	  pageData = ""
+	  apires.setEncoding "utf8"
+	  apires.on "data", (chunk) ->
+	    pageData += chunk
+	
+	  apires.on "end", ->
+	    #resdata = JSON.parse pageData
+	    console.log pageData
+	    resdata = JSON.parse(pageData.replace("response","result"))
+	    keg.setUserToken rfid, "untappd", resdata.result.access_token, (isset) ->
+	      console.log resdata
+	      handleResponse null, isset, req, res
+	
+	)
 	
 
 

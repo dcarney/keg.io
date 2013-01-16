@@ -59,6 +59,7 @@ class DbRebuild
       email: 'dcarney@gmail.com'
       twitter_handle:  '@_dcarney_'
       untappd_username:''
+      tokens:{"untappd":""}
       coasters: [0,1]
     users.push dc
 
@@ -70,6 +71,7 @@ class DbRebuild
       email: 'crcastle@gmail.com'
       twitter_handle:  '@crc'
       untappd_username:''
+      tokens:{"untappd":""}
       coasters: [0]
     users.push crc
 
@@ -81,6 +83,7 @@ class DbRebuild
       email: 'sreed@zulily.com'
       twitter_handle: ''
       untappd_username:''
+      tokens:{"untappd":""}
       coasters: []
       )
 
@@ -92,6 +95,7 @@ class DbRebuild
         email: 'c4krauss@gmail.com'
         twitter_handle:  '@unstdio'
         untappd_username:''
+        tokens:{"untappd":""}
         coasters: [])
 
     users.push(
@@ -102,6 +106,7 @@ class DbRebuild
         email: 'garrett.patterson@vivaki.com'
         twitter_handle:  '@punkassrookie'
         untappd_username:'punkassrookie'
+        tokens:{"untappd":""}
         coasters: [])
 
     pours = []
