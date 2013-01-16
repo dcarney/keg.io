@@ -34,8 +34,11 @@ class Untappd
   userCheckin:(user,beer) ->
     @logger.info "beer checkin"
     @untappd.setAccessToken(user.tokens.untappd)
-    @untappd.checkin (->
-      @logger.info "Untappd API Checkin"
-    ), "-8","PST",beer.untappd_beer_id,null,null,null,"From http://www.keg.io",null,null,null,null,null
+    #(callback,gmt_offset,timezone,beer_id,foursquare_id,user_lat,user_long,comment,rating,facebook,twitter,foursqaure,gowalla)
+    @untappd.checkin ((err,res)->
+      console.log "err:"+err
+      console.log res
+      console.log "Untappd API Checkin"
+    ), -8,"PST",beer.untappd_beer_id,null,null,null,"From http://www.keg.io",null,null,false,false,false
 
 module.exports = Untappd

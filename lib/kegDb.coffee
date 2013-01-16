@@ -89,7 +89,6 @@ class KegDb
 
   # cb = (err, entity)
   handleFindOne: (cb, err, entity) ->
-    console.log "handleFindOne:"+entity
     return cb err if err?
     return cb() unless entity?
     cb null, entity

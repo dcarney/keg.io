@@ -54,7 +54,7 @@
     "ntwitter": "0.3.1",
     "string-signer": "https://github.com/crcastle/nodejs-string-signer/tarball/master",
     "underscore": "*",
-    "node-untappd":"*"
+    "node-untappd":"https://github.com/garrettpatterson/node-untappd"
   },
   "noAnalyze": true,
   "devDependencies": {

@@ -195,14 +195,15 @@ class Keg extends events.EventEmitter
 
           # Tweet about it, whydoncha
           if !err and user? and @kegTwit?
-            @kegTwit.tweetPour user, parseInt(volume, 10)
+            @db.findKeg pour.keg_id, (err,beer)=>
+              @kegTwit.tweetPour user, parseInt(volume, 10), beer
           else if @kegTwit?
             @kegTwit.tweet "Whoa, someone just poured themselves a beer!"
             
           @logger.info "checkin to untappd?"+user.tokens.untappd
-          @untappd.userCheckin null, null
+          #untappd.userCheckin null, null
           if user.tokens.untappd
-            @db.findKeg pour.keg_id, (beer,user)->
+            @db.findKeg pour.keg_id, (err,beer)=>
               @untappd.userCheckin user, beer
             
 
@@ -228,7 +229,8 @@ class Keg extends events.EventEmitter
       
   setUserToken:(rfid, token, value, cb)->
     @logger.log rfid + ","+ token+","+ value
-    @db.update 'users', {"rfid":rfid}, {$set:{tokens:{ token : value } } }, (err, result) ->
+    update_str = '{"$set":{"tokens":{"'+ token+ '":"'+value+'" } } }'
+    @db.update 'users', {"rfid":rfid}, JSON.parse(update_str), (err, result) ->
       return cb err, false if err?
       cb null, "<html><body>Close this thing<scr" + "ipt>window.close()</scr" + "ipt></body></html>"
     #@db.update 'users', {rfid: user.rfid}, {$set: {coasters: user.coasters}}, () ->
