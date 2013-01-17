@@ -132,8 +132,13 @@ html lang: "en", ->
         authorizeUntappd = (user) ->
         	 #$('#authorizeUntappd').modal('show')
         	 #$('#authorizeUntappd iframe').attr('src','https://untappd.com/oauth/authenticate/?client_id=CCB4D76D28137142C30DABB44E9B3F3ECD2654D8&client_secret=5C8A258F1799389A874C997922F8B7C96086EE79&response_type=token&redirect_url=http://localhost:8081/signup');
-        	 window.open 'https://untappd.com/oauth/authenticate/?client_id=CCB4D76D28137142C30DABB44E9B3F3ECD2654D8&client_secret=5C8A258F1799389A874C997922F8B7C96086EE79&response_type=code&redirect_url=http://localhost:8081/users/'+user.rfid+'/untappd&code=COD', 'untappd'
+        	 authurl = 'https://untappd.com/oauth/authenticate/?client_id=CCB4D76D28137142C30DABB44E9B3F3ECD2654D8&client_secret=5C8A258F1799389A874C997922F8B7C96086EE79&response_type=code&redirect_url=http://localhost:8081/users/'+user.rfid+'/untappd&code=COD'
+        	 #window.open authurl , 'untappd'
+        	 bootbox.confirm '<h2>Link keg.io to Untappd <img src="http://untappd.com/favicon.ico" />\
+        	 <iframe src="'+authurl+' width="550" height="800" />"
+        	 '
         	 
+       
           
         untappdConfirm = (user) ->
           bootbox.confirm 'Found user:' + user.user_name + '<br /><img src="'+user.user_avatar+'"/>' , (result) ->

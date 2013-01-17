@@ -335,7 +335,8 @@ server.get '/users/:rfid?', (req, res, next) ->
 server.get '/users/:rfid/untappd', (req,res,next) ->
 	apicode = req.query['code']
 	rfid = req.params.rfid
-	apiurl= 'https://untappd.com/oauth/authorize/?client_id='+Config.untappd.client_id+'&client_secret='+Config.untappd.client_secret+'&response_type=code&redirect_url=http://localhost:8081/users/'+rfid+'/untappd&code='+apicode
+	#apiurl= untappd.getUserAuthenticationURL('http://localhost:8081/users/'+rfid+'/untappd&code='+apicode)
+	apiurl = 'https://untappd.com/oauth/authorize/?client_id='+Config.untappd.client_id+'&client_secret='+Config.untappd.client_secret+'&response_type=code&redirect_url=http://localhost:8081/users/'+rfid+'/untappd&code='+apicode
 	logger.log apiurl
 	#http.get apiurl, (resauth) ->
 	#  console.log sys.inspect resauth
