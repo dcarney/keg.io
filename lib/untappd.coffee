@@ -34,7 +34,7 @@ class Untappd
     , beerid
 
 
-  userCheckin:(user,pour,beer) ->
+  userCheckin:(user,pour,beer) =>
     @logger.info "beer checkin"
     message = pour.volume_ounces + 'oz pour, from http://www.keg.io'
     comment = "just poured another "+ pour.volume_ounces + "oz..."
@@ -49,10 +49,11 @@ class Untappd
         console.log "checkin beer id:" + res.response.checkins.items[0].beer.bid
         console.log "current beer:" + beer.untappd_beer_id
         console.log "now:" + moment()
-        console.log "checkin:"+ moment(res.response.checkins.items[0].created_at)
+        console.log "checkin:"+ res.response.checkins.items[0].created_at + "," + moment(res.response.checkins.items[0].created_at)
         console.log (moment(res.response.checkins.items[0].created_at).diff(moment(),'hours'))
+        console.log moment().diff(moment(res.response.checkins.items[0].created_at),'hours') + ">?" +  @checkin_delay_hours 
         #return
-        if res.response.checkins.count > 0 and beer.untappd_beer_id is res.response.checkins.items[0].beer.bid and (moment(res.response.checkins.items[0].created_at).diff(moment(),'hours')) <@checkin_delay_hours
+        if res.response.checkins.count > 0 and beer.untappd_beer_id is res.response.checkins.items[0].beer.bid and (moment().diff(moment(res.response.checkins.items[0].created_at),'hours')) <@checkin_delay_hours
           console.log "do untappd comment?" + @checkin_comment
           if @checkin_comment
             console.log "untappd comment"
