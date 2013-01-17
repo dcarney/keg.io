@@ -134,9 +134,14 @@ html lang: "en", ->
         	 #$('#authorizeUntappd iframe').attr('src','https://untappd.com/oauth/authenticate/?client_id=CCB4D76D28137142C30DABB44E9B3F3ECD2654D8&client_secret=5C8A258F1799389A874C997922F8B7C96086EE79&response_type=token&redirect_url=http://localhost:8081/signup');
         	 authurl = 'https://untappd.com/oauth/authenticate/?client_id=CCB4D76D28137142C30DABB44E9B3F3ECD2654D8&client_secret=5C8A258F1799389A874C997922F8B7C96086EE79&response_type=code&redirect_url=http://localhost:8081/users/'+user.rfid+'/untappd&code=COD'
         	 #window.open authurl , 'untappd'
-        	 bootbox.confirm '<h2>Link keg.io to Untappd <img src="http://untappd.com/favicon.ico" />\
-        	 <iframe src="'+authurl+' width="550" height="800" />"
-        	 '
+        	 bootbox.confirm '<h2>Link keg.io to Untappd <img src="http://untappd.com/favicon.ico" /><iframe id="untappdFrame" src="'+authurl+' style="width:550;height:800;margin:0;padding:0;" width="550" height="800" />"', (result)->
+        	   console.log result
+    	     boo = window.setInterval( (boo)->
+    	       if document.getElementById("untappdFrame").contentDocument
+    	         bootbox.hideAll()
+    	         window.clearInterval(boo)
+    	       
+    	     , 1000)
         	 
        
           
