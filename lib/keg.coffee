@@ -202,9 +202,9 @@ class Keg extends events.EventEmitter
             
           @logger.info "checkin to untappd?"+user.tokens.untappd
           #untappd.userCheckin null, null
-          if user.tokens.untappd
+          if @config.untappd.enabled and user.tokens.untappd
             @db.findKeg pour.keg_id, (err,beer)=>
-              @untappd.userCheckin user, beer
+              @untappd.userCheckin user, pour, beer
             
 
           cb null, true

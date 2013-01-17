@@ -25,6 +25,9 @@
 	
 	"untappd":{
 		"debug":true,
+		"enabled":false,
+		"checkin_delay_hours":8,
+		"checkin_comment":false,
 		"client_id":"INSERT_UNTAPPD_CLIENT_ID",
       "client_secret":"INSERT_UNTAPPD_CLIENT_SECRET" 
 	},
