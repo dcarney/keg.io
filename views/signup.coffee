@@ -146,7 +146,8 @@ html lang: "en", ->
         
         authorizeUntappd = (user) ->
           if user.untappd_enabled is false
-            bootbox.confirm 'Thank you for signing up!  Unfortunately Untappd is not turned on for this service'
+            bootbox.confirm 'Thank you for signing up!  Unfortunately Untappd is not enabled at this time'
+            $('.control-group.untappd').hide();
             return true
         	 #$('#authorizeUntappd').modal('show')
         	 #$('#authorizeUntappd iframe').attr('src','https://untappd.com/oauth/authenticate/?client_id=CCB4D76D28137142C30DABB44E9B3F3ECD2654D8&client_secret=5C8A258F1799389A874C997922F8B7C96086EE79&response_type=token&redirect_url=http://localhost:8081/signup');

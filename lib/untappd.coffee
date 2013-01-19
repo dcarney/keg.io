@@ -30,9 +30,9 @@ class Untappd
     @logger.info "lookup beerID:"+beerid
     @untappd.beerInfo (err,obj)=>
       if obj.meta and obj.meta.code==200
-        cb obj.response.beer
+        cb null, obj.response.beer
       else
-        cb null
+        cb obj, null
     , beerid
 
   getAuthenticationURL: (host, rfid)->

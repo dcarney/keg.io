@@ -59,7 +59,7 @@ class Keg extends events.EventEmitter
       # values (that represent our API keys)
       @kegTwit = new KegTwitter(@logger, config.twitter)
       
-    if config? && config.untappd
+    if config? && config.untappd && config.untappd.enabled
       @untappd = new Untappd(@logger, config.untappd)
 
   rebuildDb: (cb) =>
@@ -200,9 +200,9 @@ class Keg extends events.EventEmitter
           else if @kegTwit?
             @kegTwit.tweet "Whoa, someone just poured themselves a beer!"
             
-          @logger.info "checkin to untappd?"+user.tokens.untappd
+          #@logger.info "checkin to untappd?"+user.tokens.untappd
           #untappd.userCheckin null, null
-          if @config.untappd.enabled and user.tokens.untappd
+          if @config.untappd.enabled and user.tokens and user.tokens.untappd
             @db.findKeg pour.keg_id, (err,beer)=>
               @untappd.userCheckin user, pour, beer
             

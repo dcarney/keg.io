@@ -89,7 +89,7 @@ class FakeKegerator
       when 4 then userRFID = "DENYTAG544"  # deny user
       #when 4 then userRFID = "AA1234F"     #new untappd drinker guy
     #3935B649CA769C435696624A23D59B5E8315B427
-    #userRFID='440055F873'
+    #userRFID='AA1231F'
     console.log 'fake pour!!!!!!'
     # send API request
     kegioAPI.scan(userRFID).get (err, result) =>

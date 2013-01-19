@@ -297,23 +297,28 @@ server.get "/kegerators/:id/kegs", (req, res, next) ->
   criteria = id: req.params.id
   getUntappdBeer = (item, callback) ->
     if item.untappd_beer_id > 0
-      untappd.getBeer item.untappd_beer_id, (beer) ->
-        logger.debug "got beer from UNTAPPD"
-        item.image_path = beer.beer_label
-        item.beer = beer.beer_name
-        item.beer_style = beer.beer_style
-        item.brewery = beer.brewery.brewery_name
-        item.description = beer.beer_description
-        item["brewery_location"] = beer.brewery.location.brewery_city + ", " + beer.brewery.location.brewery_state
-        item["fromUntappd"] = true
-        callback()
+      untappd.getBeer item.untappd_beer_id, (err,beer) ->
+        if beer and not err
+          logger.debug "got beer from UNTAPPD"
+          item.image_path = beer.beer_label
+          item.beer = beer.beer_name
+          item.beer_style = beer.beer_style
+          item.brewery = beer.brewery.brewery_name
+          item.description = beer.beer_description
+          item["brewery_location"] = beer.brewery.location.brewery_city + ", " + beer.brewery.location.brewery_state
+          item["fromUntappd"] = true
+          callback()
+        else
+	       callback(err)
 
-    logger.debug "IN getUntappdBeer"
+
 
   criteria.limit = req.query["limit"]
   criteria.active = req.query["active"]
-  keg.db.findKegs criteria, (err, result) ->
+  keg.db.findKegs criteria, (err, result) =>
     async.forEach result, getUntappdBeer, (err) ->
+      if err
+        return handleResponse null,result,req,res
       handleResponse err, result, req, res
       
 # ## UI: get info about all users
