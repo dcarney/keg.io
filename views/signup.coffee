@@ -36,9 +36,29 @@ html lang: "en", ->
             legend {
               margin-left: 40px;
             }
+            
+            #untappd-modal .modal-body{
+              max-height: 600px;
+            }
+            
+            #untappd-modal {
+              width: 600px;
+              text-align: center;
+              margin: -320px 0 0 -280px;
+            }
+            
+            #untappd-modal .modal-body .label {
+              font-size: 1.2em;
+              
+            }
+            
+            #untappd-modal iframe{
+              border: 0;
+            }
       """
     link href: "../css/bootstrap-responsive.css", rel: "stylesheet"
     link href: "../css/style.css", rel: "stylesheet"
+    link href: '../css/bootstrap-toggle-buttons.css', rel: "stylesheet"
     comment "Le HTML5 shim, for IE6-8 support of HTML5 elements"
     ie "lt IE 9", ->
       script src: "http://html5shim.googlecode.com/svn/trunk/html5.js"
@@ -58,6 +78,7 @@ html lang: "en", ->
     script src: '../js/moment.min.js'
     script src: '../js/jquery.color.js'
     script src: '../js/jquery.quicksand.js'
+    script src: '../js/jquery.toggle.buttons.js'
     script src: '/socket.io/socket.io.js'
     script src: '../js/keg.io.js'
 
@@ -93,7 +114,7 @@ html lang: "en", ->
             first_name: $('#first_name').val()
             last_name: $('#last_name').val()
             twitter: $('#twitter').val()
-            untappd_username:$('#untappd_user').val()
+            link_untappd:$('#authUntappd').attr('checked')
 
           $.ajax
             type: 'POST'
@@ -105,70 +126,62 @@ html lang: "en", ->
               console.log "ERROR: #{jqxhr.status}"
               alert 'Hmmm...that didn\'t work.  Did you enter the correct RFID tag?'
             success: (response) ->
-              if response.untappd_username
-                authorizeUntappd(user)
+              if response.link_untappd
+                $('#linkUntappd').removeAttr("disabled").removeClass('disabled')
+                authorizeUntappd(response)
+              else
+                bootbox.alert 'Thanks for signing up!'
               $('#email').val('')
               $('#rfid').val('')
               $('#first_name').val('')
               $('#last_name').val('')
               $('#twitter').val('')
-              alert 'Thanks for signing up!'
+              $('.untappd .toggle-button').toggleButtons('setState',false)
+              #alert 'Thanks for signing up!'
 
           return false
           
-        untappdLookup = () ->
-          search= $('#untappd_user').val()
-          
-          $.ajax 
-            url:'/untappd/user/'+search
-            success: (response)->
-              if response.meta && response.meta.code == 500
-                $('.control-group.untappd').removeClass('success').addClass('warning')
-                $('.control-group.untappd span.help-inline').text('This was not a valid untappd user')
-              if response.uid
-                untappdConfirm response
-          return false
-          
+         
+        window.modalChecker =null
+        
         authorizeUntappd = (user) ->
+          if user.untappd_enabled is false
+            bootbox.confirm 'Thank you for signing up!  Unfortunately Untappd is not turned on for this service'
+            return true
         	 #$('#authorizeUntappd').modal('show')
         	 #$('#authorizeUntappd iframe').attr('src','https://untappd.com/oauth/authenticate/?client_id=CCB4D76D28137142C30DABB44E9B3F3ECD2654D8&client_secret=5C8A258F1799389A874C997922F8B7C96086EE79&response_type=token&redirect_url=http://localhost:8081/signup');
-        	 authurl = 'https://untappd.com/oauth/authenticate/?client_id=CCB4D76D28137142C30DABB44E9B3F3ECD2654D8&client_secret=5C8A258F1799389A874C997922F8B7C96086EE79&response_type=code&redirect_url=http://localhost:8081/users/'+user.rfid+'/untappd&code=COD'
+        	 #           http://untappd.com/oauth/authenticate/?client_id="+id+"&response_type=token&redirect_url="+returnRedirectionURL;
+        	 #authurl = 'https://untappd.com/oauth/authenticate/?client_id=CCB4D76D28137142C30DABB44E9B3F3ECD2654D8&client_secret=5C8A258F1799389A874C997922F8B7C96086EE79&response_type=code&redirect_url=http://localhost:8081/users/'+user.rfid+'/untappd&code=COD'
+        	 authurl = user.untappd_auth_url
         	 #window.open authurl , 'untappd'
-        	 bootbox.confirm '<h2>Link keg.io to Untappd <img src="http://untappd.com/favicon.ico" /><iframe id="untappdFrame" src="'+authurl+' style="width:550;height:800;margin:0;padding:0;" width="550" height="800" />"', (result)->
-        	   console.log result
-    	     boo = window.setInterval( (boo)->
-    	       if document.getElementById("untappdFrame").contentDocument
-    	         bootbox.hideAll()
-    	         window.clearInterval(boo)
+        	 #bootbox.confirm '<h2>Link keg.io to Untappd <img src="http://untappd.com/favicon.ico" /><iframe id="untappdFrame" src="'+authurl+' style="width:550;height:800;margin:0;padding:0;" width="550" height="800" />"', (result)->
+        	   #console.log result
+        	 $('#untappd-modal').modal('show').find('iframe').attr('src',authurl)
+    	     window.modalChecker = window.setInterval( ()->
+    	       if document.getElementById("untappd-frame").contentDocument
+    	         window.clearInterval(window.modalChecker)
+    	         $('#untappd-frame').hide()
+    	         $('#untappd-modal .modal-body').remove('div.well').append('<div class="well"><h1>Sucessfully Authorized Untappd</h1></div>')
+    	         window.setTimeout ()->
+    	           $('#untappd-modal').modal('hide')
+    	           $('#linkUntappd').attr('disabled','disabled').addClass('disabled')
+    	         ,3000
     	       
     	     , 1000)
         	 
        
-          
-        untappdConfirm = (user) ->
-          bootbox.confirm 'Found user:' + user.user_name + '<br /><img src="'+user.user_avatar+'"/>' , (result) ->
-            if result==true
-              $('.control-group.untappd').removeClass('warning').addClass('success')
-              $('.control-group.untappd span.help-inline').text("Sucessfully mapped untappd user");
-              $('#untappd_user').val(user.user_name)
-            else
-              bootbox.prompt 'Try again?', (result) ->
-                if result != null
-                  $.ajax
-                    url:'/untappd/user/'+result
-                    success: (response) ->
-                      if response.uid
-                        untappdConfirm response
-                else
-                  $('.control-group.untappd').removeClass('success').addClass('warning')
-                  $('.control-group.untappd span.help-inline').text('Unsucessful untappd user lookup')
-                  $('#untappd_user').val('')
-
         $(document).ready ->
           $('#signup').click onSignup
-          $('#verifyUntappd').click untappdLookup
           $('#linkUntappd').click authorizeUntappd
+          $('.toggle-button').toggleButtons({"style":{"enabled":"warning"}})
           return false
+          
+      div id:'untappd-modal', class:'modal hide fade', role:'dialog',->
+        div class:'modal-header',->
+          button type:'button',class:'close','data-dismiss':'modal', 'aria-hidden':'true',->'x'
+          h3 ->'Authorize Untappd'
+        div class:'modal-body',->
+          iframe id:'untappd-frame', style:"width:550;height:550;margin:0;padding:0;", width:"550",height:"550" 
 
       form class: 'form-horizontal', ->
         fieldset ->
@@ -210,27 +223,21 @@ html lang: "en", ->
                 p class: "help-block", ->
                   a href:'https://twitter.com/keg_io', -> 'keg.io will mention you '
                   span -> 'in relevant tweets!'
-                  
-          div class: "control-group untappd", ->
-             label class: "control-label"
-             div class:"controls",->
-               div class:"input-append",->
-                span class:"add-on",->
-                  img src:"http://untappd.com/favicon.ico", style:"border-radius:5px"
-                input class:"span3", id:"untappd_user", placeholder:"type to search for Untappd user", type:"text"
-                button id:"verifyUntappd", class:"btn",->
-                  text "Check"
-                span class:"help-inline"
+
+           div class: "control-group untappd", ->
+              label class: "control-label"
+              div class:"controls",->
+                label -> 'Link my account to Untappd (you will be prompted to authorize keg.io after sucessful registration)'
+                div class:'toggle-button',->
+                  input id:'authUntappd', type:'checkbox', value:'on'
+                button id:'linkUntappd', type: 'button', disabled:'disabled',class:'btn disabled', -> 
+                  img src:"http://untappd.com/favicon.ico"
+                  text 'Link Untappd'
                 p class:"help-block",->
                   a href:"http://untappd.com/", target:"_blank", -> "Untappd social drinking app, "
                   text "keg.io will check you into brews at this keg"
-
-         div class: "control-group untappd", ->
-            label class: "control-label"
-            div class:"controls",->
-            	button id:'linkUntappd', type: 'button', class:'btn', '<img src="http://untappd.com/favicon.ico" /> Link Untappd'
 			
-			div class: "control-group", ->
-           label class: 'control-label'
-           div class: 'controls', ->
-             button id:'signup', type: 'button', class:'btn btn-success', 'Sign up!'
+      			div class: "control-group", ->
+                 label class: 'control-label'
+                 div class: 'controls', ->
+                   button id:'signup', type: 'button', class:'btn btn-success', 'Sign up!'

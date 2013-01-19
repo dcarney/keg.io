@@ -335,9 +335,9 @@ server.get '/users/:rfid?', (req, res, next) ->
 server.get '/users/:rfid/untappd', (req,res,next) ->
 	apicode = req.query['code']
 	rfid = req.params.rfid
-	#apiurl= untappd.getUserAuthenticationURL('http://localhost:8081/users/'+rfid+'/untappd&code='+apicode)
-	apiurl = 'https://untappd.com/oauth/authorize/?client_id='+Config.untappd.client_id+'&client_secret='+Config.untappd.client_secret+'&response_type=code&redirect_url=http://localhost:8081/users/'+rfid+'/untappd&code='+apicode
-	logger.log apiurl
+	apiurl = untappd.getAuthorizationURL(req.headers.host,rfid,apicode)
+	        
+	#logger.log apiurl
 	#http.get apiurl, (resauth) ->
 	#  console.log sys.inspect resauth
 	apireq = https.get(apiurl, (apires) ->
@@ -347,8 +347,7 @@ server.get '/users/:rfid/untappd', (req,res,next) ->
 	    pageData += chunk
 	
 	  apires.on "end", ->
-	    #resdata = JSON.parse pageData
-	    console.log pageData
+		#untappd json comes back with circular parser error convert response to result
 	    resdata = JSON.parse(pageData.replace("response","result"))
 	    keg.setUserToken rfid, "untappd", resdata.result.access_token, (isset) ->
 	      console.log resdata
@@ -366,7 +365,7 @@ server.get '/users/:rfid/untappd', (req,res,next) ->
 server.post '/users', (req, res, next) ->
   return handleResponse 'No user data defined', '', req, res unless req.body?
   user = req.body
-  keg.addUser user, (err, valid) ->
+  keg.addUser req, user, (err, valid) ->
     if err? and err == 'invalid RFID'
       err =
         message: err

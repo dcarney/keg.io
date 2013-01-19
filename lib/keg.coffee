@@ -220,11 +220,22 @@ class Keg extends events.EventEmitter
       cb null, true
 
   # cb = (err, savedToDb)
-  addUser: (user, cb) ->
+  addUser: (req, user, cb) ->
     validHex = /^(?:[A-F]|[0-9]){6,12}$/;
     return cb 'invalid RFID', null unless user?.rfid? and validHex.test user.rfid
+    link_untappd = user.link_untappd
+    if user.link_untappd
+      delete user.link_untappd
     @db.insertObjects 'users', user, (err, result) =>
       return cb err, false if err?
+      if link_untappd
+        user.link_untappd = true
+        if @untappd
+          user.untappd_enabled = true
+          user.untappd_auth_url = @untappd.getAuthenticationURL(req.headers.host, user.rfid)
+        else
+          user.untappd_enabled = false
+        #maybe send the authURL for untappd instead?
       cb null, user
       
   setUserToken:(rfid, token, value, cb)->

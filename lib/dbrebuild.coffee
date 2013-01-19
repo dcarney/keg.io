@@ -58,7 +58,6 @@ class DbRebuild
       nickname: 'Beardo'
       email: 'dcarney@gmail.com'
       twitter_handle:  '@_dcarney_'
-      untappd_username:''
       tokens:{"untappd":""}
       coasters: [0,1]
     users.push dc
@@ -70,7 +69,6 @@ class DbRebuild
       nickname: ''
       email: 'crcastle@gmail.com'
       twitter_handle:  '@crc'
-      untappd_username:''
       tokens:{"untappd":""}
       coasters: [0]
     users.push crc
@@ -82,7 +80,6 @@ class DbRebuild
       nickname: 'Anarchist Hacker'
       email: 'sreed@zulily.com'
       twitter_handle: ''
-      untappd_username:''
       tokens:{"untappd":""}
       coasters: []
       )
@@ -94,7 +91,6 @@ class DbRebuild
         nickname: ''
         email: 'c4krauss@gmail.com'
         twitter_handle:  '@unstdio'
-        untappd_username:''
         tokens:{"untappd":""}
         coasters: [])
 
@@ -105,7 +101,6 @@ class DbRebuild
         nickname: ''
         email: 'garrett.patterson@vivaki.com'
         twitter_handle:  '@punkassrookie'
-        untappd_username:'punkassrookie'
         tokens:{"untappd":""}
         coasters: [])
 
