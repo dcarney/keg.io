@@ -524,6 +524,15 @@ server.get '/signup', (req, res) ->
   user =
     role: 'admin'
   res.render 'signup', {user: user, layout: 'layout'}
+  
+auth = express.basicAuth((user,pass,cb)->
+  result = (keys[user] == pass);
+  cb null, result
+
+)
+
+server.get '/admin', auth, (req,res)->
+  res.render 'admin', {keg:"1111",layout:'layout'}
 
 ###
 server.use (req, res, next) ->
