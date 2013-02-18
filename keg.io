@@ -5,6 +5,7 @@ async       = require 'async'
 coffeecup   = require 'coffeecup'
 exec        = require('child_process').exec
 express     = require 'express'
+partials    = require 'express-partials'
 fs          = require 'fs'
 http        = require 'http'
 https		= require 'https'
@@ -35,6 +36,8 @@ defaultConfigPath = 'conf/configuration.json'
 # parse the given config file, stripping out C-style comments
 parseConfig = (configFilePath) ->
   JSON.parse(fs.readFileSync(configFilePath).toString().replace(new RegExp("\\/\\*(.|\\r|\\n)*?\\*\\/", "g"), ""))
+
+#partials.register('.coffee',require('coffeecup').render)
 
 Options =
   rebuild: false
@@ -157,11 +160,12 @@ server = express()
 server.use express.logger('dev')
 
 # setup coffeekup
+
 server.set 'view engine', 'coffee'
 server.engine '.coffee', coffeecup.__express
 server.set 'views', "#{__dirname}/views"
-server.set "view options", { layout: false }
-
+server.set "view options", { layout: 'layout' }
+#server.use partials
 # create the http server, load up our middleware stack, start listening
 server.use express.favicon(__dirname + '/static/favicon.ico', {maxAge: 2592000000})
 server.use express.static(__dirname + '/static')  # static file handling
@@ -169,6 +173,7 @@ server.use express.query() # parse query string
 server.use middleware.path() # parse url path
 server.use express.bodyParser()                   # parse request bodies
 server.use server.router
+
 
 # can be used with/without handleResponse
 handleError = (err, req, res) ->
