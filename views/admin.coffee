@@ -39,6 +39,7 @@ html lang: "en", ->
       script src: "http://html5shim.googlecode.com/svn/trunk/html5.js"
     link href: "http://fonts.googleapis.com/css?family=Cabin+Sketch:bold", rel: "stylesheet", type: "text/css"
     link href: "/css/jquery.dataTables.css", rel:"stylesheet", type:"text/css"
+    link href:"/css/DT_bootstrap.css", rel:"stylesheet",type:"text/css"
     link href: "/css/bootstrapSwitch.css", rel:"stylesheet",type:"text/css"
     comment "Le fav and touch icons"
     link rel: "shortcut icon", href: "favicon.ico"
@@ -48,7 +49,7 @@ html lang: "en", ->
     link rel: "apple-touch-icon-precomposed", href: "../ico/apple-touch-icon-57-precomposed.png"
 
 
-    script src: 'http://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js'
+    script src: 'http://ajax.googleapis.com/ajax/libs/jquery/1.9.0/jquery.min.js'
     script src: '../js/bootstrap.js'
     script src: '../js/bootbox.min.js'
     script src: '/js/bootstrapSwitch.js'
@@ -57,6 +58,7 @@ html lang: "en", ->
     script src: '../js/jquery.color.js'
     script src: '../js/jquery.quicksand.js'
     script src: '../js/jquery.dataTables.min.js'
+    script src: '/js/DT_bootstrap.js'
     script src: '/socket.io/socket.io.js'
     script src: '../js/keg.io.js'
 
@@ -95,11 +97,9 @@ html lang: "en", ->
               a href:'/admin/users', 'users'  
         
         
-        div class:'span10 well',->
+        div class:'span14 well',->
           text 'this is admin'
-          div class:'switch switch-mini', 'data-off':'warning', ->
-            input type:'checkbox'
-          table id:'user_table', class:"table",->
+          table id:'user_table', class:"table table-striped table-bordered",->
             thead ->
               tr ->
                 th 'rfid'
@@ -139,13 +139,22 @@ html lang: "en", ->
                mData:"twitter_handle"
              ,
               mData: "tokens.untappd"
+              sDefaultContent:""
+              fnCreatedCell: (td,d) ->
+                #$(td).append('
+                #$switch = $(td).append('<div class="switch switch-mini" data-on="warning" data-off=""><input value="untappd" type="checkbox" '+ (if d and d isnt "" then 'checked="checked"' else '') + ' ></div>')
+                $(td).find('div.switch').bootstrapSwitch();  
               mRender: (d) ->
                 #(if d or d isnt "" then true else false)
-                '<div class="switch switch-mini"><input value="untappd" type="checkbox" '+ (if d or d isnt "" then 'checked="checked"' else '') + ' ></div>'
+                '<div class="switch switch-mini" data-on="warning" data-off=""><input value="untappd" type="checkbox" '+ (if d and d isnt "" then 'checked="checked"' else '') + ' ></div>'
+                   
              ,
               mRender:()->
                 '<button class="btn"><i class="icon-edit"></i></button>'
              ]
+             fnDrawCallback:()->
+               #$('#user_table div.switch').bootstrapSwitch();
+               
            #$.each users, (i, user)->
              
              #$('#user_table').append('<tr><td>'+ user.first_name + '</td></tr>')
