@@ -38,6 +38,8 @@ html lang: "en", ->
     ie "lt IE 9", ->
       script src: "http://html5shim.googlecode.com/svn/trunk/html5.js"
     link href: "http://fonts.googleapis.com/css?family=Cabin+Sketch:bold", rel: "stylesheet", type: "text/css"
+    link href: "/css/jquery.dataTables.css", rel:"stylesheet", type:"text/css"
+    link href: "/css/bootstrapSwitch.css", rel:"stylesheet",type:"text/css"
     comment "Le fav and touch icons"
     link rel: "shortcut icon", href: "favicon.ico"
     link rel: "apple-touch-icon-precomposed", sizes: "144x144", href: "../ico/apple-touch-icon-144-precomposed.png"
@@ -49,6 +51,7 @@ html lang: "en", ->
     script src: 'http://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js'
     script src: '../js/bootstrap.js'
     script src: '../js/bootbox.min.js'
+    script src: '/js/bootstrapSwitch.js'
     script src: '../js/underscore-min.js'
     script src: '../js/moment.min.js'
     script src: '../js/jquery.color.js'
@@ -84,7 +87,7 @@ html lang: "en", ->
           comment "/.nav-collapse"
     div class:'container-fluid',->
       div class:'row',->
-        div class:'span3 well',->
+        div class:'span2 well',->
           ul class:'nav nav-list',->
             li ->
               a href:'/admin/kegs', 'kegs'
@@ -92,27 +95,42 @@ html lang: "en", ->
               a href:'/admin/users', 'users'  
         
         
-        div class:'span9 well',->
+        div class:'span10 well',->
           text 'this is admin'
-          table id:'user_table',->
+          div class:'switch switch-mini', 'data-off':'warning', ->
+            input type:'checkbox'
+          table id:'user_table', class:"table",->
             thead ->
               tr ->
-                th
-            tbody ->
+                th 'rfid'
+                th 'first_name'
+                th 'last_name'
+                th 'email'
+                th 'twitter_handle'
+                th 'untappd'
+                th ''
+            tbody class:'dataTable' , ->
               tr ->
-                td
+                td ''
+                td ''
+                td ''
+                td ''
+                td ''
+                td ''
+                td ''
           
     coffeescript ->
       $(document).ready ->
          $.get '/users', (users) ->
-           $('#user_table').dataTable ->
+           $('#user_table').dataTable
              aaData:users
+             sAjaxDataProp:""
              aoColumns:[
-               mData:'rfid'
-               sTitle:"RFID"
+               'mData':'rfid'
+               #sTitle:"RFID"
              ,
                mData:'first_name'
-               sTitle:"name"
+               #sTitle:"name"
              ,
                mData:"last_name"
              ,
@@ -122,7 +140,11 @@ html lang: "en", ->
              ,
               mData: "tokens.untappd"
               mRender: (d) ->
-                (if d or d isnt "" then true else false)
+                #(if d or d isnt "" then true else false)
+                '<div class="switch switch-mini"><input value="untappd" type="checkbox" '+ (if d or d isnt "" then 'checked="checked"' else '') + ' ></div>'
+             ,
+              mRender:()->
+                '<button class="btn"><i class="icon-edit"></i></button>'
              ]
            #$.each users, (i, user)->
              
