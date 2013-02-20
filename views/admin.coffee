@@ -92,9 +92,9 @@ html lang: "en", ->
         div class:'span2 well',->
           ul class:'nav nav-list',->
             li ->
-              a href:'/admin/kegs', 'kegs'
+              a href:'#kegs', 'kegs'
             li ->
-              a href:'/admin/users', 'users'  
+              a href:'#users', 'users'  
         
         
         div class:'span14 well',->
@@ -118,7 +118,13 @@ html lang: "en", ->
                 td ''
                 td ''
                 td ''
-          
+                
+      div id:'untappd-modal', class:'modal hide fade', role:'dialog',->
+        div class:'modal-header',->
+          button type:'button',class:'close','data-dismiss':'modal', 'aria-hidden':'true',->'x'
+          h3 ->'Authorize Untappd'
+        div class:'modal-body',->
+          iframe id:'untappd-frame', style:"width:550;height:550;margin:0;padding:0;", width:"550",height:"550" 
     coffeescript ->
       $(document).ready ->
          $.get '/users', (users) ->
@@ -140,10 +146,17 @@ html lang: "en", ->
              ,
               mData: "tokens.untappd"
               sDefaultContent:""
-              fnCreatedCell: (td,d) ->
+              fnCreatedCell: (td,d, oData) ->
                 #$(td).append('
                 #$switch = $(td).append('<div class="switch switch-mini" data-on="warning" data-off=""><input value="untappd" type="checkbox" '+ (if d and d isnt "" then 'checked="checked"' else '') + ' ></div>')
-                $(td).find('div.switch').bootstrapSwitch();  
+                $switch = $(td).find('div.switch').bootstrapSwitch()
+                $(td).find('div.switch').on 'switch-change', (e,data) ->
+                  #$(this).bootstrapSwitch 'setState', false
+                  $.get '/users/' +   oData.rfid + '/authurl/untappd', (res) ->
+                    authorizeUntappd (
+                      untappd_enabled:true
+                      untappd_auth_url:res.authurl
+                      )
               mRender: (d) ->
                 #(if d or d isnt "" then true else false)
                 '<div class="switch switch-mini" data-on="warning" data-off=""><input value="untappd" type="checkbox" '+ (if d and d isnt "" then 'checked="checked"' else '') + ' ></div>'
@@ -158,5 +171,36 @@ html lang: "en", ->
            #$.each users, (i, user)->
              
              #$('#user_table').append('<tr><td>'+ user.first_name + '</td></tr>')
-           
+        window.modalChecker =null
+        
+        authorizeUntappd = (user) ->
+          if user.untappd_enabled is false
+            bootbox.confirm 'Thank you for signing up!  Unfortunately Untappd is not enabled at this time'
+            $('.control-group.untappd').hide();
+            return true
+           #$('#authorizeUntappd').modal('show')
+           #$('#authorizeUntappd iframe').attr('src','https://untappd.com/oauth/authenticate/?client_id=CCB4D76D28137142C30DABB44E9B3F3ECD2654D8&client_secret=5C8A258F1799389A874C997922F8B7C96086EE79&response_type=token&redirect_url=http://localhost:8081/signup');
+           #           http://untappd.com/oauth/authenticate/?client_id="+id+"&response_type=token&redirect_url="+returnRedirectionURL;
+           #authurl = 'https://untappd.com/oauth/authenticate/?client_id=CCB4D76D28137142C30DABB44E9B3F3ECD2654D8&client_secret=5C8A258F1799389A874C997922F8B7C96086EE79&response_type=code&redirect_url=http://localhost:8081/users/'+user.rfid+'/untappd&code=COD'
+           authurl = user.untappd_auth_url
+           #window.open authurl , 'untappd'
+           #bootbox.confirm '<h2>Link keg.io to Untappd <img src="http://untappd.com/favicon.ico" /><iframe id="untappdFrame" src="'+authurl+' style="width:550;height:800;margin:0;padding:0;" width="550" height="800" />"', (result)->
+             #console.log result
+           $('#untappd-modal').modal('show').find('iframe').attr('src',authurl)
+           window.modalChecker = window.setInterval( ()->
+             if document.getElementById("untappd-frame").contentDocument
+               window.clearInterval(window.modalChecker)
+               $('#untappd-frame').hide()
+               #this logs out user that just linked accounts
+               img = new Image 1,1
+               img.src = 'http://untappd.com/logout'
+               document.body.appendChild img
+               #need to not destroy the content as we'll want to re-use
+               $('#untappd-modal .modal-body').remove('div.well').append('<div class="well"><h1>Sucessfully Authorized Untappd</h1></div>')
+               window.setTimeout ()->
+                 $('#untappd-modal').modal('hide')
+                 $('#linkUntappd').attr('disabled','disabled').addClass('disabled')
+               ,3000
+             
+           , 1000)
       

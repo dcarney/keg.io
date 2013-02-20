@@ -342,6 +342,10 @@ server.get '/users/:rfid?', (req, res, next) ->
   keg.findUsers criteria, (err, result) ->
     handleResponse err, result, req, res
 
+server.get '/users/:rfid/authurl/untappd', (req, res, next) ->
+    authurl = untappd.getAuthenticationURL(req.headers.host, req.params.rfid)
+    handleResponse null, {'authurl':authurl}, req,res
+
 server.get '/users/:rfid/untappd', (req,res,next) ->
 	apicode = req.query['code']
 	rfid = req.params.rfid
