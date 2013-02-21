@@ -31,6 +31,25 @@ html lang: "en", ->
               height: auto;
               float: right;
             }
+            
+                        #untappd-modal .modal-body{
+              max-height: 600px;
+            }
+            
+            #untappd-modal {
+              width: 600px;
+              text-align: center;
+              /*margin: -320px 0 0 -280px;*/
+            }
+            
+            #untappd-modal .modal-body .label {
+              font-size: 1.2em;
+              
+            }
+            
+            #untappd-modal iframe{
+              border: 0;
+            }
       """
     link href: "../css/bootstrap-responsive.css", rel: "stylesheet"
     link href: "../css/style.css", rel: "stylesheet"
@@ -187,7 +206,7 @@ html lang: "en", ->
                     #  text "keg.io will check you into brews at this keg"
         div class:'modal-footer', ->
           button class:'btn', 'data-dismiss':'modal', 'aria-hidden':'true', -> 'Cancel'
-          button class:'btn btn-success', -> 'Update User'
+          button id:'update_user_btn', class:'btn btn-success', -> 'Update User'
                # div class: "control-group", ->
                 #     label class: 'control-label'
                 #     div class: 'controls', ->
@@ -195,9 +214,12 @@ html lang: "en", ->
                        
     coffeescript ->
       $(document).ready ->
-         $.get '/users', (users) ->
+           $('#update_user_btn').click updateUser
+         #$.get '/users', (users) ->
            $('#user_table').dataTable
-             aaData:users
+             #aaData:users
+             bProcessing:true
+             sAjaxSource:'/users'
              sAjaxDataProp:""
              aoColumns:[
                'mData':'rfid'
@@ -252,17 +274,42 @@ html lang: "en", ->
           for k of user
             $('#'+ k).val(user[k]);
           $('#twitter').val(user.twitter_handle.replace('@',''));
-          if user.tokens.untappd and user.tokens.untappd isnt ""
-            $('#authUntappd').attr("checked","checked")
-            $('#user_form .switch').bootstrapSwitch('setState',true);
-          else
-            $('#authUntappd').removeAttr('checked');
-            $('#user_form .switch').bootstrapSwitch('setState',false);
+
           $('#user_form').modal('show')
         
         window.modalChecker =null
         
+        updateUser = ()->
+          user =
+            email: $('#email').val()
+            rfid: $('#rfid').val()
+            first_name: $('#first_name').val()
+            last_name: $('#last_name').val()
+            twitter_handle: '@' + $('#twitter').val()
+            link_untappd:$('#authUntappd').attr('checked')
+            
+          $.ajax
+            type: 'PUT'
+            url: '/users/'+user.rfid
+            data: JSON.stringify user
+            contentType: 'application/json'
+            dataType: "json"
+            error: (jqxhr) ->
+              console.log "ERROR: #{jqxhr.status}"
+              alert 'Hmmm...that didn\'t work.  Did you enter the correct RFID tag?'
+            success: (response) ->
+              $('#user_form').modal('hide')
+              
+
+
+        logoutUntappd = ()->
+          img = new Image 1,1
+          img.src = 'http://untappd.com/logout?'+Math.random()
+          document.body.appendChild img
+        
         authorizeUntappd = (user) ->
+          #make sure we're logged out since this is an all-user admin
+          logoutUntappd
           if user.untappd_enabled is false
             bootbox.confirm 'Thank you for signing up!  Unfortunately Untappd is not enabled at this time'
             $('.control-group.untappd').hide();
@@ -282,9 +329,7 @@ html lang: "en", ->
                window.clearInterval(window.modalChecker)
                $('#untappd-frame').hide()
                #this logs out user that just linked accounts
-               img = new Image 1,1
-               img.src = 'http://untappd.com/logout'
-               document.body.appendChild img
+               logoutUntappd
                #need to not destroy the content as we'll want to re-use
                $('#untappd-modal .modal-body .success').show();
                $('#untappd-modal .modal-body iframe').hide();

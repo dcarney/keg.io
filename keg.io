@@ -388,7 +388,7 @@ server.post '/users', (req, res, next) ->
 	
 server.put '/users/:rfid', (req, res, next) ->
   return handleResponse 'No user data defined','', req, res unless req.body?
-  if req.body and req.body.rfid inst req.params.rfid
+  if req.body and req.body.rfid != req.params.rfid
     handleResponse 'User does not match the one you wish to update','',req,res
   user = req.body
   keg.updateUser req, user, (err, valid)->
