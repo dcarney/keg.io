@@ -219,7 +219,13 @@ class Keg extends events.EventEmitter
       @emit 'temp', kegerator_id, temp
       cb null, true
 
+  updateUser:(req,user,cb)->
+    @logger.log "Update user:"+ user.rfid
+    @db.update 'users', {rfid: user.rfid}, {$set: user }, (err, result) =>
+      return cb err, false if err?
+      cb null, true
   # cb = (err, savedToDb)
+  
   addUser: (req, user, cb) ->
     validHex = /^(?:[A-F]|[0-9]){6,12}$/;
     return cb 'invalid RFID', null unless user?.rfid? and validHex.test user.rfid

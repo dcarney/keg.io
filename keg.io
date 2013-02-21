@@ -386,6 +386,14 @@ server.post '/users', (req, res, next) ->
         responseCode: 400
     handleResponse err, valid, req, res
 	
+server.put '/users/:rfid', (req, res, next) ->
+  return handleResponse 'No user data defined','', req, res unless req.body?
+  if req.body and req.body.rfid inst req.params.rfid
+    handleResponse 'User does not match the one you wish to update','',req,res
+  user = req.body
+  keg.updateUser req, user, (err, valid)->
+    handleResponse err, valid, req, res
+  
 
 # ## UI: get info about all of a user's pours
 #   `GET /users/RFID/pours`

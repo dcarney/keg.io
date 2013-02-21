@@ -125,6 +125,74 @@ html lang: "en", ->
           h3 ->'Authorize Untappd'
         div class:'modal-body',->
           iframe id:'untappd-frame', style:"width:550;height:550;margin:0;padding:0;", width:"550",height:"550" 
+          div class:"well success", style:"display:none;", ->
+            h1 'Sucessfully Authorized Untappd'
+      div id:'user_form', class:'modal hide', role:'dialog',->
+        div class:'modal-header',->
+          button type:'button',class:'close','data-dismiss':'modal', 'aria-hidden':'true',->'x'
+          h3 ->'Edit User'
+        div class:'modal-body',->
+          form class: 'form-horizontal', ->
+            fieldset ->
+   
+              div class: "control-group", ->
+                label class: "control-label", 'RFID'
+                div class: "controls", ->
+                  input id: 'rfid', type:"text", placeholder:"RFID tag #", class: "input-xlarge"
+                  p class: "help-block", 'This was given to you along with your RFID tag'
+    
+              div class: "control-group", ->
+                label class: "control-label", for:"input01", 'First Name'
+                div class: "controls", ->
+                  input id:'first_name', type:"text", placeholder:"first name", class: "input-xlarge"
+                  p class: "help-block"
+    
+              div class: "control-group", ->
+                label class: "control-label", for: "input01", 'Last Name'
+                div class: "controls", ->
+                  input id:'last_name',  type:"text", placeholder:"last name", class: "input-xlarge"
+                  p class: "help-block"
+    
+              div class: "control-group", ->
+                label class: "control-label", for:"input01", 'Email'
+                div class: "controls", ->
+                  input id:'email', type:"text", placeholder:"email", class: "input-xlarge"
+                  p class: "help-block", ->
+                    span ->'This is only used to display your keg.io'
+                    a href:'http://en.gravatar.com/', -> ' gravatar'
+    
+              div class: "control-group", ->
+                label class: "control-label", 'Twitter Username'
+                div class: "controls", ->
+                  div class: "input-prepend", ->
+                    span class: "add-on", '@'
+                    input id:'twitter', class: "span2", placeholder: "twitter username",  type:"text"
+                    #p class: "help-block", ->
+                     # a href:'https://twitter.com/keg_io', -> 'keg.io will mention you '
+                     # span -> 'in relevant tweets!'
+    
+               div class: "control-group untappd", ->
+                  label class: "control-label", ->
+                    text 'Untappd'
+                    img src:'http://untappd.com/favicon.ico'
+                  div class:"controls",->
+                    #label -> 'Link my account to Untappd (you will be prompted to authorize keg.io after sucessful registration)'
+                    div class:'switch switch-small', 'data-on':'warning', 'data-off':' ', ->
+                      input id:'authUntappd', type:'checkbox', value:'on'
+                    #button id:'linkUntappd', type: 'button', disabled:'disabled',class:'btn disabled', -> 
+                    #  img src:"http://untappd.com/favicon.ico"
+                     # text 'Link Untappd'
+                   # p class:"help-block",->
+                   #   a href:"http://untappd.com/", target:"_blank", -> "Untappd social drinking app, "
+                    #  text "keg.io will check you into brews at this keg"
+        div class:'modal-footer', ->
+          button class:'btn', 'data-dismiss':'modal', 'aria-hidden':'true', -> 'Cancel'
+          button class:'btn btn-success', -> 'Update User'
+               # div class: "control-group", ->
+                #     label class: 'control-label'
+                #     div class: 'controls', ->
+                 #      button id:'signup', type: 'button', class:'btn btn-success', 'Sign up!'
+                       
     coffeescript ->
       $(document).ready ->
          $.get '/users', (users) ->
@@ -164,6 +232,9 @@ html lang: "en", ->
              ,
               mRender:()->
                 '<button class="btn"><i class="icon-edit"></i></button>'
+              fnCreatedCell:(td,d,oData) ->
+                $(td).find('button').click () ->
+                  modalEdit oData
              ]
              fnDrawCallback:()->
                #$('#user_table div.switch').bootstrapSwitch();
@@ -171,6 +242,21 @@ html lang: "en", ->
            #$.each users, (i, user)->
              
              #$('#user_table').append('<tr><td>'+ user.first_name + '</td></tr>')
+        
+        
+  
+        modalEdit = (user) ->
+          for k of user
+            $('#'+ k).val(user[k]);
+          $('#twitter').val(user.twitter_handle.replace('@',''));
+          if user.tokens.untappd and user.tokens.untappd isnt ""
+            $('#authUntappd').attr("checked","checked")
+            $('#user_form .switch').bootstrapSwitch('setState',true);
+          else
+            $('#authUntappd').removeAttr('checked');
+            $('#user_form .switch').bootstrapSwitch('setState',false);
+          $('#user_form').modal('show')
+        
         window.modalChecker =null
         
         authorizeUntappd = (user) ->
@@ -186,7 +272,8 @@ html lang: "en", ->
            #window.open authurl , 'untappd'
            #bootbox.confirm '<h2>Link keg.io to Untappd <img src="http://untappd.com/favicon.ico" /><iframe id="untappdFrame" src="'+authurl+' style="width:550;height:800;margin:0;padding:0;" width="550" height="800" />"', (result)->
              #console.log result
-           $('#untappd-modal').modal('show').find('iframe').attr('src',authurl)
+           $('#untappd-modal').modal('show').find('iframe').show().attr('src',authurl)
+           $('#untappd-modal .modal-body .success').hide();
            window.modalChecker = window.setInterval( ()->
              if document.getElementById("untappd-frame").contentDocument
                window.clearInterval(window.modalChecker)
@@ -196,7 +283,9 @@ html lang: "en", ->
                img.src = 'http://untappd.com/logout'
                document.body.appendChild img
                #need to not destroy the content as we'll want to re-use
-               $('#untappd-modal .modal-body').remove('div.well').append('<div class="well"><h1>Sucessfully Authorized Untappd</h1></div>')
+               $('#untappd-modal .modal-body .success').show();
+               $('#untappd-modal .modal-body iframe').hide();
+               #$('#untappd-modal .modal-body').remove('div.well').append('<div class="well" id="untappd_success"><h1>Sucessfully Authorized Untappd</h1></div>')
                window.setTimeout ()->
                  $('#untappd-modal').modal('hide')
                  $('#linkUntappd').attr('disabled','disabled').addClass('disabled')
