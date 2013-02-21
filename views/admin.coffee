@@ -171,14 +171,14 @@ html lang: "en", ->
                      # a href:'https://twitter.com/keg_io', -> 'keg.io will mention you '
                      # span -> 'in relevant tweets!'
     
-               div class: "control-group untappd", ->
-                  label class: "control-label", ->
-                    text 'Untappd'
-                    img src:'http://untappd.com/favicon.ico'
-                  div class:"controls",->
+            #   div class: "control-group untappd", ->
+             #     label class: "control-label", ->
+            #        text 'Untappd'
+            #        img src:'http://untappd.com/favicon.ico'
+            #      div class:"controls",->
                     #label -> 'Link my account to Untappd (you will be prompted to authorize keg.io after sucessful registration)'
-                    div class:'switch switch-small', 'data-on':'warning', 'data-off':' ', ->
-                      input id:'authUntappd', type:'checkbox', value:'on'
+            #        div class:'switch switch-small', 'data-on':'warning', 'data-off':' ', ->
+           #           input id:'authUntappd', type:'checkbox', value:'on'
                     #button id:'linkUntappd', type: 'button', disabled:'disabled',class:'btn disabled', -> 
                     #  img src:"http://untappd.com/favicon.ico"
                      # text 'Link Untappd'
@@ -220,11 +220,14 @@ html lang: "en", ->
                 $switch = $(td).find('div.switch').bootstrapSwitch()
                 $(td).find('div.switch').on 'switch-change', (e,data) ->
                   #$(this).bootstrapSwitch 'setState', false
-                  $.get '/users/' +   oData.rfid + '/authurl/untappd', (res) ->
-                    authorizeUntappd (
-                      untappd_enabled:true
-                      untappd_auth_url:res.authurl
-                      )
+                  if data.value is true
+                    $.get '/users/' +   oData.rfid + '/authurl/untappd', (res) ->
+                      authorizeUntappd (
+                        untappd_enabled:true
+                        untappd_auth_url:res.authurl
+                        )
+                  else
+                    #send untappd clear token
               mRender: (d) ->
                 #(if d or d isnt "" then true else false)
                 '<div class="switch switch-mini" data-on="warning" data-off=""><input value="untappd" type="checkbox" '+ (if d and d isnt "" then 'checked="checked"' else '') + ' ></div>'
