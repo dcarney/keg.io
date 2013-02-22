@@ -34,6 +34,18 @@ class Untappd
       else
         cb obj, null
     , beerid
+    
+  searchBeer:(term, cb)->
+    @logger.info "searching untappd for:" + term
+    @untappd.searchBeer (err, obj)=>
+      if obj.meta and obj.meta.code ==200
+        cb null, obj.response
+      else
+        cb
+          message: obj.meta.error_detail
+        , null
+    , term
+    , 'name'
 
   getAuthenticationURL: (host, rfid)->
     url = 'http://'+host+'/users/'+rfid+'/untappd'

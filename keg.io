@@ -297,6 +297,13 @@ server.get '/kegerators/:id/pours', (req, res, next) ->
 #   chronological order
 #
 
+server.put "/kegerators/:id/kegs/:keg_id", (req,res,next)->
+  if req.body and req.body.keg_id != req.params.keg_id
+    handleResponse 'Invalid request', '', req, res
+  thekeg = req.body
+  keg.updateKeg req, thekeg, (err,valid)->
+    handleResponse err, valid, req, res  
+
 server.get "/kegerators/:id/kegs", (req, res, next) ->
   criteria = undefined
   criteria = id: req.params.id
@@ -326,12 +333,7 @@ server.get "/kegerators/:id/kegs", (req, res, next) ->
         return handleResponse null,result,req,res
       handleResponse err, result, req, res
 
-server.put "/kegerators/:id/kegs/:keg_id", (req,res,next)->
-  #if req.body and req.body.keg_id != req.params.id
-  #  handleResponse 'Invalid request', '', req, res
-  thekeg = res.body
-  keg.updateKeg req, thekeg, (err,valid)->
-    handleResponse err, valid, req, res   
+ 
 # ## UI: get info about all users
 #   `GET /users/RFID?`
 #
@@ -430,6 +432,11 @@ server.get '/users/:rfid/pours', (req, res, next) ->
 server.get '/untappd/user/:user', (req, res, next) ->
   keg.untappd.searchUser req.params.user, (err, result) ->
     handleResponse err, result, req, res
+    
+server.get '/untappd/search/beer?', (req, res, next)->
+  keg.untappd.searchBeer req.query['beer'], (err, result)->
+    beers = [] or result.beers
+    handleResponse err, beers, req, res
 
 # ## UI: get info about all coasters
 #   `GET /coasters`

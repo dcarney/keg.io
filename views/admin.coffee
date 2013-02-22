@@ -70,6 +70,7 @@ html lang: "en", ->
 
     script src: 'http://ajax.googleapis.com/ajax/libs/jquery/1.9.0/jquery.min.js'
     script src: '../js/bootstrap.js'
+#    script src: '/js/bootstrap-typeahead.js'
     script src: '../js/bootbox.min.js'
     script src: '/js/bootstrapSwitch.js'
     script src: '../js/underscore-min.js'
@@ -140,10 +141,14 @@ html lang: "en", ->
               div class:"control-group", id:'untappd_beer_fields', ->
                 label for:'untappd_beer_id', 'Untappd Beer Id'
                 div class:'input-append', ->
-                  input type:'text', id:'untappd_beer_id', name:'untappd_beer_id', disabled:'disabled'
-                  button class:'btn' , id:'untappd_beer_lookup', name:'untappd_beer_lookup', ->
+                  input type:'text', id:'untappd_beer_name', name:'untappd_beer_name', placeholder:'Begin typing to search...'
+                  #button class:'btn' , id:'untappd_beer_lookup', name:'untappd_beer_lookup', ->
+                   # img src:'http://www.untappd.com/favicon.ico'
+                   # text 'Lookup Untappd Beer'
+                  div class:'add-on',->
                     img src:'http://www.untappd.com/favicon.ico'
-                    text 'Lookup Untappd Beer'
+                    span id:'untappd_show_beer_id'
+                  input type:'hidden', id:'untappd_beer_id', name:'untappd_beer_id'
               fieldset id:'kegio_beer_fields',->
                 label for:'brewery','brewery'
                 input type:'text', id:'brewery', name:'brewery'
@@ -252,6 +257,33 @@ html lang: "en", ->
              loadUserTable()
            else if anchor is 'kegs'
              loadKegAdmin()
+           
+           $('#beer_untappd_switch').on 'switch-change', (e,data)->
+             $('#untappd_beer_fields').toggle(data.value)
+             $('#kegio_beer_fields').toggle(!data.value)
+           
+           $('#untappd_beer_name').typeahead
+             items: 25
+             source : (query, process)->
+               window.untappd_beers = []
+               $.get '/untappd/search/beer?beer='+$('#untappd_beer_name').val(), (data)->
+                 $('#untappd_beer_fields').removeClass('success').addClass('warning')
+                 opts = []
+                 i =0
+                 while i<data.items.length
+                   opts.push data.items[i].beer.beer_name
+                   untappd_beers[data.items[i].beer.beer_name] = data.items[i].beer.bid
+                   i++ 
+                 process opts
+             ,
+             updater:(item)->
+              bid = untappd_beers[item];
+              $('#untappd_beer_id').val(bid);
+              $('#untappd_show_beer_id').text(bid)
+              $('#untappd_beer_fields').removeClass('warning').addClass('success')
+              item
+                  
+           
         $('#btn_tappedkeg').click () ->
           $('#active').val(false)
           keg = 
@@ -272,7 +304,7 @@ html lang: "en", ->
               $('#keg_form')[0].reset()
               false
               #$('#user_table').dataTable().fnReloadAjax();
-            
+          false
       
       
       
@@ -293,6 +325,8 @@ html lang: "en", ->
               if curr.untappd_beer_id > 0
                 $('#beer_untappd_enabled').attr 'checked', 'checked'
                 $('#beer_untappd_switch').bootstrapSwitch('setState',true)
+                $('#untappd_show_beer_id').text(curr.untappd_beer_id)
+                $('#untappd_beer_name').val(curr.beer)
                 $('#kegio_beer_fields').hide();
               else
                 $('#beer_untappd_enabled').removeAttr 'checked'
