@@ -78,8 +78,8 @@ html lang: "en", ->
     script src: '../js/jquery.quicksand.js'
     script src: '../js/jquery.dataTables.min.js'
     script src: '/js/DT_bootstrap.js'
-    script src: '/socket.io/socket.io.js'
-    script src: '../js/keg.io.js'
+   # script src: '/socket.io/socket.io.js'
+   # script src: '../js/keg.io.js'
 
   body ->
     div class: 'navbar navbar-fixed-top', ->
@@ -115,8 +115,54 @@ html lang: "en", ->
             li ->
               a href:'#users', 'users'  
         
-        
-        div class:'span14 well',->
+        div id:'keg_admin', class:"span8 well",->
+          text 'this is keg admin'
+          select id:'kegerators', ->
+            option value:0, selected:'selected', '-- Select --'
+          div id:'current_keg', style:'display:none', ->
+            form id:'keg_form', ->
+              label for:'beer', 'Beer'
+              input type:'text', id:'beer', name:'beer', value:''
+              label for:'volume_gallons', 'Keg Size'
+              
+              select id:'volume_gallons', name:'volume_gallons', ->
+                option value:'5', 'Cornelius Keg - 5 gal'
+                option value:'7.75', 'Pony Keg (or Slim Quarter) - 7.75 gal'
+                option value:'15.5', 'Full Keg (Half Barrel) - 15.5 gal'
+                option value:'5.23', 'Sixth Barrel - 5.23 gal'
+              input type:'hidden', id:'active', name:'active'
+              input type:'hidden', id:'tapped_date', name:"tapped_date"
+              input type:'hidden', id:'keg_id', name:'keg_id'
+              input type:'hidden', id:'kegerator_id', name:"kegerator_id"
+              label for:'beer_untappd_switch', 'Beer linked to Untappd'
+              div class:'switch switch-small', "data-on":"warning", "data-off":" ", id:'beer_untappd_switch', ->
+                input id:'beer_untappd_enabled', type:'checkbox', name:'beer_untappd_enabled'
+              div class:"control-group", id:'untappd_beer_fields', ->
+                label for:'untappd_beer_id', 'Untappd Beer Id'
+                div class:'input-append', ->
+                  input type:'text', id:'untappd_beer_id', name:'untappd_beer_id', disabled:'disabled'
+                  button class:'btn' , id:'untappd_beer_lookup', name:'untappd_beer_lookup', ->
+                    img src:'http://www.untappd.com/favicon.ico'
+                    text 'Lookup Untappd Beer'
+              fieldset id:'kegio_beer_fields',->
+                label for:'brewery','brewery'
+                input type:'text', id:'brewery', name:'brewery'
+                label for:'beer_style','Beer Style'
+                input type:'text', id:'beer_style', name:'beer_style'
+                label for:'','description'
+                input type:'textarea', id:'description', name:'descripiton'
+                label for:'image_path','Image Path'
+                input type:'text', id:'image_path', name:'image_path'
+                label for:'brewery_location','Brewery Location'
+                input type:'text', id:'brewery_location', name:'brewery_location'
+              div class:'control-group form-inline', ->
+                div class:'controls', ->
+                  button id:'btn_tappedkeg', class:'btn btn-danger', 'This Keg is Tapped!'
+                  button id:'btn_updatekeg', class:'btn btn-success', 'Update'
+              div class:'control-group form-inline', ->
+                div class:'controls', ->
+                  button id:'btn_addkeg', class:'btn btn-success', 'Add New Keg'
+        div id:'user_admin', class:'span14 well',->
           text 'this is admin'
           table id:'user_table', class:"table table-striped table-bordered",->
             thead ->
@@ -186,24 +232,7 @@ html lang: "en", ->
                   div class: "input-prepend", ->
                     span class: "add-on", '@'
                     input id:'twitter', class: "span2", placeholder: "twitter username",  type:"text"
-                    #p class: "help-block", ->
-                     # a href:'https://twitter.com/keg_io', -> 'keg.io will mention you '
-                     # span -> 'in relevant tweets!'
-    
-            #   div class: "control-group untappd", ->
-             #     label class: "control-label", ->
-            #        text 'Untappd'
-            #        img src:'http://untappd.com/favicon.ico'
-            #      div class:"controls",->
-                    #label -> 'Link my account to Untappd (you will be prompted to authorize keg.io after sucessful registration)'
-            #        div class:'switch switch-small', 'data-on':'warning', 'data-off':' ', ->
-           #           input id:'authUntappd', type:'checkbox', value:'on'
-                    #button id:'linkUntappd', type: 'button', disabled:'disabled',class:'btn disabled', -> 
-                    #  img src:"http://untappd.com/favicon.ico"
-                     # text 'Link Untappd'
-                   # p class:"help-block",->
-                   #   a href:"http://untappd.com/", target:"_blank", -> "Untappd social drinking app, "
-                    #  text "keg.io will check you into brews at this keg"
+
         div class:'modal-footer', ->
           button class:'btn', 'data-dismiss':'modal', 'aria-hidden':'true', -> 'Cancel'
           button id:'update_user_btn', class:'btn btn-success', -> 'Update User'
@@ -215,7 +244,66 @@ html lang: "en", ->
     coffeescript ->
       $(document).ready ->
            $('#update_user_btn').click updateUser
+           $('#untappd-modal').on 'hidden', ()->
+             $('#user_table').dataTable().fnReloadAjax();
          #$.get '/users', (users) ->
+           anchor = window.location.hash.replace('#','');
+           if anchor is 'users'
+             loadUserTable()
+           else if anchor is 'kegs'
+             loadKegAdmin()
+        $('#btn_tappedkeg').click () ->
+          $('#active').val(false)
+          keg = 
+            keg_id:$('#keg_id').val()
+            kegerator_id:$('#kegerator_id').val()
+            active:$('#active').val();
+          $.ajax
+            type:'PUT'
+            url:'/kegerators/'+keg.kegerator_id+'/kegs/'+keg.keg_id
+            data: JSON.stringify keg
+            contentType: 'application/json'
+            dataType: "json"
+            error: (jqxhr) ->
+              console.log "ERROR: #{jqxhr.status}"
+              alert 'Hmmm...that didn\'t work.  KEG KEG KEG?'
+              false
+            success: (response) ->
+              $('#keg_form')[0].reset()
+              false
+              #$('#user_table').dataTable().fnReloadAjax();
+            
+      
+      
+      
+      loadKegAdmin = ->
+        $.get '/kegerators', (kegerators)->
+          i=0
+          
+          while i < kegerators.length
+            k = kegerators[i]
+            $('#kegerators').append '<option value="' + k.kegerator_id + '">'+k.name+'</option>'
+            i++
+              
+          $('#kegerators').change ()->
+            $.get '/kegerators/'+ $(this).val() + '/kegs', (kegs)->
+              $('#current_keg').show();
+              curr = kegs[0]
+              kegiovalues = ['kegerator_id','beer','volume_ounces','tapped_date','untappd_beer_id']
+              if curr.untappd_beer_id > 0
+                $('#beer_untappd_enabled').attr 'checked', 'checked'
+                $('#beer_untappd_switch').bootstrapSwitch('setState',true)
+                $('#kegio_beer_fields').hide();
+              else
+                $('#beer_untappd_enabled').removeAttr 'checked'
+                $('#kegio_beer_fields').show();
+                
+              for v of curr
+                $('#' + v).val(curr[v])
+                $('#current_keg').append( v + ':' + curr[v])
+      
+      
+      loadUserTable = ->
            $('#user_table').dataTable
              #aaData:users
              bProcessing:true
@@ -250,6 +338,11 @@ html lang: "en", ->
                         )
                   else
                     #send untappd clear token
+                    $.ajax
+                      url:'/users/'+ oData.rfid + '/untappd'
+                      type:'delete'
+                      success: (res)->
+                        console.log 'removed untappd token' unless res is false
               mRender: (d) ->
                 #(if d or d isnt "" then true else false)
                 '<div class="switch switch-mini" data-on="warning" data-off=""><input value="untappd" type="checkbox" '+ (if d and d isnt "" then 'checked="checked"' else '') + ' ></div>'
@@ -262,11 +355,6 @@ html lang: "en", ->
                   modalEdit oData
              ]
              fnDrawCallback:()->
-               #$('#user_table div.switch').bootstrapSwitch();
-               
-           #$.each users, (i, user)->
-             
-             #$('#user_table').append('<tr><td>'+ user.first_name + '</td></tr>')
         
         
   
@@ -299,6 +387,7 @@ html lang: "en", ->
               alert 'Hmmm...that didn\'t work.  Did you enter the correct RFID tag?'
             success: (response) ->
               $('#user_form').modal('hide')
+              $('#user_table').dataTable().fnReloadAjax();
               
 
 

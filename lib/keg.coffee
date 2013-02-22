@@ -224,6 +224,12 @@ class Keg extends events.EventEmitter
     @db.update 'users', {rfid: user.rfid}, {$set: user }, (err, result) =>
       return cb err, false if err?
       cb null, true
+      
+  updateKeg:(req, thekeg ,cb)->
+    @logger.log "Update Keg:" + JSON.stringify thekeg
+    @db.update 'kegs', {keg_id: thekeg.keg_id }, {$set: thekeg }, (err, result) =>
+      return cb err, false if err?
+      cb null, true
   # cb = (err, savedToDb)
   
   addUser: (req, user, cb) ->
@@ -249,7 +255,7 @@ class Keg extends events.EventEmitter
     update_str = '{"$set":{"tokens":{"'+ token+ '":"'+value+'" } } }'
     @db.update 'users', {"rfid":rfid}, JSON.parse(update_str), (err, result) ->
       return cb err, false if err?
-      cb null, "<html><body>Close this thing<scr" + "ipt>window.close()</scr" + "ipt></body></html>"
+      cb null, true#"<html><body>Close this thing<scr" + "ipt>window.close()</scr" + "ipt></body></html>"
     #@db.update 'users', {rfid: user.rfid}, {$set: {coasters: user.coasters}}, () ->
 
   # cb= (err, result)

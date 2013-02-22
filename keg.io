@@ -325,7 +325,13 @@ server.get "/kegerators/:id/kegs", (req, res, next) ->
       if err
         return handleResponse null,result,req,res
       handleResponse err, result, req, res
-      
+
+server.put "/kegerators/:id/kegs/:keg_id", (req,res,next)->
+  #if req.body and req.body.keg_id != req.params.id
+  #  handleResponse 'Invalid request', '', req, res
+  thekeg = res.body
+  keg.updateKeg req, thekeg, (err,valid)->
+    handleResponse err, valid, req, res   
 # ## UI: get info about all users
 #   `GET /users/RFID?`
 #
@@ -346,6 +352,12 @@ server.get '/users/:rfid/authurl/untappd', (req, res, next) ->
     authurl = untappd.getAuthenticationURL(req.headers.host, req.params.rfid)
     handleResponse null, {'authurl':authurl}, req,res
 
+server.delete '/users/:rfid/:token',(req,res,next)->
+  token = req.params.token
+  rfid = req.params.rfid
+  keg.setUserToken rfid, token,"", (err, result)->
+    handleResponse err, result, req,res
+
 server.get '/users/:rfid/untappd', (req,res,next) ->
 	apicode = req.query['code']
 	rfid = req.params.rfid
@@ -363,9 +375,9 @@ server.get '/users/:rfid/untappd', (req,res,next) ->
 	  apires.on "end", ->
 		#untappd json comes back with circular parser error convert response to result
 	    resdata = JSON.parse(pageData.replace("response","result"))
-	    keg.setUserToken rfid, "untappd", resdata.result.access_token, (isset) ->
+	    keg.setUserToken rfid, "untappd", resdata.result.access_token, (err,valid) ->
 	      console.log resdata
-	      handleResponse null, isset, req, res
+	      handleResponse null, isset, req, "<html><body>Close this thing<scr" + "ipt>window.close()</scr" + "ipt></body></html>"
 	
 	)
 	
@@ -393,7 +405,8 @@ server.put '/users/:rfid', (req, res, next) ->
   user = req.body
   keg.updateUser req, user, (err, valid)->
     handleResponse err, valid, req, res
-  
+
+
 
 # ## UI: get info about all of a user's pours
 #   `GET /users/RFID/pours`
