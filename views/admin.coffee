@@ -161,10 +161,10 @@ html lang: "en", ->
                 label for:'brewery_location','Brewery Location'
                 input type:'text', id:'brewery_location', name:'brewery_location'
               div class:'control-group form-inline', ->
-                div class:'controls', ->
+                div class:'controls', id:'keg_update_buttons', ->
                   button id:'btn_tappedkeg', class:'btn btn-danger', 'This Keg is Tapped!'
                   button id:'btn_updatekeg', class:'btn btn-success', 'Update'
-              div class:'control-group form-inline', ->
+              div class:'control-group form-inline', id:'keg_add_buttons', ->
                 div class:'controls', ->
                   button id:'btn_addkeg', class:'btn btn-success', 'Add New Keg'
         div id:'user_admin', class:'span14 well',->
@@ -302,6 +302,8 @@ html lang: "en", ->
               false
             success: (response) ->
               $('#keg_form')[0].reset()
+              $('#keg_add_buttons').show();
+              $('#keg_update_buttons').hide();
               false
               #$('#user_table').dataTable().fnReloadAjax();
           false
@@ -321,21 +323,25 @@ html lang: "en", ->
             $.get '/kegerators/'+ $(this).val() + '/kegs', (kegs)->
               $('#current_keg').show();
               curr = kegs[0]
-              kegiovalues = ['kegerator_id','beer','volume_ounces','tapped_date','untappd_beer_id']
-              if curr.untappd_beer_id > 0
-                $('#beer_untappd_enabled').attr 'checked', 'checked'
-                $('#beer_untappd_switch').bootstrapSwitch('setState',true)
-                $('#untappd_show_beer_id').text(curr.untappd_beer_id)
-                $('#untappd_beer_name').val(curr.beer)
-                $('#kegio_beer_fields').hide();
+              if curr.active is "true"
+                kegiovalues = ['kegerator_id','beer','volume_ounces','tapped_date','untappd_beer_id']
+                if curr.untappd_beer_id > 0
+                  $('#beer_untappd_enabled').attr 'checked', 'checked'
+                  $('#beer_untappd_switch').bootstrapSwitch('setState',true)
+                  $('#untappd_show_beer_id').text(curr.untappd_beer_id)
+                  $('#untappd_beer_name').val(curr.beer)
+                  $('#kegio_beer_fields').hide();
+                else
+                  $('#beer_untappd_enabled').removeAttr 'checked'
+                  $('#kegio_beer_fields').show();
+                  
+                for v of curr
+                  $('#' + v).val(curr[v])
+                  $('#current_keg').append( v + ':' + curr[v])
               else
-                $('#beer_untappd_enabled').removeAttr 'checked'
-                $('#kegio_beer_fields').show();
-                
-              for v of curr
-                $('#' + v).val(curr[v])
-                $('#current_keg').append( v + ':' + curr[v])
-      
+                $('#keg_form')[0].reset()
+                $('#keg_add_buttons').show();
+                $('#keg_update_buttons').hide();
       
       loadUserTable = ->
            $('#user_table').dataTable

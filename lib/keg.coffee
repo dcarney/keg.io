@@ -227,7 +227,7 @@ class Keg extends events.EventEmitter
       
   updateKeg:(req, thekeg ,cb)->
     @logger.log "Update Keg:" + JSON.stringify thekeg
-    @db.update 'kegs', {keg_id: thekeg.keg_id }, {$set: thekeg }, (err, result) =>
+    @db.update 'kegs', {keg_id: thekeg.keg_id *1}, {$set: thekeg }, (err, result) =>
       return cb err, false if err?
       cb null, true
   # cb = (err, savedToDb)

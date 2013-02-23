@@ -268,6 +268,8 @@ server.get '/kegerators/:id/users', (req, res, next) ->
     keg.findUsers criteria, (err, result) ->
       handleResponse err, result, req, res
 
+#server.post '/kegerators:id/kegs', (req,res,next) ->
+  
 # ## UI: get pours for a kegerator
 #   `GET /kegerators/ID/pours`
 #
@@ -435,7 +437,7 @@ server.get '/untappd/user/:user', (req, res, next) ->
     
 server.get '/untappd/search/beer?', (req, res, next)->
   keg.untappd.searchBeer req.query['beer'], (err, result)->
-    beers = [] or result.beers
+    beers = result.beers
     handleResponse err, beers, req, res
 
 # ## UI: get info about all coasters
