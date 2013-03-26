@@ -327,6 +327,7 @@ server.post '/users', (req, res, next) ->
         responseCode: 400
     handleResponse err, valid, req, res
 
+
 # ## UI: get info about all of a user's pours
 #   `GET /users/RFID/pours`
 #
@@ -426,7 +427,7 @@ server.get '/api/kegerator/:accessKey/scan/:rfid', api_middlewares, (req, res, n
       respond(401, res, 'scan', "#{req.params.rfid} is invalid")
 
 
-# TODO: Change this to 'pour'??
+# DEPRECATED: Use PUT /api/kegerator/ACCESS_KEY/pour/volume instead
 # ## API: report the volume for a pour
 #   `PUT /api/kegerator/ACCESS_KEY/flow/VOLUME`
 #
@@ -448,6 +449,25 @@ server.put /^\/api\/kegerator\/([\d]+)\/flow\/([\d]+)$/, api_middlewares, (req, 
     else
       respond(401, res, 'flow', 'invalid flow event (a valid scan may not have been received)')
 
+# ## API: report the volume for a pour
+#   `PUT /api/kegerator/ACCESS_KEY/pour/VOLUME`
+#
+#    Where **ACCESS_KEY** is an access key registered with the keg.io server
+#    and **VOLUME** is the volume in US fluid ounces of the pour, in decimal
+#    or integer form
+#
+# #### Examples:
+# ##### Report a flow of 12.3 fl. oz. on kegerator 1111:
+#     PUT http://keg.io/kegerator/1111/flow/12.3
+server.put /^\/api\/kegerator\/([\d]+)\/pour\/(\d+(?:.\d+)?)$/, api_middlewares, (req, res, next) ->
+  access_key = req.params[0]
+  volume = req.params[1]
+  keg.endFlow access_key, volume, (err, savedToDb) ->
+    if !err
+      respond(200, res, 'pour', volume)
+    else
+      respond(401, res, 'pour', 'invalid pour event (a valid scan may not have been received)')
+
 # ## API: report the current kegerator temperature
 #   `PUT /api/kegerator/ID/temp/TEMP`
 #
@@ -465,18 +485,6 @@ server.get '/signup', (req, res) ->
   user =
     role: 'admin'
   res.render 'signup', {user: user, layout: 'layout'}
-
-###
-server.use (req, res, next) ->
-  data=''
-  req.setEncoding('utf8')
-  req.on 'data', (chunk) ->
-     data += chunk
-
-  req.on 'end', () ->
-      req.body = JSON.parse data
-      next()
-###
 
 httpserver = http.createServer(server)
 httpserver.listen process.env.PORT ? Config.http_port
