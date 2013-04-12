@@ -231,6 +231,11 @@ class Keg extends events.EventEmitter
       return cb err, false if err?
       cb null, true
   # cb = (err, savedToDb)
+  addKeg: (req, newkeg, cb)->
+    @logger.log "add keg:"+ JSON.stringify newkeg
+    @db.insertObjects 'kegs', newkeg, (err, result) =>
+      return cb err, false if err?
+      cb null, newkeg
   
   addUser: (req, user, cb) ->
     validHex = /^(?:[A-F]|[0-9]){6,12}$/;

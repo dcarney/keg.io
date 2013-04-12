@@ -121,6 +121,7 @@ html lang: "en", ->
           select id:'kegerators', ->
             option value:0, selected:'selected', '-- Select --'
           div id:'current_keg', style:'display:none', ->
+            input type:'hidden', id:'keg_id_last', name:'keg_id_last'
             form id:'keg_form', ->
               label for:'beer', 'Beer'
               input type:'text', id:'beer', name:'beer', value:''
@@ -135,6 +136,7 @@ html lang: "en", ->
               input type:'hidden', id:'tapped_date', name:"tapped_date"
               input type:'hidden', id:'keg_id', name:'keg_id'
               input type:'hidden', id:'kegerator_id', name:"kegerator_id"
+              
               label for:'beer_untappd_switch', 'Beer linked to Untappd'
               div class:'switch switch-small', "data-on":"warning", "data-off":" ", id:'beer_untappd_switch', ->
                 input id:'beer_untappd_enabled', type:'checkbox', name:'beer_untappd_enabled'
@@ -283,6 +285,35 @@ html lang: "en", ->
               $('#untappd_beer_fields').removeClass('warning').addClass('success')
               item
                   
+        $('#btn_addkeg').click () ->
+          keg =
+            kegerator_id:$('#kegerators').val()
+            keg_id:($('#keg_id_last').val()*1)+1
+            beer:$('#beer').val()
+            active:'true'
+            beer_style:$('#beer_style').val()
+            brewery:$('#brewery').val()
+            description:$('#description').val()
+            image_path:$('#image_path').val()
+            tapped_date:new Date()
+            untappd_beer_id:$('#untappd_beer_id').val()
+            volume_gallons :$('#volume_gallons').val()
+          console.log(keg)
+          
+          $.ajax
+            type:'POST'
+            url:'/kegs/'+$('#kegerators').val()
+            data: JSON.stringify keg
+            contentType: 'application/json'
+            dataType: "json"
+            error: (jqxhr) ->
+              console.log "ERROR: #{jqxhr.status}"
+              alert 'Hmmm...that didn\'t work.  KEG KEG KEG?'
+              false
+            success: (response) ->
+              $('#keg_form')[0].reset()
+              false
+          false
            
         $('#btn_tappedkeg').click () ->
           $('#active').val(false)
@@ -323,6 +354,7 @@ html lang: "en", ->
             $.get '/kegerators/'+ $(this).val() + '/kegs', (kegs)->
               $('#current_keg').show();
               curr = kegs[0]
+              $('#keg_id_last').val( curr.keg_id)
               if curr.active is "true"
                 kegiovalues = ['kegerator_id','beer','volume_ounces','tapped_date','untappd_beer_id']
                 if curr.untappd_beer_id > 0

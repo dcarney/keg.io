@@ -386,6 +386,11 @@ server.get '/users/:rfid/untappd', (req,res,next) ->
 	)
 	
 
+server.post '/kegs/:kegerator', (req, res, next)->
+  return handleResponse 'No keg to add','',req,res unless req.body?
+  newkeg = req.body
+  keg.addKeg req, newkeg, (err, valid) ->
+    handleResponse err, valid, req, res
 
 # ## UI: register a new user
 #   `POST /users`
