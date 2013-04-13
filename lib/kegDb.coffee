@@ -85,7 +85,7 @@ class KegDb
     @db.collection collectionName, (err, collection) ->
       return cb err, null if err?
       collection.update selector, doc, {upsert: true}
-      cb null, null
+      cb null, true
 
   # cb = (err, entity)
   handleFindOne: (cb, err, entity) ->
@@ -120,11 +120,12 @@ class KegDb
   findKegs: (criteria, cb) =>
     @getCollection 'kegs', (err, collection) =>
       return cb err, null if err?
-      limit = if criteria?.limit? then {limit: criteria.limit} else {}
+      opts = if criteria?.limit? then {limit: criteria.limit} else {}
+      opts['sort'] = [['keg_id',-1]]
       selector = {}
       if criteria?.id? then selector.kegerator_id = parseInt(criteria.id, 10)
       if criteria?.active? then selector.active = criteria.active
-      collection.find selector, limit, (err, cursor) =>
+      collection.find selector, opts, (err, cursor) =>
         @handleFind cb, err, cursor
 
   # cb = (err, temps)

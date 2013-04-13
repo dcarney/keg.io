@@ -227,15 +227,29 @@ class Keg extends events.EventEmitter
       
   updateKeg:(req, thekeg ,cb)->
     @logger.log "Update Keg:" + JSON.stringify thekeg
+    thekeg.keg_id = parseInt thekeg.keg_id
+    thekeg.kegerator_id = parseInt thekeg.kegerator_id
     @db.update 'kegs', {keg_id: thekeg.keg_id *1}, {$set: thekeg }, (err, result) =>
       return cb err, false if err?
+      console.log "Updated keg successful" + result
       cb null, true
   # cb = (err, savedToDb)
   addKeg: (req, newkeg, cb)->
     @logger.log "add keg:"+ JSON.stringify newkeg
-    @db.insertObjects 'kegs', newkeg, (err, result) =>
-      return cb err, false if err?
-      cb null, newkeg
+    #@kegeratorKegs newkeg.kegerator_id, 1, (result)=>
+    @db.findKegs
+      limit:1
+    , (err, kegs) =>
+      #console.log "findKegs:" + JSON.stringify kegs
+      if kegs.length > 0
+        console.log "last keg was:"+ JSON.stringify kegs[0]
+        newkeg.keg_id = parseInt(kegs[0].keg_id) + 1
+      else
+        newkeg.keg_id = 1
+      console.log "the new keg is:" + JSON.stringify newkeg
+      @db.insertObjects 'kegs', newkeg, (err, result) =>
+        return cb err, false if err?
+        cb null, newkeg
   
   addUser: (req, user, cb) ->
     validHex = /^(?:[A-F]|[0-9]){6,12}$/;

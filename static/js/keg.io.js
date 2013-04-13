@@ -230,6 +230,7 @@ var handleScanEvent = function(data) {
   newprev.find('h2').text(newprev.find('h2').text().replace('Hello, ',''));
   newprev.attr('data-id', $('#hero div.card').attr('data-id'));
   newprev.find('#user_coasters').remove();
+  newprev.find('p.pour_volume').html(newprev.find('p.pour_volume span'))
 
   var previousRow = $('#previousRow');
   var newRow = previousRow.clone();

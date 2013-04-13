@@ -303,8 +303,9 @@ server.put "/kegerators/:id/kegs/:keg_id", (req,res,next)->
   if req.body and req.body.keg_id != req.params.keg_id
     handleResponse 'Invalid request', '', req, res
   thekeg = req.body
-  keg.updateKeg req, thekeg, (err,valid)->
-    handleResponse err, valid, req, res  
+  keg.updateKeg req, thekeg, (err,result)->
+    console.log "in updatekeg callback" + result
+    handleResponse err, result, req, res  
 
 server.get "/kegerators/:id/kegs", (req, res, next) ->
   criteria = undefined
@@ -324,7 +325,8 @@ server.get "/kegerators/:id/kegs", (req, res, next) ->
           callback()
         else
 	       callback(err)
-
+    else
+      callback()
 
 
   criteria.limit = req.query["limit"]

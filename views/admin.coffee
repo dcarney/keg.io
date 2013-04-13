@@ -93,24 +93,18 @@ html lang: "en", ->
           a class: 'home_link brand', href: "#", "keg.io"
           div class: 'nav-collapse', ->
             ul class: 'nav', ->
-              li class: 'home_link active', ->
-                a href: "#", 'home'
-              li class: 'dropdown', ->
-                a class: 'dropdown-toggle', "data-toggle": "dropdown", href: "#", ->
-                  text " kegerators "
-                  span class: 'caret'
-                ul class: 'dropdown-menu', ->
-              li ->
-                a href: "http://keg.io", target: "_blank", "about"
-              li ->
-                a href: "https://github.com/dcarney/keg.io", target: "_blank", "github"
+              li class: 'home_link', ->
+                a href: "/", 'home'
+              li class: 'admin_link active',->
+                a href: "#", 'admin'
               li ->
                 a href: '/signup', 'signup!'
           comment "/.nav-collapse"
     div class:'container-fluid',->
       div class:'row',->
         div class:'span2 well',->
-          ul class:'nav nav-list',->
+          ul class:'nav nav-list admin',->
+            li class: 'nav-header','Admin Menu'
             li ->
               a href:'#kegs', 'kegs'
             li ->
@@ -259,6 +253,7 @@ html lang: "en", ->
              loadUserTable()
            else if anchor is 'kegs'
              loadKegAdmin()
+           $('.nav.admin a[href="#'+anchor+'"]').parent().addClass('active')
            
            $('#beer_untappd_switch').on 'switch-change', (e,data)->
              $('#untappd_beer_fields').toggle(data.value)
@@ -284,10 +279,20 @@ html lang: "en", ->
               $('#untappd_show_beer_id').text(bid)
               $('#untappd_beer_fields').removeClass('warning').addClass('success')
               item
-                  
+        
+       $('.nav.admin a').click ()->
+          $('.nav.admin li').removeClass('active')
+          if $(this).attr('href')=='#kegs'
+            $(this).parent().addClass('active')
+            loadKegAdmin()
+          if $(this).attr('href')== '#users'
+            loadUserTable()
+            $(this).parent().addClass('active')
+          
+             
         $('#btn_addkeg').click () ->
           keg =
-            kegerator_id:$('#kegerators').val()
+            kegerator_id:$('#kegerators').val()*1
             keg_id:($('#keg_id_last').val()*1)+1
             beer:$('#beer').val()
             active:'true'
@@ -296,7 +301,7 @@ html lang: "en", ->
             description:$('#description').val()
             image_path:$('#image_path').val()
             tapped_date:new Date()
-            untappd_beer_id:$('#untappd_beer_id').val()
+            untappd_beer_id:$('#untappd_beer_id').val()*1
             volume_gallons :$('#volume_gallons').val()
           console.log(keg)
           
@@ -312,36 +317,49 @@ html lang: "en", ->
               false
             success: (response) ->
               $('#keg_form')[0].reset()
+              $('#untappd_beer_id').val(0)
+              $('#beer_untappd_switch').bootstrapSwitch('setState',false)
+              populateKegForm(response.kegerator_id)
               false
           false
            
         $('#btn_tappedkeg').click () ->
-          $('#active').val(false)
-          keg = 
-            keg_id:$('#keg_id').val()
-            kegerator_id:$('#kegerator_id').val()
-            active:$('#active').val();
-          $.ajax
-            type:'PUT'
-            url:'/kegerators/'+keg.kegerator_id+'/kegs/'+keg.keg_id
-            data: JSON.stringify keg
-            contentType: 'application/json'
-            dataType: "json"
-            error: (jqxhr) ->
-              console.log "ERROR: #{jqxhr.status}"
-              alert 'Hmmm...that didn\'t work.  KEG KEG KEG?'
+          bootbox.confirm "Are you sure you want to change to a new keg?", (confirm) ->
+            if confirm
+              $('#active').val(false)
+              keg = 
+                keg_id:$('#keg_id').val()
+                kegerator_id:$('#kegerator_id').val()
+                active:$('#active').val();
+              $.ajax
+                type:'PUT'
+                url:'/kegerators/'+keg.kegerator_id+'/kegs/'+keg.keg_id
+                data: JSON.stringify keg
+                contentType: 'application/json'
+                dataType: "json"
+                error: (jqxhr) ->
+                  console.log "ERROR: #{jqxhr.status}"
+                  alert 'Hmmm...that didn\'t work.  KEG KEG KEG?'
+                  false
+                success: (response) ->
+                  $('#keg_form')[0].reset()
+                  $('#untappd_beer_id').val(0)
+                  $('#beer_untappd_switch').bootstrapSwitch('setState',false)
+                  $('#keg_add_buttons').show();
+                  $('#keg_update_buttons').hide();
+                  false
+                  #$('#user_table').dataTable().fnReloadAjax();
+            else
               false
-            success: (response) ->
-              $('#keg_form')[0].reset()
-              $('#keg_add_buttons').show();
-              $('#keg_update_buttons').hide();
-              false
-              #$('#user_table').dataTable().fnReloadAjax();
           false
       
       
       
       loadKegAdmin = ->
+        $('#user_admin').hide();
+        $('#keg_admin').show();
+        if $('#kegerators option').length > 1
+          return false
         $.get '/kegerators', (kegerators)->
           i=0
           
@@ -351,31 +369,40 @@ html lang: "en", ->
             i++
               
           $('#kegerators').change ()->
-            $.get '/kegerators/'+ $(this).val() + '/kegs', (kegs)->
-              $('#current_keg').show();
-              curr = kegs[0]
-              $('#keg_id_last').val( curr.keg_id)
-              if curr.active is "true"
-                kegiovalues = ['kegerator_id','beer','volume_ounces','tapped_date','untappd_beer_id']
-                if curr.untappd_beer_id > 0
-                  $('#beer_untappd_enabled').attr 'checked', 'checked'
-                  $('#beer_untappd_switch').bootstrapSwitch('setState',true)
-                  $('#untappd_show_beer_id').text(curr.untappd_beer_id)
-                  $('#untappd_beer_name').val(curr.beer)
-                  $('#kegio_beer_fields').hide();
-                else
-                  $('#beer_untappd_enabled').removeAttr 'checked'
-                  $('#kegio_beer_fields').show();
-                  
-                for v of curr
-                  $('#' + v).val(curr[v])
-                  $('#current_keg').append( v + ':' + curr[v])
-              else
-                $('#keg_form')[0].reset()
-                $('#keg_add_buttons').show();
-                $('#keg_update_buttons').hide();
-      
+            populateKegForm $(this).val()
+                
+      populateKegForm = (kegid)->
+        $.get '/kegerators/'+ kegid + '/kegs?active=true', (kegs)->
+          $('#current_keg').show();
+          curr = kegs[0]
+          #$('#keg_id_last').val(curr.keg_id)
+          if curr && curr.active is "true"
+            kegiovalues = ['kegerator_id','beer','volume_ounces','tapped_date','untappd_beer_id']
+            if curr.untappd_beer_id > 0
+              $('#beer_untappd_enabled').attr 'checked', 'checked'
+              $('#beer_untappd_switch').bootstrapSwitch('setState',true)
+              $('#untappd_show_beer_id').text(curr.untappd_beer_id)
+              $('#untappd_beer_name').val(curr.beer)
+              $('#kegio_beer_fields').hide();
+            else
+              $('#beer_untappd_enabled').removeAttr 'checked'
+              $('#kegio_beer_fields').show();
+              $('#beer_untappd_switch').bootstrapSwitch('setState',false)
+              $('#untappd_beer_fields').hide();
+            
+            $('#keg_add_buttons').hide();
+            $('#keg_update_buttons').show();
+            for v of curr
+              $('#' + v).val(curr[v])
+              #$('#current_keg').append( v + ':' + curr[v])
+          else
+            $('#keg_form')[0].reset()
+            $('#keg_add_buttons').show();
+            $('#keg_update_buttons').hide();
+                
       loadUserTable = ->
+           $('#keg_admin').hide()
+           $('#user_admin').show()
            $('#user_table').dataTable
              #aaData:users
              bProcessing:true

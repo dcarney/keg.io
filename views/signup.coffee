@@ -93,7 +93,7 @@ html lang: "en", ->
           a class: 'home_link brand', href: "/", "keg.io"
           div class: 'nav-collapse', ->
             ul class: 'nav', ->
-              li class: 'home_link active', ->
+              li class: 'home_link', ->
                 a href: "/", 'home'
               li class: 'dropdown', ->
                 a class: 'dropdown-toggle', "data-toggle": "dropdown", href: "#", ->
@@ -104,6 +104,8 @@ html lang: "en", ->
                 a href: "http://keg.io", target: "_blank", "about"
               li ->
                 a href: "https://github.com/dcarney/keg.io", target: "_blank", "github"
+              li class:'active',->
+                a href: '/signup', 'signup!'
           comment "/.nav-collapse"
     div ->
       coffeescript ->
