@@ -723,6 +723,9 @@ float getTemp(){
       return TEMP_SENSOR_ERROR;
   }
 
+// this next if statement has caused issues
+// if temp readings + scan causes garbled scans and the board to reboot
+// try removing it
   if ( OneWire::crc8( addr, 7) != addr[7]) {
       Serial.println("Temp sensor CRC is not valid!");
       return TEMP_SENSOR_ERROR;
