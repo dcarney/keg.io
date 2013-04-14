@@ -268,8 +268,8 @@ html lang: "en", ->
                  opts = []
                  i =0
                  while i<data.items.length
-                   opts.push data.items[i].beer.beer_name
-                   untappd_beers[data.items[i].beer.beer_name] = data.items[i].beer.bid
+                   opts.push data.items[i].beer.beer_name + ' ('+data.items[i].brewery.brewery_name+') ' + data.items[i].beer.bid
+                   untappd_beers[data.items[i].beer.beer_name+' ('+data.items[i].brewery.brewery_name+') '+ data.items[i].beer.bid] = data.items[i].beer.bid
                    i++ 
                  process opts
              ,

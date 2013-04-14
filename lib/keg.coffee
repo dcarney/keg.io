@@ -160,6 +160,50 @@ class Keg extends events.EventEmitter
 
   # cb = (err, savedToDb)
   # emits: 'pour'
+  endPour: (kegerator_id, volume, cb) =>
+    rfid = @kegerator_last_scans[kegerator_id]
+    return cb 'no valid pour event to end', null unless rfid?
+
+    # remove the rfid from memory, and save the pour to the DB and emit if > 0
+    delete @kegerator_last_scans[kegerator_id]
+
+    pour =
+      date: moment().format 'YYYY-MM-DDTHH:mm:ssZ' #ISO8601
+      rfid: rfid
+      keg_id: 1   # TODO: hardcoded
+      kegerator_id: parseInt kegerator_id, 10
+      volume_ounces: Math.round(parseFloat(volume, 10))
+
+    # save to the DB and emit
+    # if pour_volume < 0, set it to 0 and also don't check for new costers
+    if volume <= 0
+      pour.volume_ounces = 0
+      @db.insertObjects 'pours', pour, (err, result) =>
+        return cb err, false if err?
+        @emit 'pour', kegerator_id, 0
+        cb null, true
+    else
+      @db.insertObjects 'pours', pour, (err, result) =>
+        return cb err, false if err?
+        @emit 'pour', kegerator_id, volume
+
+        # earn a coaster?
+        @checkForNewCoasters pour, volume
+
+        ## get the user's info
+        @db.findUser pour.rfid, (err, user) =>
+
+          # Tweet about it, whydoncha
+          if !err and user? and @kegTwit?
+            @kegTwit.tweetPour user, parseInt(volume, 10)
+          else if @kegTwit?
+            @kegTwit.tweet "Whoa, someone just poured themselves a beer!"
+
+          cb null, true
+
+  # deprecated.  Use endPour instread
+  # cb = (err, savedToDb)
+  # emits: 'pour'
   endFlow: (kegerator_id, volume, cb) =>
     rfid = @kegerator_last_scans[kegerator_id]
     return cb 'no valid pour event to end', null unless rfid?

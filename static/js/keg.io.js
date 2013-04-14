@@ -15,12 +15,16 @@ var clearKegeratorSelection = function() {
   $('#main').addClass("span12");
 
   // TODO: should we clear the cookie?? I'm leaning towards no
+  // CRC: Cookie cleared!  This is cleaner now that we have a real about page
+  // and it's easy to get back to your kegerator page.
+  cookieDelete('kegio');
 
   // stop listening for events on this kegerator
   detachWebSocket();
 };
 
 var switchKegerator = function(kegeratorId) {
+
   $.getJSON("/kegerators/" + kegeratorId, function(data) {
      console.log(data);
      var kegerator = data;
@@ -38,8 +42,7 @@ var switchKegerator = function(kegeratorId) {
      $('.row-fluid .span3').show();
      $('#main').addClass("span9");
      $('#main').removeClass("span12");
-     $('#previousRowOne').empty();
-     $('#previousRowTwo').empty();
+     $('#previousRow').empty();
 
      // Populate some DOM elements w/ info
      $('#kegerator_details').empty();
@@ -64,7 +67,7 @@ var switchKegerator = function(kegeratorId) {
       $('#keg_details').append("<li class='divider'></li>");
       $('#keg_details').append("<li class='nav-header'>Keg</li>");
       $('#keg_details').append("<h3>" + keg.beer + ' ' + keg.beer_style + "</h3>");
-      $('#keg_details').append("<h3>" + keg.brewery + "</h3>"+(keg.brewery_location?'<p>'+keg.brewery_location+'</p>':''));
+      $('#keg_details').append("<h3>" + keg.brewery + "</h3>");
       $('#keg_details').append("<p>Tapped <span data-livestamp='" + keg.tapped_date + "'></span></p>");
       $('#keg_details').append("<p style='font-style:italic;'>" + keg.description + "</p>");
       $('#keg_details').append('<img src="'+(keg.image_path.indexOf("http")!=-1?keg.image_path:("http://images.keg.io/" + keg.image_path)) + '"></img>');
@@ -73,6 +76,8 @@ var switchKegerator = function(kegeratorId) {
 	  }
      });  // getJSON
 
+     initializeKegeratorScreen(kegeratorId);
+
      // re-connect to the appropriate web socket
      reattachWebSocket(kegeratorId);
   });
@@ -80,6 +85,7 @@ var switchKegerator = function(kegeratorId) {
 
 // Connect to a web socket and listen for events for the given kegerator
 var reattachWebSocket = function(kegeratorId) {
+  socket.removeAllListeners("attached");
   $('#kegerator_details .badge.connected').removeClass("badge-important").addClass("badge-warning on");
   socket.emit('attach', kegeratorId);
   socket.on('attached', function () {
@@ -90,6 +96,7 @@ var reattachWebSocket = function(kegeratorId) {
 
 // Stop listening for events for the given kegerator.  Web socket remains connected.
 var detachWebSocket = function() {
+  socket.removeAllListeners("detached");
   $('#kegerator_details .badge.connected').removeClass("badge-important").addClass("badge-warning on");
   socket.emit('detach', null);
   socket.on('detached', function () {
@@ -161,7 +168,7 @@ var handlePourEvent = function(data) {
 //
 var populatePreviousDrinkersMarkup = function(pourObjects) {
   // Clear the previous drinkers rows
-  $(".previous").empty();
+  $(".previousRow").empty();
 
   var count = 0;
   pourObjects = pourObjects.sort(function(a,b) { return Date.parse(b.date) - Date.parse(a.date); });
@@ -200,7 +207,7 @@ var populateCurrentDrinkerMarkup = function(user) {
 
   $('#gravatar').attr('src', user.gravatar);
   $('#user_info').empty();
-  $('#user_info').append('<h2>Hello, <span class="firstname">'+ user.first_name + '</span></h2>');
+  $('#user_info').append('<h2>Hello, <span class="firstname">'+ user.first_name + ' ' + user.last_name + '</span></h2>');
   $('#user_info').append("<p class='pour_volume'></p>");
   $('#user_info').append('<p class="pour_date"></p>');
   //$('#user_info').append('<a class="btn rfid" href="#/users/' + user.rfid + '">View Profile</a>');
@@ -283,7 +290,7 @@ var cookieRead = function readCookie(name) {
 };
 
 var cookieDelete = function eraseCookie(name) {
-  createCookie(name,"",-1);
+  cookieCreate(name,"",-1);
 };
 
 // The web socket
@@ -291,6 +298,67 @@ var socket = null;
 
 // The attached kegerator (if any)
 var currentKegeratorId = null;
+
+var initializeKegeratorScreen = function(currentKegeratorId) {
+ // Populate the 'last drinker' and 'current drinker' cards
+ if (currentKegeratorId !== null) {
+   $('previousRows').empty();
+   // limit of 7 = 1 current drinker, 6 previous
+   $.getJSON('/kegerators/' + currentKegeratorId + '/pours?limit=7', function(pours) {
+     var lastPour = pours.shift(); // the 'last' pour is the 0th element!
+     getUser(lastPour.rfid, function(user) {
+       populateCurrentDrinkerMarkup(user);
+       $('#hero div.card p.pour_volume').append("You poured <span class='badge'>" + lastPour.volume_ounces + " ounces</span>");
+       $('#hero div.card p.pour_date').attr('data-livestamp', lastPour.date);
+       $('#hero div.card').attr('data-id', (new Date(lastPour.date)).getTime());
+     });
+
+     var pourObjects = [];
+     // remove any undefined objecs
+     pours = _.reject(pours, function(pour) { return pour === null; });
+
+     var numPours = pours.length;
+     _.each(pours, function(pour) {
+       getUser(pour.rfid, function(user) {
+          pour['user'] = user;
+          pourObjects.push(pour);
+          if (pourObjects.length === numPours) {
+           // all done, populate the UI
+           populatePreviousDrinkersMarkup(pourObjects);
+          }
+        });
+      });
+    }); // getJSON
+  }
+	
+  
+  socket = io.connect('http://' + window.location.hostname);
+  unsubscribeSocketEvents(window.socket, ['scan','temp','deny','pour','coaster','heartbeat']);
+  socket.on('connect', function () {
+   socketDebug('connect', null);
+   $('.badge.connected').removeClass("badge-important badge-warning").addClass("badge-success on");//.text("connected");
+  });
+  socket.on('disconnect', function() {
+   $('.badge.connected').removeClass("badge-success badge-warning").addClass("badge-important on");//.text("disconnected");
+  });
+  socket.on('hello', function (data) { socketDebug('hello', data); });
+  socket.on('scan', handleScanEvent);
+  socket.on('temp', handleTempEvent);
+  socket.on('deny', handleDenyEvent);
+  socket.on('pour', handlePourEvent);
+  socket.on('coaster', handleCoasterEvent);
+  socket.on('heartbeat', handleHeartbeatEvent);
+  // TODO: add code to handle flow event
+};
+
+function unsubscribeSocketEvents(socket,events){
+	if(typeof events == 'string') events = [events];
+	
+	for(var i =0; i < events.length; i ++){
+		socket.removeAllListeners(events[i]);
+	}
+	
+}
 
 $(document).ready(function(){
 
@@ -312,70 +380,40 @@ $(document).ready(function(){
   // Get the list of available kegerators, populate the dropdown with them
   $.getJSON("/kegerators", function(kegerators) {
     _.each(kegerators, function(k) {
-      $('.nav .dropdown-menu').append("<li><a id=" + k.kegerator_id + " href='#' onclick='javascript:return false;'>" + k.name + "</a></li>");
+      $('.dropdown-menu').append("<li><a id=" + k.kegerator_id + " href='#' onclick='javascript:return false;'>" + k.name + "</a></li>");
+      if (cookieRead('kegio') === null) {
+        $('#kegerator_details').append("<li><a id=" + k.kegerator_id + " href='#' onclick='javascript:return false;'>" + k.name + "</a></li>");
+      }
     });
+    setKegSelectionEvents();
   }); // getJSON
-
-  // Populate the 'last drinker' and 'current drinker' cards
-  if (currentKegeratorId !== null) {
-    // limit of 7 = 1 current drinker, 6 previous
-    $.getJSON('/kegerators/' + currentKegeratorId + '/pours?limit=7', function(pours) {
-      var lastPour = pours.shift(); // the 'last' pour is the 0th element!
-      getUser(lastPour.rfid, function(user) {
-        populateCurrentDrinkerMarkup(user);
-        $('#hero div.card p.pour_volume').append("You poured <span class='badge'>" + lastPour.volume_ounces + " ounces</span>");
-        $('#hero div.card p.pour_date').attr('data-livestamp', lastPour.date);
-        $('#hero div.card').attr('data-id', (new Date(lastPour.date)).getTime());
-      });
-
-      var pourObjects = [];
-      // remove any undefined objecs
-      pours = _.reject(pours, function(pour) { return pour === null; });
-
-      var numPours = pours.length;
-      _.each(pours, function(pour) {
-        getUser(pour.rfid, function(user) {
-          pour['user'] = user;
-          pourObjects.push(pour);
-          if (pourObjects.length === numPours) {
-            // all done, populate the UI
-            populatePreviousDrinkersMarkup(pourObjects);
-          }
-        });
-      });
-
-    }); // getJSON
-  }
-
- socket = io.connect('http://' + window.location.hostname);
- socket.on('connect', function () {
-  socketDebug('connect', null);
-  $('.badge.connected').removeClass("badge-important badge-warning").addClass("badge-success on");//.text("connected");
- });
- socket.on('disconnect', function() {
-  $('.badge.connected').removeClass("badge-success badge-warning").addClass("badge-important on");//.text("disconnected");
- });
- socket.on('hello', function (data) { socketDebug('hello', data); });
- socket.on('scan', handleScanEvent);
- socket.on('temp', handleTempEvent);
- socket.on('deny', handleDenyEvent);
- socket.on('pour', handlePourEvent);
- socket.on('coaster', handleCoasterEvent);
- socket.on('heartbeat', handleHeartbeatEvent);
- // TODO: add code to handle flow event
-
+  
+  // Attach an event handler to all the "home" links that clears the
+	// kegerator selection, and displays the homepage content
+	$('.home_link').on('click', function(event) {
+	  clearKegeratorSelection();
+	});
 });   // document ready
 
-// Attach an event handler to each item in the "kegerators" menu
-$('.dropdown-menu').on('click', 'li', function(event) {
-  var selectedId = $(event.srcElement).attr('id');
-  console.log('New kegerator selected: ' + selectedId);
-  if (_gaq) _gaq.push(['_trackEvent', 'kegerators', 'switch', selectedId]);
-  switchKegerator(selectedId);
-});
+function setKegSelectionEvents(){
+	// Attach an event handler to each item in the "kegerators" menu
+	//$('.dropdown-menu').on('click', 'li', function() {
+	$('.dropdown-menu a').click(function(){
+	  var selectedId = $(this).attr('id');
+	  console.log('New kegerator selected: ' + selectedId);
+	  if (_gaq) _gaq.push(['_trackEvent', 'kegerators', 'switch', selectedId]);
+	  switchKegerator(selectedId);
+	});
+	
+	// Also, attach an event handler to each item in the "kegerators" sidebar
+	//$('#kegerator_details').on('click', 'li', function() {
+	$('#kegerator_details a').click(function(){
+	  var selectedId = $(this).attr('id');
+	  if(selectedId!= null){
+		  console.log('New kegerator selected: ' + selectedId);
+		  if (_gaq) _gaq.push(['_trackEvent', 'kegerators', 'switch', selectedId]);
+		  switchKegerator(selectedId);
+	  }
+	});
+}
 
-// Attach an event handler to all the "home" links that clears the
-// kegerator selection, and displays the homepage content
-$('.home_link').on('click', function(event) {
-  clearKegeratorSelection();
-});

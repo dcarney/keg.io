@@ -383,7 +383,7 @@ server.get '/users/:rfid/untappd', (req,res,next) ->
 	    resdata = JSON.parse(pageData.replace("response","result"))
 	    keg.setUserToken rfid, "untappd", resdata.result.access_token, (err,valid) ->
 	      console.log resdata
-	      handleResponse null, isset, req, "<html><body>Close this thing<scr" + "ipt>window.close()</scr" + "ipt></body></html>"
+	      handleResponse null, valid, req, res#"<html><body>Close this thing<scr" + "ipt>window.close()</scr" + "ipt></body></html>"
 	
 	)
 	
@@ -416,6 +416,7 @@ server.put '/users/:rfid', (req, res, next) ->
   user = req.body
   keg.updateUser req, user, (err, valid)->
     handleResponse err, valid, req, res
+
 
 
 
@@ -531,7 +532,7 @@ server.get '/api/kegerator/:accessKey/scan/:rfid', api_middlewares, (req, res, n
       respond(401, res, 'scan', "#{req.params.rfid} is invalid")
 
 
-# TODO: Change this to 'pour'??
+# DEPRECATED: Use PUT /api/kegerator/ACCESS_KEY/pour/volume instead
 # ## API: report the volume for a pour
 #   `PUT /api/kegerator/ACCESS_KEY/flow/VOLUME`
 #
@@ -552,6 +553,25 @@ server.put /^\/api\/kegerator\/([\d]+)\/flow\/([\d]+)$/, api_middlewares, (req, 
       respond(200, res, 'flow', volume)
     else
       respond(401, res, 'flow', 'invalid flow event (a valid scan may not have been received)')
+
+# ## API: report the volume for a pour
+#   `PUT /api/kegerator/ACCESS_KEY/pour/VOLUME`
+#
+#    Where **ACCESS_KEY** is an access key registered with the keg.io server
+#    and **VOLUME** is the volume in US fluid ounces of the pour, in decimal
+#    or integer form
+#
+# #### Examples:
+# ##### Report a flow of 12.3 fl. oz. on kegerator 1111:
+#     PUT http://keg.io/kegerator/1111/flow/12.3
+server.put /^\/api\/kegerator\/([\d]+)\/pour\/(\d+(?:.\d+)?)$/, api_middlewares, (req, res, next) ->
+  access_key = req.params[0]
+  volume = req.params[1]
+  keg.endFlow access_key, volume, (err, savedToDb) ->
+    if !err
+      respond(200, res, 'pour', volume)
+    else
+      respond(401, res, 'pour', 'invalid pour event (a valid scan may not have been received)')
 
 # ## API: report the current kegerator temperature
 #   `PUT /api/kegerator/ID/temp/TEMP`
@@ -579,18 +599,6 @@ auth = express.basicAuth((user,pass,cb)->
 
 server.get '/admin', auth, (req,res)->
   res.render 'admin', {keg:"1111",layout:'layout'}
-
-###
-server.use (req, res, next) ->
-  data=''
-  req.setEncoding('utf8')
-  req.on 'data', (chunk) ->
-     data += chunk
-
-  req.on 'end', () ->
-      req.body = JSON.parse data
-      next()
-###
 
 httpserver = http.createServer(server)
 httpserver.listen process.env.PORT ? Config.http_port

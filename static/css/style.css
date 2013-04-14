@@ -135,3 +135,84 @@ h3 {
 .badge {
   font-size: 125%;
 }
+
+/*  bootstrap upgrade fixes             						*/
+/*  new bootstrap upped the font-size and whacks everything out */
+
+body.kegio .mini-card h2, .card h2, .card p {
+	margin: 0;
+}
+/*
+body.kegio .hero-unit .card p {
+	font-size: 13px;
+}
+*/
+body.kegio .badge {
+	padding: 4px 9px;
+}
+body.kegio .hero-unit .badge{
+	padding: 6px 9px;
+}
+
+
+body.kegio {
+	  font-size: 13px;
+  line-height: 18px;
+}
+
+body.kegio .nav-list .nav-header {
+	line-height: 18px;
+}
+
+body.kegio h1 {
+  font-size: 30px;
+  line-height: 36px;
+  margin: 0;
+}
+
+body.kegio h1 small {
+  font-size: 18px;
+}
+
+body.kegio h2 {
+  font-size: 24px;
+  line-height: 36px;
+}
+
+body.kegio h2 small {
+  font-size: 18px;
+}
+
+body.kegio h3 {
+  font-size: 18px;
+  line-height: 27px;
+  margin-bottom: 10px;
+}
+
+h3 small {
+  font-size: 14px;
+}
+
+body.kegio h4,
+body.kegio h5,
+body.kegio h6 {
+  line-height: 18px;
+}
+
+body.kegio h4 {
+  font-size: 14px;
+}
+
+body.kegio h4 small {
+  font-size: 12px;
+}
+
+body.kegio h5 {
+  font-size: 12px;
+}
+
+body.kegio h6 {
+  font-size: 11px;
+  color: #999999;
+  text-transform: uppercase;
+}

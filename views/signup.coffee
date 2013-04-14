@@ -1,4 +1,3 @@
-
 doctype 5
 html lang: "en", ->
   head ->
@@ -44,7 +43,7 @@ html lang: "en", ->
             #untappd-modal {
               width: 600px;
               text-align: center;
-              margin: -320px 0 0 -280px;
+              /*margin: -320px 0 0 -280px;*/
             }
             
             #untappd-modal .modal-body .label {
@@ -101,7 +100,7 @@ html lang: "en", ->
                   span class: 'caret'
                 ul class: 'dropdown-menu', ->
               li ->
-                a href: "http://keg.io", target: "_blank", "about"
+                a href: "/hardware.html", "about"
               li ->
                 a href: "https://github.com/dcarney/keg.io", target: "_blank", "github"
               li class:'active',->
@@ -117,7 +116,7 @@ html lang: "en", ->
             last_name: $('#last_name').val()
             twitter: $('#twitter').val()
             link_untappd:$('#authUntappd').attr('checked')
-
+			      
           $.ajax
             type: 'POST'
             url: '/users'
@@ -139,7 +138,6 @@ html lang: "en", ->
               $('#last_name').val('')
               $('#twitter').val('')
               $('.untappd .toggle-button').toggleButtons('setState',false)
-              #alert 'Thanks for signing up!'
 
           return false
           
@@ -164,6 +162,7 @@ html lang: "en", ->
     	       if document.getElementById("untappd-frame").contentDocument
     	         window.clearInterval(window.modalChecker)
     	         $('#untappd-frame').hide()
+    	         $('#untappd-frame').attr('src','https://untappd.com/logout');
     	         $('#untappd-modal .modal-body').remove('div.well').append('<div class="well"><h1>Sucessfully Authorized Untappd</h1></div>')
     	         window.setTimeout ()->
     	           $('#untappd-modal').modal('hide')

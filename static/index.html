@@ -53,7 +53,7 @@
     <link rel="apple-touch-icon-precomposed" href="../ico/apple-touch-icon-57-precomposed.png">
   </head>
 
-  <body>
+  <body class="kegio">
     <div class="navbar navbar-fixed-top">
       <div class="navbar-inner">
         <div class="container-fluid">
@@ -65,7 +65,7 @@
           <a class="home_link brand" href="/">keg.io</a>
           <div class="nav-collapse">
             <ul class="nav">
-              <li class="home_link active"><a href="/">home</a></li>
+              <li class="active"><a class="home_link" href="/">home</a></li>
               <li class="dropdown">
                 <a class="dropdown-toggle" data-toggle="dropdown" href="#">
                   kegerators
@@ -74,7 +74,7 @@
                 <ul class="dropdown-menu">
                 </ul>
               </li>
-              <li><a href="http://keg.io" target="_blank">about</a></li>
+              <li><a class="home_link" href="/hardware.html">about</a></li>
               <li><a href="https://github.com/dcarney/keg.io" target="_blank">github</a></li>
               <li><a href="/signup">signup!</a></li>
             </ul>
@@ -86,30 +86,13 @@
       <div class="row-fluid">
         <div class="span3">
           <div class="well sidebar-nav">
-            <ul id="home_details" class="nav nav-list">
-
-            </ul>
             <ul id="kegerator_details" class="nav nav-list">
-              <li class="nav-header">Kegerator</li>
-              <li class="active"><a href="#">Link</a></li>
-              <li><a href="#">Link</a></li>
-              <li><a href="#">Link</a></li>
-              <li><a href="#">Link</a></li>
-              <li class="nav-header">Sidebar</li>
-              <li><a href="#">Link</a></li>
-              <li><a href="#">Link</a></li>
-              <li><a href="#">Link</a></li>
-              <li><a href="#">Link</a></li>
-              <li><a href="#">Link</a></li>
-              <li><a href="#">Link</a></li>
-              <li class="nav-header">Sidebar</li>
-              <li><a href="#">Link</a></li>
-              <li><a href="#">Link</a></li>
-              <li><a href="#">Link</a></li>
+              <li class="nav-header">About</li>
+              <li><a href="/hardware.html">Hardware</a></li>
+              <li><a href="/team.html">Team</a></li>
+              <li class="nav-header">Choose a kegerator</li>
             </ul>
-            <ul id="keg_details" class="nav nav-list">
-              <li class="nav-header">Keg</li>
-            </ul>
+            <div id="keg_details" class="nav nav-list"></div>
           </div><!--/.well -->
         </div><!--/span-->
         <div id="main" class="span9">
@@ -122,9 +105,17 @@
               </div>
             </div>
             <div class="intro_copy">
-              <h1>Welcome to keg.io!</h1>
-              <p>keg.io lets you watch your favorite office workers drink beer in real-time.  Select a kegerator above to get started.</p>
-              <p><a class="btn btn-primary btn-large">Learn more &raquo;</a></p>
+              <h1>This is keg.io</h1><br/>
+              <p>keg.io is a community of Arduino-powered kegerators hooked up to a Node.js server in the cloud that fosters consumption of tasty beer with friends local or remote.</p>
+              <p>Earn badges and compete with your friends:
+                <ul>
+                  <li><strong>Party Starter</strong>: be the first drinker of the day</li>
+                  <li><strong>Beer Aficionado</strong>: pour beers from five consecutive kegs</li>
+                  <li><strong>Power User</strong>: drink a beer each day for five consecutive days</li>
+                  <li>and lots more...</li>
+                </ul>
+              </p>
+              <h3 style="color: #e8ca90; font-style: italic;"><a href="/signup">Signup</a> if you have your unique keg.io ID, or select a kegerator on the left to see who's drinking.</h3>
             </div>
           </div>
           <ul class="previous hidden" id="previousRow">
@@ -135,7 +126,7 @@
       <hr>
 
       <footer>
-        <p>&copy; keg.io 2012</p>
+        <p>&copy; keg.io 2013</p>
       </footer>
 
     </div><!--/.fluid-container-->
