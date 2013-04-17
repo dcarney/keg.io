@@ -30,8 +30,7 @@ class KegTwitter
     # Use the person's regular name (including any given nickname)
     # Ex. Dylan 'Beardo' Carney
     name = "#{userInfo.first_name} " +
-          (if (userInfo.nickname? && userInfo.nickname.length > 0) then "'#{userInfo.nickname}' " else "") +
-          userInfo.last_name
+          (if (userInfo.nickname? && userInfo.nickname.length > 0) then " (aka '#{userInfo.nickname}')" else "")
 
     # Use the twitter handle instead, if the user has one.
     if userInfo.twitter_handle? && userInfo.twitter_handle.length > 0
