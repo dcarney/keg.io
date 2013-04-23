@@ -587,9 +587,10 @@ server.put '/api/kegerator/:id/temp/:temp', api_middlewares, (req, res, next) ->
       respond(200, res, 'temp', req.params.temp)
 
 server.get '/signup', (req, res) ->
+  newrfid = req.query["rfid"] || ''
   user =
     role: 'admin'
-  res.render 'signup', {user: user, layout: 'layout'}
+  res.render 'signup', {user: user, layout: 'layout', rfid:newrfid}
   
 auth = express.basicAuth((user,pass,cb)->
   result = (keys[user] == pass);

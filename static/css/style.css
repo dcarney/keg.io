@@ -216,3 +216,8 @@ body.kegio h6 {
   color: #999999;
   text-transform: uppercase;
 }
+
+.badge.deny {
+    cursor: pointer;
+}
+

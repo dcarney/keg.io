@@ -53,8 +53,8 @@ var switchKegerator = function(kegeratorId) {
      $('#kegerator_details').append('<span class="badge badge-important connected">server</span> ');
      $('#kegerator_details').append('<span class="badge badge-important heartbeat">kegerator</span> ');
      $('#kegerator_details').append('<span class="badge" id="kegerator_temp">-- &deg;F</span>');
-
-     // Get data about most recent keg on this kegerator
+     $('#kegerator_details').append('<span class="badge badge-important deny"></span>');
+// Get data about most recent keg on this kegerator
      $.getJSON("/kegerators/" + kegeratorId + "/kegs?limit=1&active=true", function(data) {
       keg = data;
       if (_.isArray(data)) {
@@ -114,6 +114,7 @@ var handleHeartbeatEvent = function(data) {
   var validHeartbeat = ((data !== null) && (data['data'] === true));
   if (validHeartbeat) {
     $('#kegerator_details .badge.heartbeat').removeClass("badge-warning").addClass("badge-success");
+
   } else  {
     $('#kegerator_details .badge.heartbeat').removeClass("badge-success").addClass("badge-important on");
   }
@@ -137,10 +138,12 @@ var handleTempEvent = function(data) {
 
 var handleDenyEvent = function(data) {
   socketDebug('deny', data);
-  $("#kegerator_details .badge.pour").removeClass("badge-important").addClass("badge-important");
-  window.setTimeout(function() {
-    $("#kegerator_details .badge.pour").toggleClass("on");
-  }, 1500);
+  var rfid = data.data;
+  denyscans = $('#deny_modal ul');
+  denyscans.prepend('<li><a href="/signup?rfid='+rfid + '">'+rfid+' - ' + (new Date()).toString() + '</a>');
+  
+  
+  $('#kegerator_details .badge.deny').text(denyscans.find('li').length  + (denyscans.find('li').length == 20?'+':''));
 };
 
 var handlePourEvent = function(data) {
@@ -238,7 +241,6 @@ var handleScanEvent = function(data) {
   newprev.attr('data-id', $('#hero div.card').attr('data-id'));
   newprev.find('#user_coasters').remove();
   newprev.find('p.pour_volume').html(newprev.find('p.pour_volume span'))
-
   var previousRow = $('#previousRow');
   var newRow = previousRow.clone();
 
@@ -254,6 +256,7 @@ var handleScanEvent = function(data) {
       $(el).find('p.pour_date').attr('data-livestamp', date);
     });
   });
+
 
   getUser(rfid, function(user) {
     populateCurrentDrinkerMarkup(user);
@@ -360,6 +363,7 @@ function unsubscribeSocketEvents(socket,events){
 	
 }
 
+
 $(document).ready(function(){
 
   // Add tooltips to each coaster img
@@ -376,6 +380,10 @@ $(document).ready(function(){
     currentKegeratorId = cookieVal;
     switchKegerator(currentKegeratorId);
   }
+  
+  $(document).on('click','.badge.deny',function(){
+     $('#deny_modal').modal();
+  });
 
   // Get the list of available kegerators, populate the dropdown with them
   $.getJSON("/kegerators", function(kegerators) {

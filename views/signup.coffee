@@ -193,7 +193,7 @@ html lang: "en", ->
           div class: "control-group", ->
             label class: "control-label"
             div class: "controls", ->
-              input id: 'rfid', type:"text", placeholder:"RFID tag #", class: "input-xlarge"
+              input id: 'rfid', type:"text", placeholder:"RFID tag #", value:@rfid, class: "input-xlarge"
               p class: "help-block", 'This was given to you along with your RFID tag'
 
           div class: "control-group", ->
