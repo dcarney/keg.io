@@ -1,249 +1,387 @@
+ var socketDebug = function(msg, data) {
+  console.log("socket event: '" + msg + "' data: " + (data === null ? "" : JSON.stringify(data)));
+};
 
+// Returns the client to the "home page" and hides any
+// attached kegerator display info
+var clearKegeratorSelection = function() {
+  currentKegeratorId = null;
+  // hide the intro copy, display the kegerator card
+  $('#hero .card').addClass('hidden');
+  $('#hero .intro_copy').removeClass('hidden');
+  $('.previous').addClass('hidden');
+  $('.row-fluid .span3').hide();
+  $('#main').removeClass("span9");
+  $('#main').addClass("span12");
 
-var kegio = {
-	
-	
-	accessKey: '1111',
+  // TODO: should we clear the cookie?? I'm leaning towards no
+  // CRC: Cookie cleared!  This is cleaner now that we have a real about page
+  // and it's easy to get back to your kegerator page.
+  cookieDelete('kegio');
 
-  gauges:[ 
-  {
-      target:'flow_chart',
-      type:'gauge',
-      label:'Flow',
-      data:0,
-      options:{ 
-                redFrom:70,
-                redTo:80,
-                yellowFrom:60,
-                yellowTo:70,
-                yellowColor: '#FF6E00',
-        width:135,
-        height:135,
-                min: 0,
-                max: 80
-              }   
-  
-    },{
-      target:'temp_chart',
-      type:'gauge',
-      label:'Temp °F',
-      data:function(callback){
-        kegio.getCurrentTemp(callback);
-      },
-      update:function(){
-        kegio.getCurrentTemp(callback,this.target);
-      },
-      options:{
-                min:30,
-                max:70,
-                greenFrom:30,
-                greenTo:48,
-                greenColor:'#1FD8D8',
-                yellowFrom:48,
-                yellowTo:60,
-                yellowColor: '#FF6E00',
-                redFrom:60,
-                redTo:70,
-                redColor: 'red',
-                width:135,
-                height:135
-              }
+  // stop listening for events on this kegerator
+  detachWebSocket();
+};
 
+var switchKegerator = function(kegeratorId) {
 
-    },{
-      target:'beer_chart',
-      type:'gauge',
-      label:'Beer',
-      data:0,
-      options:{
-        redFrom:0,
-        redTo:10,
-        yellowFrom:10,
-        yellowTo:30,
-        yellowColor: '#FF6E00',
-        greenFrom:80,
-        greenTo:100,
-        width:135,
-        height:135
+  $.getJSON("/kegerators/" + kegeratorId, function(data) {
+     console.log(data);
+     var kegerator = data;
+     if (_.isArray(data)) {
+      kegerator = data[0];
+     }
+
+     // Save the value in a cookie
+     cookieCreate('kegio', kegeratorId, 90);
+
+     // hide the intro copy and previous drinkers, display the kegerator card
+     $('#hero .card').removeClass('hidden');
+     $('#hero .intro_copy').addClass('hidden');
+     $('.previous').removeClass('hidden');
+     $('.row-fluid .span3').show();
+     $('#main').addClass("span9");
+     $('#main').removeClass("span12");
+     $('#previousRow').empty();
+
+     // Populate some DOM elements w/ info
+     $('#kegerator_details').empty();
+     $('#kegerator_details').append("<li class='nav-header'>Kegerator</li>");
+     //$('#kegerator_details').append("<p><span class='kegerator'>" + kegerator.name + "</span></p>");
+     $('#kegerator_details').append("<h1>" + kegerator.name + "</h1>");
+     $('#kegerator_details').append("<h3>" + kegerator.description + "</h3  >");
+     $('#kegerator_details').append('<span class="badge badge-important connected">server</span> ');
+     $('#kegerator_details').append('<span class="badge badge-important heartbeat">kegerator</span> ');
+     $('#kegerator_details').append('<span class="badge" id="kegerator_temp">-- &deg;F</span>');
+     $('#kegerator_details').append('<span class="badge badge-important deny"></span>');
+// Get data about most recent keg on this kegerator
+     $.getJSON("/kegerators/" + kegeratorId + "/kegs?limit=1&active=true", function(data) {
+      keg = data;
+      if (_.isArray(data)) {
+        keg = data[0];
       }
-    }
-      ]
-  ,
 
-needleBump : function(){
-  flowchart = charts['flow_chart'];
-  if(flowchart.data.getValue(0, 1)!=0){
-    var bump = Math.random()>.5?1:-1;
-    var nv = flowchart.data.getValue(0, 1) + bump;
-    flowchart.data.setValue(0,1,nv);
-    flowchart.draw(flowchart.data,flowchart.options);
+      // populate some DOM elements w/ current keg info
+      // TODO: Make image_path part of the repsonse, liek we do with gravatar images
+      $('#keg_details').empty();
+      $('#keg_details').append("<li class='divider'></li>");
+      $('#keg_details').append("<li class='nav-header'>Keg</li>");
+      $('#keg_details').append("<h3>" + keg.beer + ' ' + keg.beer_style + "</h3>");
+      $('#keg_details').append("<h3>" + keg.brewery + "</h3>");
+      $('#keg_details').append("<p>Tapped <span data-livestamp='" + keg.tapped_date + "'></span></p>");
+      $('#keg_details').append("<p style='font-style:italic;'>" + keg.description + "</p>");
+      $('#keg_details').append('<img src="'+(keg.image_path.indexOf("http")!=-1?keg.image_path:("http://images.keg.io/" + keg.image_path)) + '"></img>');
+      if(keg.fromUntappd){
+        $('#keg_details').append('<br /><span class=""><img src="http://untappd.com/favicon.ico" />Additional beer data provided by Untappd</span>');
+      }
+     });  // getJSON
+
+     initializeKegeratorScreen(kegeratorId);
+
+     // re-connect to the appropriate web socket
+     reattachWebSocket(kegeratorId);
+  });
+};
+
+// Connect to a web socket and listen for events for the given kegerator
+var reattachWebSocket = function(kegeratorId) {
+  socket.removeAllListeners("attached");
+  $('#kegerator_details .badge.connected').removeClass("badge-important").addClass("badge-warning on");
+  socket.emit('attach', kegeratorId);
+  socket.on('attached', function () {
+    $('#kegerator_details .badge.connected').removeClass("badge-warning").addClass("badge-success");
+    socketDebug('attached', kegeratorId);
+  });
+};
+
+// Stop listening for events for the given kegerator.  Web socket remains connected.
+var detachWebSocket = function() {
+  socket.removeAllListeners("detached");
+  $('#kegerator_details .badge.connected').removeClass("badge-important").addClass("badge-warning on");
+  socket.emit('detach', null);
+  socket.on('detached', function () {
+    socketDebug('detached', null);
+  });
+};
+
+var handleCoasterEvent = function(data) {
+  socketDebug('coaster', data);
+  // TODO: Make the new coaster show up in the UI
+};
+
+var handleHeartbeatEvent = function(data) {
+  socketDebug('heartbeat', data);
+  var validHeartbeat = ((data !== null) && (data['data'] === true));
+  if (validHeartbeat) {
+    $('#kegerator_details .badge.heartbeat').removeClass("badge-warning").addClass("badge-success");
+
+  } else  {
+    $('#kegerator_details .badge.heartbeat').removeClass("badge-success").addClass("badge-important on");
   }
-},
-     
-     
-googleDatafy: function(g_data,json){
-  
-  var values = json.value;
-  g_data.addRows(values.length);
-  for(var i = 0; i < values.length; i++){
-    var tv = values[i];
-    for(var z = 0; z < tv.length; z ++){
-      g_data.setValue(i,z,tv[z]);
+
+};
+
+var handleTempEvent = function(data) {
+  socketDebug('temp', data);
+  temperature = data['data'];
+  $('#kegerator_temp').empty();
+  $('#kegerator_temp').html(temperature + "&deg;F");
+    $('#kegerator_temp').removeClass("badge-important badge-success badge-warning");
+  if(temperature < 45) {
+    $('#kegerator_temp').addClass("badge-success");
+  } else if(temperature < 50) {
+    $('#kegerator_temp').addClass("badge-warning");
+  } else {
+    $('#kegerator_temp').addClass("badge-important");
     }
+};
+
+var handleDenyEvent = function(data) {
+  socketDebug('deny', data);
+  var rfid = data.data;
+  denyscans = $('#deny_modal ul');
+  denyscans.prepend('<li><a href="/signup?rfid='+rfid + '">'+rfid+' - ' + (new Date()).toString() + '</a>');
   
+  
+  $('#kegerator_details .badge.deny').text(denyscans.find('li').length  + (denyscans.find('li').length == 20?'+':''));
+};
+
+var handlePourEvent = function(data) {
+  socketDebug('pour', data);
+  var volumeOunces = data['data'];
+  var now = new Date();
+  $('#user_info .pour_volume').html("You poured <span class='badge'>" + volumeOunces + " ounces</span>");
+  $('#user_info .pour_date').attr('data-livestamp', new Date());
+  $('#user_info .pour_date').attr('data',now);
+  if (_gaq) _gaq.push(['_trackEvent', 'pours', 'pour', cookieRead('kegio'), volumeOunces]);
+};
+
+// each obj in pourObjects is a regular pour, with the associated member obj
+// as the .user property.
+// Ex:
+// {
+//  "rfid": "44004C234A",
+//  "keg_id": 1,
+//  "kegerator_id": 1111,
+//  "volume_ounces": 5,
+//  "rates": [],
+//  "date": "2012-07-23T20:17:14-07:00"
+//  "user": <SOME_USER_OBJ>
+//  }
+//
+var populatePreviousDrinkersMarkup = function(pourObjects) {
+  // Clear the previous drinkers rows
+  $(".previousRow").empty();
+
+  var count = 0;
+  pourObjects = pourObjects.sort(function(a,b) { return Date.parse(b.date) - Date.parse(a.date); });
+  _.each(pourObjects, function(pourObject) {
+    count++;
+    var pour = pourObject;
+    var user = pour.user;
+
+    // Create a fresh new div for holding the markup for a previous drinker
+    var previousCard = $('<li class="mini-card" data-id="' + (new Date(pour.date)).getTime() + '"></div>');
+    previousCard.append("<img id='gravatar' class='profile' src='" + user.gravatar + "'>");
+    previousCard.append('<h2 class=name>' + user.first_name + '</h2>');
+    previousCard.append("<p class='pour_volume'><span class='badge'>" + pour.volume_ounces + " ounces</span></p>");
+    previousCard.append("<p class='pour_date' data-livestamp='" + pour.date + "'></p>");
+
+    $('#previousRow').append(previousCard);
+  });
+};
+
+// Take a user object and populate various bits of markup with info about them
+var populateCurrentDrinkerMarkup = function(user) {
+    $('#user_coasters').empty();
+  if (user) {
+    _.each(user.coasters, function(coaster_id) {
+      $.getJSON("/coasters/" + coaster_id, function(data) {
+        if (!_.isEmpty(data)) {
+          data= data[0];
+          var image_path = data.image_path;
+          var description = data.description;
+          var coaster = $('<img class="coaster" title="'+description+'" data-placement="bottom" src="'+image_path+'">').appendTo('#user_coasters');
+          $(coaster).tooltip();
+        }
+      });
+    });
   }
-  return g_data;
-  
-},
 
-  getSocketPort: function(callback){
-  		return this.sendRequest('/config/socketPort',callback);
-  		
-  	}	,
-  	
-  getLastDrinkers: function(callback,n){
-  		if(n==null){
-  			n=1;
-  		}
-  		this.sendRequest('/kegerators/'+this.accessKey+'/users?recent='+n,callback);
-  		
-	},
+  $('#gravatar').attr('src', user.gravatar);
+  $('#user_info').empty();
+  $('#user_info').append('<h2>Hello, <span class="firstname">'+ user.first_name + ' ' + user.last_name + '</span></h2>');
+  $('#user_info').append("<p class='pour_volume'></p>");
+  $('#user_info').append('<p class="pour_date"></p>');
+  //$('#user_info').append('<a class="btn rfid" href="#/users/' + user.rfid + '">View Profile</a>');
+};
 
-  getLastDrinker: function(callback){
+// Helper fn for getting a user obj via the API
+// cb = (user)
+var getUser = function(rfid, cb) {
+   $.getJSON("/users/" + rfid, function(data) {
+    var user = null;
+    if (_.isArray(data)) {
+      user = data[0];
+    }
+    return cb(user);
+  });
+};
 
-      this.sendRequest('/kegerators/' + this.accessKey + '/lastdrinker',callback);
-  },
+var handleScanEvent = function(data) {
+  socketDebug('scan', data);
+  rfid = data['data'];
 
-	getCurrentTemp: function(callback,target){
-		  this.getTemperatures(function(data){
-        callback(data[0].temperature,target);
-      },1);
-   },
+  hero = $('#hero div.card').clone();
+  var newprev = $('<li class="mini-card"></div>').append($(hero).children());
+  userInfo = newprev.find('#user_info').children();
+  newprev.find('div.card_content').remove();
+  newprev.append(userInfo);
+  newprev.find('h2').text(newprev.find('h2').text().replace('Hello, ',''));
+  newprev.attr('data-id', $('#hero div.card').attr('data-id'));
+  newprev.find('#user_coasters').remove();
+  newprev.find('p.pour_volume').html(newprev.find('p.pour_volume span'))
+  var previousRow = $('#previousRow');
+  var newRow = previousRow.clone();
 
-   getTemperatures : function (callback, n){
-      this.sendRequest('/kegerators/'+this.accessKey+'/temperatures?recent='+n,callback);
-   },
-	
-	getKegs: function(callback, n){
-			if(n==null){
-				n = 1;	
-			}
-			this.sendRequest('/kegerators/' + this.accessKey + '/kegs?recent=' + n,callback);
-			
-		},
+  // remove last element
+  newRow.find('li:last').remove();
 
-    getPours : function(callback, n){
-      n = n==null?1:n;
-      this.sendRequest('/kegerators/' + this.accessKey + '/pours?recent='+n,callback);
-    },
+  // add new first element
+  newRow.prepend(newprev);
 
-    getUsers : function(callback){
-      this.sendRequest('/users',callback);
-    },
+  $('#previousRow').quicksand(newRow.children(), function() {
+    $('#previousRow li').each(function(idx, el) {
+      date = new Date(parseInt($(el).attr('data-id'), 10));
+      $(el).find('p.pour_date').attr('data-livestamp', date);
+    });
+  });
 
-    getUserInfo : function(rfid,callback){
-        this.sendRequest('/users/'+rfid,function(users){
-          callback(users[0]);
+
+  getUser(rfid, function(user) {
+    populateCurrentDrinkerMarkup(user);
+    $('#hero div.card p.pour_volume').append("<span class='label label-striped active'>pouring...</span>");
+    var pourDate = new Date();
+    $('#hero div.card').attr('data-id', pourDate.getTime());
+    $('#hero div.card p.pour_date').attr('data-livestamp', pourDate);
+
+
+    $("#hero").animate({backgroundColor: "#FF0000"}, 700);
+    $("#hero").animate({backgroundColor: "#FFFFFF"}, 700);
+  });
+};
+
+var cookieCreate = function createCookie(name,value,days) {
+  var expires = "";
+  if (days) {
+    var date = new Date();
+    date.setTime(date.getTime() + (days*24*60*60*1000));
+    expires = "; expires=" + date.toGMTString();
+  }
+  document.cookie = name+"="+value+expires+"; path=/";
+};
+
+var cookieRead = function readCookie(name) {
+  var nameEQ = name + "=";
+  var ca = document.cookie.split(';');
+  for(var i=0; i < ca.length; i++) {
+    var c = ca[i];
+    while (c.charAt(0)==' ') c = c.substring(1,c.length);
+    if (c.indexOf(nameEQ) === 0) { return c.substring(nameEQ.length,c.length); }
+  }
+  return null;
+};
+
+var cookieDelete = function eraseCookie(name) {
+  cookieCreate(name,"",-1);
+};
+
+// The web socket
+var socket = null;
+
+// The attached kegerator (if any)
+var currentKegeratorId = null;
+
+var initializeKegeratorScreen = function(currentKegeratorId) {
+ // Populate the 'last drinker' and 'current drinker' cards
+ if (currentKegeratorId !== null) {
+   $('previousRows').empty();
+   // limit of 7 = 1 current drinker, 6 previous
+   $.getJSON('/kegerators/' + currentKegeratorId + '/pours?limit=7', function(pours) {
+     var lastPour = pours.shift(); // the 'last' pour is the 0th element!
+     getUser(lastPour.rfid, function(user) {
+       populateCurrentDrinkerMarkup(user);
+       $('#hero div.card p.pour_volume').append("You poured <span class='badge'>" + lastPour.volume_ounces + " ounces</span>");
+       $('#hero div.card p.pour_date').attr('data-livestamp', lastPour.date);
+       $('#hero div.card').attr('data-id', (new Date(lastPour.date)).getTime());
+     });
+
+     var pourObjects = [];
+     // remove any undefined objecs
+     pours = _.reject(pours, function(pour) { return pour === null; });
+
+     var numPours = pours.length;
+     _.each(pours, function(pour) {
+       getUser(pour.rfid, function(user) {
+          pour['user'] = user;
+          pourObjects.push(pour);
+          if (pourObjects.length === numPours) {
+           // all done, populate the UI
+           populatePreviousDrinkersMarkup(pourObjects);
+          }
         });
-    },
+      });
+    }); // getJSON
+  }
+    
+  
+  socket = io.connect('http://' + window.location.hostname);
+  unsubscribeSocketEvents(window.socket, ['scan','temp','deny','pour','coaster','heartbeat']);
+  socket.on('connect', function () {
+   socketDebug('connect', null);
+   $('.badge.connected').removeClass("badge-important badge-warning").addClass("badge-success on");//.text("connected");
+  });
+  socket.on('disconnect', function() {
+   $('.badge.connected').removeClass("badge-success badge-warning").addClass("badge-important on");//.text("disconnected");
+  });
+  socket.on('hello', function (data) { socketDebug('hello', data); });
+  socket.on('scan', handleScanEvent);
+  socket.on('temp', handleTempEvent);
+  socket.on('deny', handleDenyEvent);
+  socket.on('pour', handlePourEvent);
+  socket.on('coaster', handleCoasterEvent);
+  socket.on('heartbeat', handleHeartbeatEvent);
+  // TODO: add code to handle flow event
+};
 
-    getUserCoasters : function(rfid,callback){
-        this.sendRequest('/coasters/'+rfid,callback);
-    },
-
-    getCoasters:function(callback){
-        this.sendRequest('/coasters');
-    },
-
-
-	
-	
-  handleError: function(data) {
-       if (typeof data.data == 'undefined'){
-            var data = jQuery.parseJSON(data.responseText);
-       }
-       if (typeof data.code == 'undefined'){
-               data.code = 'N/A';
-       }
-       new Notification('<strong>' + data.status.toUpperCase() + '</strong> ' + data.data + ' - Error Code: ' + data.code, 'error');
-   },
-
- 
-   inDeveloperMode: function() {
-       return $('#devmode').is(':checked');
-   },
- 
-   // display nicely formatted API request details before sending it to API server
-    formatAndConfirmRequest: function(method, url, data, callback) {
-       if ( this.inDeveloperMode() ) {
-           var request = $('<div></div>');
- 
-           var urlArray = url.split('?');
-           var path = urlArray[0];
-           var queryString = urlArray.length > 1 ? urlArray[1] : '';
-           var dataString = data;
- 
-           var curlCommand = 'curl -i -H "Accept: application/json" -k' +
-                               ' "' + window.location.protocol + '//' +
-                               window.location.host +
-                               path +
-                               (queryString && queryString.length > 0 ? '?' + queryString + '"': '"') +
-                               ' -X ' + method +
-                               (dataString && dataString.length > 0 ? ' -d "' + dataString + '"' : '') +
-                               ' --user ' + user_name;
- 
-                        $(request).append('The GUI is about to make a Brainstem API request on your behalf. ' +
-                                                                'The exact same request can be made on the command line using the ' +
-                                                                '<a href="http://curl.haxx.se/" target="_blank">cURL</a> command below.<br /><br />' +
-                                                                'Click the command text to highlight it, Ctrl/Command+C, then paste it on the command line to see it in action.<br /><br />' +
-                                                                'You will be prompted for your password so that it will not be shown in plain text.<br /><br />');
-           $(request).append('<pre><code>' + curlCommand + '</pre></code><br /><br />');
-           $(request).append('Continuing sending request to server?');
-           $(request).dialog({ buttons: { "Ok": function() { $(this).dialog("close"); callback(true); },
-                                          "Cancel": function() { $(this).dialog("close"); callback(false); }
-                                        },
-                               modal: true,
-                               title: 'Request Details',
-                               width: 700
-                            });
- 
-           // select the full text of the curl command by single-clicking
-           $('code').click(function() {
-                $(this).selectText();
-           });
-       } else {
-           callback(true);
-       }
-   },
-   
-
- 
-sendRequest: function(url, callback, error, method, data) {
-       //method is optional param, as default behavior is just "GET me that stuff, yo"
-       if (typeof method == 'undefined' || method == null) method = 'GET';
-       //so is error, but give it a default catch-all for sure
-       if (typeof error == 'undefined' || error == null) error = this.handleError;
- 
-       this.formatAndConfirmRequest(method, url, data, function(status) {
-           if (status == false) {
-               error( { status: 'ab /config/socketPortorted', data: 'User cancelled request.', code: 'N/A' } );
-               return;
-           } else {
- 
-               $.ajax({
-                   type: method,
-                   url: url,
-                   data: data,
-                   dataType: 'json',
-                   beforeSend: function(xhr) {
-                      // xhr.setRequestHeader("Authorization", "Basic " + token);
-                   },
-                   success: callback,
-                   error: error
-               });
-           }
-       });
-   }
-
-
+function unsubscribeSocketEvents(socket,events){
+    if(typeof events == 'string') events = [events];
+    
+    for(var i =0; i < events.length; i ++){
+        socket.removeAllListeners(events[i]);
+    }
+    
 }
+
+function setKegSelectionEvents(){
+    // Attach an event handler to each item in the "kegerators" menu
+    //$('.dropdown-menu').on('click', 'li', function() {
+    $('.dropdown-menu a').click(function(){
+      var selectedId = $(this).attr('id');
+      console.log('New kegerator selected: ' + selectedId);
+      if (_gaq) _gaq.push(['_trackEvent', 'kegerators', 'switch', selectedId]);
+      switchKegerator(selectedId);
+    });
+    
+    // Also, attach an event handler to each item in the "kegerators" sidebar
+    //$('#kegerator_details').on('click', 'li', function() {
+    $('#kegerator_details a').click(function(){
+      var selectedId = $(this).attr('id');
+      if(selectedId!= null){
+          console.log('New kegerator selected: ' + selectedId);
+          if (_gaq) _gaq.push(['_trackEvent', 'kegerators', 'switch', selectedId]);
+          switchKegerator(selectedId);
+      }
+    });
+}
+
