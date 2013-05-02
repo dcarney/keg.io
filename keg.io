@@ -436,6 +436,9 @@ server.get '/users/:rfid/pours', (req, res, next) ->
     handleResponse err, result, req, res
 
 
+server.get '/data/toppours/:kegid', (req, res, next) ->
+  keg.db.topPoursByKeg req.params.kegid, (err, result)->
+    handleResponse err, result, req, res
 # ## UI: validate untapp username
 #   `GET /untappd/user/:user`
 #
