@@ -1,9 +1,9 @@
 #ifndef __CREDENTIALS_H__
 #define __CREDENTIALS_H__
 
-  #define WIFI_SSID "simply_measured"
-  #define WIFI_PASSPHRASE "si|\\/|ply"
-  #define KEGIO_DOMAIN "192.168.8.158"
+  #define WIFI_SSID "beeeeeeer"
+  #define WIFI_PASSPHRASE "6800000037"
+  #define KEGIO_DOMAIN "192.168.1.179"
   #define KEGIO_PORT 8081
 
   char clientId[] = "1111";
@@ -14,3 +14,4 @@
   int clientSecretLength = 6;
 
 #endif
+

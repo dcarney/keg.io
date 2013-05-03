@@ -50,6 +50,7 @@ char PATH[20] = "/api/kegerator/";
 #define RED_PIN 8
 #define BLUE_PIN 9
 #define GREEN_PIN 10
+#define OVERRIDE_PIN A0
 
 // Status LED colors
 #define BLUE 0
@@ -116,11 +117,13 @@ void setup() {
   pinMode(RFID_RESET_PIN, OUTPUT);
   pinMode(BEEP_PIN, OUTPUT);
   pinMode(SOLENOID_PIN, OUTPUT);
+  pinMode(OVERRIDE_PIN,INPUT);
 
   digitalWrite(RED_PIN, LOW);
   digitalWrite(GREEN_PIN, LOW);
   digitalWrite(BLUE_PIN, LOW);
-
+  digitalWrite(OVERRIDE_PIN, LOW);
+  
   Serial.begin(SERIAL_BAUD);
   rfidSerial.begin(SERIAL_BAUD);
 
@@ -189,10 +192,11 @@ void setup() {
 #define TEMP_MSG 1
 #define FLOW_MSG 2
 int lastHttpReqAction = INVALID_MSG;
+int isOverride = LOW;
 
 // the loop routine runs over and over again forever:
 void loop() {
-
+  isOverride = digitalRead(OVERRIDE_PIN);
   // If there are a few bytes waiting on the WiFly shield...
   // If there's less than 4, chances are we don't want to parse just yet
   // HTTP/1.1 200 OK
@@ -211,17 +215,32 @@ void loop() {
       ledStatus(GREEN);
     }
 
-    if ((lastHttpReqAction == SCAN_MSG) && (responseCode == 200)) {
+    if (((lastHttpReqAction == SCAN_MSG) && (responseCode == 200))) {
       solenoidOpenMs = millis();
       lastFlowMillis = solenoidOpenMs;
       totalFlow = 0.0;
       digitalWrite(SOLENOID_PIN, HIGH);
     }
   }
+  
+  if ((isOverride == HIGH) && solenoidOpenMs == 0) {
+    tone(BEEP_PIN, BEEP_HZ_HI, 250);
+    delay(250);
+    tone(BEEP_PIN, BEEP_HZ_LO, 750);
+    solenoidOpenMs = millis();
+    lastFlowMillis = solenoidOpenMs;
+    totalFlow = 0.0;
+    //sendSignedHttp("GET", SCAN_MSG, "000000");
+    digitalWrite(SOLENOID_PIN, HIGH);
+  }
+  
+  if(digitalRead(OVERRIDE_PIN)==HIGH){
+   //Serial.println("OVR ON"); 
+  }
 
   // If it's time to close the solenoid (and it was open)
   if ((solenoidOpenMs > 0) &&
-      (millis() - solenoidOpenMs) > SOLENOID_OPEN_DURATION_MS) {
+      (millis() - solenoidOpenMs) > SOLENOID_OPEN_DURATION_MS && isOverride == LOW) {
     digitalWrite(SOLENOID_PIN, LOW);
     solenoidOpenMs = 0;
     lastFlowMillis = 0;
@@ -288,10 +307,10 @@ void loop() {
   }
 
   // if there's a byte waiting to be read on the RFID serial port...
-  if (((millis() - lastRfidMs) > RFID_DURATION_MS) && (rfidSerial.available() > 1)) {
+  if (isOverride == LOW && ((millis() - lastRfidMs) > RFID_DURATION_MS) && (rfidSerial.available() > 1)) {
     readTag3();
     if (checkTag(tagBuffer)) {
-      tone(BEEP_PIN, BEEP_HZ_MID, 250); // 440hz for 250ms
+       // 440hz for 250ms
       Serial.println(tagBuffer);
       sendSignedHttp("GET", SCAN_MSG, tagBuffer);
     } else {
@@ -726,10 +745,10 @@ float getTemp(){
 // this next if statement has caused issues
 // if temp readings + scan causes garbled scans and the board to reboot
 // try removing it
-  if ( OneWire::crc8( addr, 7) != addr[7]) {
-      Serial.println("Temp sensor CRC is not valid!");
-      return TEMP_SENSOR_ERROR;
-  }
+//  if ( OneWire::crc8( addr, 7) != addr[7]) {
+ //     Serial.println("Temp sensor CRC is not valid!");
+//      return TEMP_SENSOR_ERROR;
+//  }
 
   if ( addr[0] != 0x10 && addr[0] != 0x28) {
       Serial.print("Temp sensor device is not recognized");
@@ -758,3 +777,4 @@ float getTemp(){
 
   return TemperatureSum;
 }
+

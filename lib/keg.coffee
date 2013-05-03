@@ -205,7 +205,7 @@ class Keg extends events.EventEmitter
   # cb = (err, savedToDb)
   # emits: 'pour'
   endFlow: (kegerator_id, volume, cb) =>
-    rfid = @kegerator_last_scans[kegerator_id]
+    rfid = @kegerator_last_scans[kegerator_id] || "000000"
     return cb 'no valid pour event to end', null unless rfid?
 
     # remove the rfid from memory, and save the pour to the DB and emit if > 0

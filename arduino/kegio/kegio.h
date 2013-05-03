@@ -23,7 +23,7 @@
   // How often should the arduino check the temperature and report to keg.io?
   // This interval not only serves to send temperature info to the server, but
   // also as a "status heartbeat"
-  #define TEMPERATURE_SEND_INTERVAL_MS 10000
+  #define TEMPERATURE_SEND_INTERVAL_MS 30000
 
   // How long should the solenoid stay open per scan?  This depends on the flow
   // rate that your particular setup is providing, and personal perference
@@ -43,3 +43,4 @@
   #define KEGIO_VERBOSE_DEBUGGING 0
 
 #endif
+
