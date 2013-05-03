@@ -329,7 +329,10 @@ class Keg extends events.EventEmitter
       u.getGravatar (gravatar_url) ->
         u.gravatar = gravatar_url
         cb null, u
-
+  
+  getTopPours: (kegid, cb) =>
+    @db.topPoursByKeg kegid, (err, data)=>
+      cb(data)
   # criteria = 0 or more of: {id, limit, kegerator_id}
   # cb= (err, result)
   findUsers: (criteria, cb) =>

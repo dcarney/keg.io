@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>keg.io</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="">
+    <meta name="author" content="Garrett" >
+
+    <!-- Le styles -->
+    <link href="../css/bootstrap.css" rel="stylesheet">
+    <style type="text/css">
+      body {
+        padding-top: 60px;
+        padding-bottom: 40px;
+      }
+      .sidebar-nav {
+        padding: 9px 0;
+      }
+
+      #hero .lastname, #hero .location, #hero .rfid {
+        display: none;
+      }
+
+      .mini-card .tagline, .mini-card .user_coasters{
+			display: none;
+      }
+
+
+      .mini-card .bc-right{
+      	width: auto;
+      	height: auto;
+      	float: right;
+      }
+
+    </style>
+    <link href="../css/bootstrap-responsive.css" rel="stylesheet">
+    <link href="../css/style.css" rel="stylesheet">
+
+    <!-- Le HTML5 shim, for IE6-8 support of HTML5 elements -->
+    <!--[if lt IE 9]>
+      <script src="http://html5shim.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+
+    <!-- fonts -->
+    <link href='http://fonts.googleapis.com/css?family=Cabin+Sketch:bold' rel='stylesheet' type='text/css'>
+
+    <!-- Le fav and touch icons -->
+    <link rel="shortcut icon" href="favicon.ico">
+    <link rel="apple-touch-icon-precomposed" sizes="144x144" href="../ico/apple-touch-icon-144-precomposed.png">
+    <link rel="apple-touch-icon-precomposed" sizes="114x114" href="../ico/apple-touch-icon-114-precomposed.png">
+    <link rel="apple-touch-icon-precomposed" sizes="72x72" href="../ico/apple-touch-icon-72-precomposed.png">
+    <link rel="apple-touch-icon-precomposed" href="../ico/apple-touch-icon-57-precomposed.png">
+  </head>
+
+  <body class="kegio">
+    <div class="navbar navbar-fixed-top">
+      <div class="navbar-inner">
+        <div class="container-fluid">
+          <a class="btn btn-navbar" data-toggle="collapse" data-target=".nav-collapse">
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+          </a>
+          <a class="home_link brand" href="/">keg.io</a>
+          <div class="nav-collapse">
+            <ul class="nav">
+              <li class="active"><a class="home_link" href="/">home</a></li>
+              <li class="dropdown">
+                <a class="dropdown-toggle" data-toggle="dropdown" href="#">
+                  kegerators
+                  <span class="caret"></span>
+                </a>
+                <ul class="dropdown-menu">
+                </ul>
+              </li>
+              <li><a class="home_link" href="/hardware.html">about</a></li>
+              <li><a href="https://github.com/dcarney/keg.io" target="_blank">github</a></li>
+              <li><a href="/signup">signup!</a></li>
+            </ul>
+          </div><!--/.nav-collapse -->
+        </div>
+      </div>
+    </div>
+    <div class="container-fluid">
+      <div class="row-fluid">
+        <div class="span3">
+          <div class="well sidebar-nav">
+            <ul id="kegerator_details" class="nav nav-list">
+              <li class="nav-header">About</li>
+              <li><a href="/hardware.html">Hardware</a></li>
+              <li><a href="/team.html">Team</a></li>
+              <li class="nav-header">Choose a kegerator</li>
+            </ul>
+
+            <div id="keg_details" class="nav nav-list"></div>
+          </div><!--/.well -->
+        </div><!--/span-->
+        <div id="main" class="span9 well">
+            <div id="pourchart"></div>
+            
+            
+        </div>
+         </div><!--/row-->
+
+      <hr>
+
+      <footer>
+        <p>&copy; keg.io 2013</p>
+      </footer>
+        <div id="deny_modal" class="modal hide" role="dialog" aria-hidden="true">
+        <div class="modal-header"><button type="button" class="close" data-dismiss="modal">x</button>
+            <h3>Deny Scans</h3>
+        </div>
+        <div class="modal-body">
+        <ul></ul>
+        </div>
+        <div class="modal-footer"></div>
+        </div>
+    </div><!--/.fluid-container-->
+
+    <!-- Le javascript
+    ================================================== -->
+    <!-- Placed at the end of the document so the pages load faster -->
+    <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js"></script>
+    <script src="../js/bootstrap-transition.js"></script>
+    <script src="../js/bootstrap-alert.js"></script>
+    <script src="../js/bootstrap-modal.js"></script>
+    <script src="../js/bootstrap-dropdown.js"></script>
+    <script src="../js/bootstrap-scrollspy.js"></script>
+    <script src="../js/bootstrap-tab.js"></script>
+    <script src="../js/bootstrap-tooltip.js"></script>
+    <script src="../js/bootstrap-popover.js"></script>
+    <script src="../js/bootstrap-button.js"></script>
+    <script src="../js/bootstrap-collapse.js"></script>
+    <script src="../js/bootstrap-carousel.js"></script>
+    <script src="../js/bootstrap-typeahead.js"></script>
+
+    <script src="../js/underscore-min.js"></script>
+    <script src="../js/moment.min.js"></script>
+    <script src="../js/livestamp.min.js"></script>
+    <script src="../js/mustache.js"></script>
+    <script src="../js/jquery.color.js"></script>
+    <script src="../js/jquery.quicksand.js"></script>
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="../js/keg.io.client.js"></script>
+    <script src="http://d3js.org/d3.v3.min.js" charset="utf-8"></script>
+
+    <!-- GA code -->
+    <script type="text/javascript">
+
+      var _gaq = _gaq || [];
+      _gaq.push(['_setAccount', 'UA-36037091-2']);
+      _gaq.push(['_trackPageview']);
+
+      (function() {
+        var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+        ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+        var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+      })();
+      
+      
+      
+      $(document).ready(function(){
+
+  // Look for a keg.io cookie, with an all-numeric kegerator ID in it.
+  var cookieVal = cookieRead('kegio');
+  if ((cookieVal !== null) && (cookieVal.match(/^\d+$/))) {
+    currentKegeratorId = cookieVal;
+    switchKegerator(currentKegeratorId);
+  }
+  
+  $(document).on('click','.badge.deny',function(){
+     $('#deny_modal').modal();
+  });
+
+  // Get the list of available kegerators, populate the dropdown with them
+  $.getJSON("/kegerators", function(kegerators) {
+    _.each(kegerators, function(k) {
+      $('.dropdown-menu').append("<li><a id=" + k.kegerator_id + " href='#' onclick='javascript:return false;'>" + k.name + "</a></li>");
+      if (cookieRead('kegio') === null) {
+        $('#kegerator_details').append("<li><a id=" + k.kegerator_id + " href='#' onclick='javascript:return false;'>" + k.name + "</a></li>");
+      }
+    });
+    setKegSelectionEvents();
+  }); // getJSON
+  
+  // Attach an event handler to all the "home" links that clears the
+    // kegerator selection, and displays the homepage content
+    $('.home_link').on('click', function(event) {
+      clearKegeratorSelection();
+    });
+    
+    
+    
+});   // document ready
+
+var switchKegerator = function(kegeratorId) {
+
+  $.getJSON("/kegerators/" + kegeratorId, function(data) {
+     console.log(data);
+     var kegerator = data;
+     if (_.isArray(data)) {
+      kegerator = data[0];
+     }
+
+     // Save the value in a cookie
+     cookieCreate('kegio', kegeratorId, 90);
+
+
+
+// Get data about most recent keg on this kegerator
+     $.getJSON("/kegerators/" + kegeratorId + "/kegs?limit=1&active=true", function(data) {
+      keg = data;
+      if (_.isArray(data)) {
+        keg = data[0];
+      }
+
+      // populate some DOM elements w/ current keg info
+      // TODO: Make image_path part of the repsonse, liek we do with gravatar images
+      $('#keg_details').empty();
+      $('#keg_details').append("<li class='divider'></li>");
+      $('#keg_details').append("<li class='nav-header'>Keg</li>");
+      $('#keg_details').append("<h3>" + keg.beer + ' ' + keg.beer_style + "</h3>");
+      $('#keg_details').append("<h3>" + keg.brewery + "</h3>");
+      $('#keg_details').append("<p>Tapped <span data-livestamp='" + keg.tapped_date + "'></span></p>");
+      $('#keg_details').append("<p style='font-style:italic;'>" + keg.description + "</p>");
+      $('#keg_details').append('<img src="'+(keg.image_path.indexOf("http")!=-1?keg.image_path:("http://images.keg.io/" + keg.image_path)) + '"></img>');
+      if(keg.fromUntappd){
+        $('#keg_details').append('<br /><span class=""><img src="http://untappd.com/favicon.ico" />Additional beer data provided by Untappd</span>');
+      }
+     
+     doPourChart(keg.keg_id);
+     
+     
+     });  // getJSON
+     initializeKegeratorScreen(kegeratorId);
+
+     // re-connect to the appropriate web socket
+     reattachWebSocket(kegeratorId);
+  });
+};
+
+      
+function doPourChart(keg_id){
+    $.getJSON("/data/toppours/" + keg_id,function(data){
+           data.sort(function(a,b){
+               if(a.total < b.total){
+                   return 1;
+               }
+               if(a.total > b.total){
+                   return -1;
+               }
+               return 0;
+            });
+            //Width and height
+            var w = 500;
+            var h = 200;
+            
+            var axisPadding = 50;
+           
+            var barPadding = 1;
+            
+            //var dataset = [ 5, 10, 13, 19, 21, 25, 22, 18, 15, 13,
+            //                11, 12, 15, 20, 18, 17, 16, 18, 23, 25 ];
+            var dataset = data;
+           
+            var yscale = d3.scale.linear()
+                                 .domain([0,d3.max(dataset,function(d){return d.total;})])
+                                 .range([0,h]);
+                       var yaxisscale = d3.scale.linear()
+                                 .domain([0,d3.max(dataset,function(d){return d.total;})])
+                                 .range([h,0]);
+
+            var xscale = d3.scale.linear()
+                                .domain([0,dataset.length])
+                                .range([0,w]);
+            var colorscale = d3.scale.linear()
+                                .domain([0,d3.max(dataset,function(d){return d.pours;})])
+                                .range(["blue","green","yellow","orange","red"]);
+            
+            //Create SVG element
+            var svg = d3.select("#pourchart")
+                        .append("svg")
+                        .attr("width", w + axisPadding)
+                        .attr("height", h + axisPadding);
+
+            svg.selectAll("rect")
+               .data(dataset)
+               .enter()
+               .append("rect")
+               .attr("x", function(d, i) {
+                    return i * (w / dataset.length) + axisPadding;
+               })
+               .attr("y", function(d) {
+                    return h -yscale(d.total);
+               })
+               .attr("id", function(d){return d.rfid})
+               .attr("width", w / dataset.length - barPadding)
+               .attr("height", function(d) {
+                    return yscale(d.total);
+               })
+               .attr("fill", function(d) {
+               //     return "rgb(0, 0, " + (d * 10) + ")";
+                      return colorscale(d.pours);
+               });
+
+            svg.selectAll("text")
+               .data(dataset)
+               .enter()
+               .append("text")
+               .text(function(d) {
+                    return d.rfid;
+               })
+               .attr("text-anchor", "end")
+               .attr("x", function(d, i) {
+                    return i * (w / dataset.length) + (w / dataset.length - barPadding) / 2;
+               })
+               .attr("y", function(d) {
+                    return h - yscale(d.total) + 14;
+               })
+               //.attr("transform", "translate(0," + h + ")")
+               .attr("transform", function(d,i){
+                   return "translate("+i * (w / dataset.length)+", 100) rotate(-90)";
+               })
+               .attr("font-family", "sans-serif")
+               .attr("font-size", "11px")
+               .attr("fill", "white");
+           
+           var yaxis = d3.svg.axis()
+                                .scale(yaxisscale)
+                                .orient("left")
+                                .ticks(5);
+                                
+           svg.append("g").attr("class","axis")
+           .attr("transform","translate("+axisPadding+",0)")
+           .call(yaxis);
+
+           $.getJSON('/users',function(users){
+               return;
+             d3.selectAll("rect")
+               //.data(dataset)
+               .enter()
+               .append("text")
+               .text(function(d) {
+                    return users[d.rfid];
+               })
+               .attr("text-anchor", "middle")
+               .attr("x", function(d, i) {
+                    return i * (w / dataset.length) + (w / dataset.length - barPadding) / 2;
+               })
+               .attr("y", function(d) {
+                    return h - yscale(d.total) + 14;
+               })
+              // .attr("transform", function(d,i){
+              //     return "rotate(180,"+ (i * (w / dataset.length)) + ",0)";
+              // })
+               .attr("font-family", "sans-serif")
+               .attr("font-size", "11px")
+               .attr("fill", "white");     
+               
+           });
+     });
+    
+}
+      
+      
+      
+      
+      
+      
+      
+
+    </script>
+
+  </body>
+</html>

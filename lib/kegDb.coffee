@@ -151,6 +151,19 @@ class KegDb
       collection.find selector, opts, (err, cursor) =>
         @handleFind cb, err, cursor
 
+  topPoursByKeg:(kegid, cb)=>
+    console.log "get pours for keg:" + kegid
+    @getCollection 'pours', (err, collection) =>
+      return cb err, null if err?
+      collection.group {rfid:1}, {keg_id:parseInt(kegid)},{total:0, pours:0},(curr,result)->
+          result.total+= curr.volume_ounces
+          result.pours +=1
+      , null
+      , true
+      , (err, results) =>
+        console.log results
+        cb err, results
+     
   # cb = (err, user)
   findUser: (rfid, cb) =>
     @getCollection 'users', (err, collection) =>
