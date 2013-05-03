@@ -385,3 +385,58 @@ function setKegSelectionEvents(){
     });
 }
 
+var handleScanEvent = function(data) {
+  socketDebug('scan', data);
+  rfid = data['data'];
+
+  /*hero = $('#hero div.card').clone();
+  var newprev = $('<li class="mini-card"></div>').append($(hero).children());
+  userInfo = newprev.find('#user_info').children();
+  newprev.find('div.card_content').remove();
+  newprev.append(userInfo);
+  newprev.find('h2').text(newprev.find('h2').text().replace('Hello, ',''));
+  newprev.attr('data-id', $('#hero div.card').attr('data-id'));
+  newprev.find('#user_coasters').remove();
+  newprev.find('p.pour_volume').html(newprev.find('p.pour_volume span'))
+  var previousRow = $('#previousRow');
+  var newRow = previousRow.clone();
+
+  // remove last element
+  newRow.find('li:last').remove();
+
+  // add new first element
+  newRow.prepend(newprev);
+
+  $('#previousRow').quicksand(newRow.children(), function() {
+    $('#previousRow li').each(function(idx, el) {
+      date = new Date(parseInt($(el).attr('data-id'), 10));
+      $(el).find('p.pour_date').attr('data-livestamp', date);
+    });
+  });
+    */
+
+  getUser(rfid, function(user) {
+    populateCurrentDrinkerMarkup(user);
+    $('#hero div.card p.pour_volume').append("<span class='label label-striped active'>pouring...</span>");
+    var pourDate = new Date();
+    $('#hero div.card').attr('data-id', pourDate.getTime());
+    $('#hero div.card p.pour_date').attr('data-livestamp', pourDate);
+
+
+    $("#hero").animate({backgroundColor: "#FF0000"}, 700);
+    $("#hero").animate({backgroundColor: "#FFFFFF"}, 700);
+  });
+};
+
+var handlePourEvent = function(data) {
+  socketDebug('pour', data);
+  var volumeOunces = data['data'];
+  var now = new Date();
+  $('#user_info .pour_volume').html("You poured <span class='badge'>" + volumeOunces + " ounces</span>");
+  $('#user_info .pour_date').attr('data-livestamp', new Date());
+  $('#user_info .pour_date').attr('data',now);
+ 
+};
+
+
+
