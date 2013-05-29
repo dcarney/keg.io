@@ -210,48 +210,50 @@ class Keg extends events.EventEmitter
 
     # remove the rfid from memory, and save the pour to the DB and emit if > 0
     delete @kegerator_last_scans[kegerator_id]
-
-    pour =
-      date: moment().format 'YYYY-MM-DDTHH:mm:ssZ' #ISO8601
-      rfid: rfid
-      keg_id: 1   # TODO: hardcoded
-      kegerator_id: parseInt kegerator_id, 10
-      volume_ounces: parseInt volume, 10
-
-    # save to the DB and emit
-    # if pour_volume < 0, set it to 0 and also don't check for new costers
-    if volume <= 0
-      pour.volume_ounces = 0
-      @db.insertObjects 'pours', pour, (err, result) =>
-        return cb err, false if err?
-        @emit 'pour', kegerator_id, 0
-        cb null, true
-    else
-      @db.insertObjects 'pours', pour, (err, result) =>
-        return cb err, false if err?
-        @emit 'pour', kegerator_id, volume
-
-        # earn a coaster?
-        @checkForNewCoasters pour, volume
-
-        ## get the user's info
-        @db.findUser pour.rfid, (err, user) =>
-
-          # Tweet about it, whydoncha
-          if !err and user? and @kegTwit?
-            @db.findKeg pour.keg_id, (err,beer)=>
-              @kegTwit.tweetPour user, parseInt(volume, 10), beer
-          else if @kegTwit?
-            @kegTwit.tweet "Whoa, someone just poured themselves a beer!"
-            
-          #@logger.info "checkin to untappd?"+user.tokens.untappd
-          #untappd.userCheckin null, null
-          if @config.untappd.enabled and user.tokens and user.tokens.untappd
-            @db.findKeg pour.keg_id, (err,beer)=>
-              @untappd.userCheckin user, pour, beer
-            
-
+    
+    @kegeratorKegsById kegerator_id, 1, (curr_keg)=>
+      pour =
+        date: moment().format 'YYYY-MM-DDTHH:mm:ssZ' #ISO8601
+        rfid: rfid
+        keg_id: curr_keg.keg_id   # TODO: hardcoded
+        kegerator_id: parseInt kegerator_id, 10
+        volume_ounces: parseInt volume, 10
+  
+      # save to the DB and emit
+      # if pour_volume < 0, set it to 0 and also don't check for new costers
+      if volume <= 0
+        pour.volume_ounces = 0
+        @db.insertObjects 'pours', pour, (err, result) =>
+          return cb err, false if err?
+          @emit 'pour', kegerator_id, 0
           cb null, true
+      else
+        @db.insertObjects 'pours', pour, (err, result) =>
+          console.log pour
+          return cb err, false if err?
+          @emit 'pour', kegerator_id, volume
+  
+          # earn a coaster?
+          @checkForNewCoasters pour, volume
+  
+          ## get the user's info
+          @db.findUser pour.rfid, (err, user) =>
+  
+            # Tweet about it, whydoncha
+            if !err and user? and @kegTwit?
+              @db.findKeg pour.keg_id, (err,beer)=>
+                @kegTwit.tweetPour user, parseInt(volume, 10), beer
+            else if @kegTwit?
+              @kegTwit.tweet "Whoa, someone just poured themselves a beer!"
+              
+            #@logger.info "checkin to untappd?"+user.tokens.untappd
+            #untappd.userCheckin null, null
+            if @config.untappd.enabled and user.tokens and user.tokens.untappd
+              @db.findKeg pour.keg_id, (err,beer)=>
+                @untappd.userCheckin user, pour, beer
+              
+  
+            cb null, true
 
   # cb = (err, savedToDb)
   # emits 'temp'
@@ -367,6 +369,14 @@ class Keg extends events.EventEmitter
       query.limit = num_temps if num_temps?
       @models.Temperature.findAll(query).success (temps) =>
         cb(@models.mapAttribs(temp) for temp in temps)
+
+  kegeratorKegsById: (kr_id, num_kegs, cb) ->
+    query = {limit:1, where: {kegerator_id: kr_id}, order: 'tapped_date DESC'}
+    #console.log "kegeratorKegsById:" + query
+    #query.limit = num_kegs if num_kegs?
+    @db.findKegs query , (err, kegs) =>
+      #@logger.info kegs
+      cb(kegs[0])
 
   kegeratorKegs: (access_key, num_kegs, cb) ->
     @models.Kegerator.find({where: {access_key: access_key}}).success (kegerator) =>
