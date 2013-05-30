@@ -32,6 +32,19 @@
       	height: auto;
       	float: right;
       }
+      
+      .tooltip {
+          position: absolute;
+          text-align: center;
+          width: 80px;
+          height: 30px;
+          padding: 2px;
+          font: 12px sans-serif;
+          background: #ccc;
+          border: 0;
+          border-radius: 8px;
+          pointer-events: none;
+      }
 
     </style>
     <link href="../css/bootstrap-responsive.css" rel="stylesheet">
@@ -78,6 +91,7 @@
               <li><a href="https://github.com/dcarney/keg.io" target="_blank">github</a></li>
               <li><a href="/signup">signup!</a></li>
             </ul>
+            
           </div><!--/.nav-collapse -->
         </div>
       </div>
@@ -87,10 +101,8 @@
         <div class="span3">
           <div class="well sidebar-nav">
             <ul id="kegerator_details" class="nav nav-list">
-              <li class="nav-header">About</li>
-              <li><a href="/hardware.html">Hardware</a></li>
-              <li><a href="/team.html">Team</a></li>
               <li class="nav-header">Choose a kegerator</li>
+              <span class="badge badge-important deny"></span>'
             </ul>
 
             <div id="keg_details" class="nav nav-list"></div>
@@ -98,7 +110,15 @@
         </div><!--/span-->
         <div id="main" class="span9 well">
             <div id="pourchart"></div>
-            
+                             <div id="hero" class="hero-unit">
+            <div class="card hidden">
+              <img id="gravatar" class="profile" src=""/>
+              <div id="user_info" class="card_content">
+              </div>
+              <div id="user_coasters" class="user_coasters card_content" style="margin: 10px; float: left;">
+              </div>
+            </div>
+            </div>
             
         </div>
          </div><!--/row-->
@@ -230,20 +250,38 @@ var switchKegerator = function(kegeratorId) {
         $('#keg_details').append('<br /><span class=""><img src="http://untappd.com/favicon.ico" />Additional beer data provided by Untappd</span>');
       }
      
-     doPourChart(keg.keg_id);
+     window.user_map = [];
+     $.getJSON("/users",function(users){
+        for(var i = 0; i < users.length; i++){
+            user_map[users[i].rfid] = users[i];
+        }
+         doPourChart(keg.keg_id);
+     });
+     
      
      
      });  // getJSON
      initializeKegeratorScreen(kegeratorId);
-
+        $('div.card').removeClass('hidden');
      // re-connect to the appropriate web socket
      reattachWebSocket(kegeratorId);
+     socket.on('pour',function(){
+         doPourChart(keg.keg_id)
+     });
   });
 };
 
+svg = null;
       
 function doPourChart(keg_id){
     $.getJSON("/data/toppours/" + keg_id,function(data){
+            
+           data.map(function(d){
+               var user = user_map[d.rfid];
+               d.name = user.first_name + ' ' + user.last_name;
+               return d;
+           })
+        
            data.sort(function(a,b){
                if(a.total < b.total){
                    return 1;
@@ -264,6 +302,10 @@ function doPourChart(keg_id){
             //var dataset = [ 5, 10, 13, 19, 21, 25, 22, 18, 15, 13,
             //                11, 12, 15, 20, 18, 17, 16, 18, 23, 25 ];
             var dataset = data;
+            
+            var div = d3.select("body").append("div")
+                        .attr("class", "tooltip")
+                        .style("opacity", 0);
            
             var yscale = d3.scale.linear()
                                  .domain([0,d3.max(dataset,function(d){return d.total;})])
@@ -277,16 +319,26 @@ function doPourChart(keg_id){
                                 .range([0,w]);
             var colorscale = d3.scale.linear()
                                 .domain([0,d3.max(dataset,function(d){return d.pours;})])
-                                .range(["blue","green","yellow","orange","red"]);
+                                .range(["blue","red"]);
             
             //Create SVG element
-            var svg = d3.select("#pourchart")
+            //var svg= null
+            //var svg = d3.select('#pourchart svg')[0][0]==null?d3.select('#pourchart').append("svg"):d3.select('#pourchart svg')[0][0];
+            if($('.vis').length == 0|| svg==null){
+             svg = d3.select("#pourchart")
                         .append("svg")
-                        .attr("width", w + axisPadding)
-                        .attr("height", h + axisPadding);
+                        svg.attr("width", w + axisPadding)
+                        .attr("height", h + axisPadding)
+                        .append("g")
+                        .attr("class", "vis")
+                        .attr('width', w)
+                        .attr("height", h)
+                                       .attr("fill","#999");
+            }else{
 
-            svg.selectAll("rect")
-               .data(dataset)
+                //svg = d3.select(".vis")
+            }
+               svg.selectAll("rect").data(dataset)
                .enter()
                .append("rect")
                .attr("x", function(d, i) {
@@ -303,63 +355,60 @@ function doPourChart(keg_id){
                .attr("fill", function(d) {
                //     return "rgb(0, 0, " + (d * 10) + ")";
                       return colorscale(d.pours);
-               });
+               })
+               .on("mouseover",function(d){
+                    div.transition().duration(200).style("opacity",.9);
+                    div.html(d.total + 'oz<br />' + d.pours + " pours")
+                        .style("left", (d3.event.pageX) + "px")
+                        .style("top", (d3.event.pageY - 28) + "px")
+               })
+               .on("mouseout",function(d){
+                   div.transition().duration(500).style("opacity",0);
+               })
+               
+               ;
 
             svg.selectAll("text")
                .data(dataset)
                .enter()
                .append("text")
                .text(function(d) {
-                    return d.rfid;
+                    return d.name;
                })
-               .attr("text-anchor", "end")
+               .attr("text-anchor", "start")
+               .attr("transform", function(d,i){
+                  var transx = (i*(w/ dataset.length)) + axisPadding + ( w / dataset.length)/2;
+                  return "translate("+transx+", "+(h-10) +") rotate(-90)";
+                  
+               })
                .attr("x", function(d, i) {
-                    return i * (w / dataset.length) + (w / dataset.length - barPadding) / 2;
+                    //return i * (w / dataset.length) + (w / dataset.length - barPadding) / 2;
                })
                .attr("y", function(d) {
-                    return h - yscale(d.total) + 14;
+                    //return h - yscale(d.total) + 14;
                })
                //.attr("transform", "translate(0," + h + ")")
-               .attr("transform", function(d,i){
-                   return "translate("+i * (w / dataset.length)+", 100) rotate(-90)";
-               })
                .attr("font-family", "sans-serif")
                .attr("font-size", "11px")
                .attr("fill", "white");
+           
+           
+
+                
            
            var yaxis = d3.svg.axis()
                                 .scale(yaxisscale)
                                 .orient("left")
                                 .ticks(5);
-                                
-           svg.append("g").attr("class","axis")
-           .attr("transform","translate("+axisPadding+",0)")
+           var yaxis_obj = null;
+           if($('.vis .axis').length == 0){
+               yaxis_obj = d3.select(".vis").append("g").attr("class","axis");
+           }else{
+               yaxis_obj = d3.select('.vis .axis');
+           }                     
+           yaxis_obj.attr("transform","translate("+axisPadding+",0)")
            .call(yaxis);
 
-           $.getJSON('/users',function(users){
-               return;
-             d3.selectAll("rect")
-               //.data(dataset)
-               .enter()
-               .append("text")
-               .text(function(d) {
-                    return users[d.rfid];
-               })
-               .attr("text-anchor", "middle")
-               .attr("x", function(d, i) {
-                    return i * (w / dataset.length) + (w / dataset.length - barPadding) / 2;
-               })
-               .attr("y", function(d) {
-                    return h - yscale(d.total) + 14;
-               })
-              // .attr("transform", function(d,i){
-              //     return "rotate(180,"+ (i * (w / dataset.length)) + ",0)";
-              // })
-               .attr("font-family", "sans-serif")
-               .attr("font-size", "11px")
-               .attr("fill", "white");     
-               
-           });
      });
     
 }
