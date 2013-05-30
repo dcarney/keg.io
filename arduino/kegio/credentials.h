@@ -14,4 +14,3 @@
   int clientSecretLength = 6;
 
 #endif
-

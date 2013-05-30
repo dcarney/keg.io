@@ -353,6 +353,15 @@ server.get '/users/:rfid?', (req, res, next) ->
   criteria['id'] = req.params.rfid
   keg.findUsers criteria, (err, result) ->
     handleResponse err, result, req, res
+    
+server.get '/credits/:rfid', (req, res, next) ->
+  criteria = {}
+  criteria['kegerator_id'] = parseInt req.query['kegerator_id'] if req.query["kegerator_id"]?
+  criteria['rfid'] = req.params.rfid
+  console.log JSON.stringify criteria
+  #@logger.log '/credits/:rfid'
+  keg.db.findCredits criteria, (err, result) ->
+    handleResponse err, result, req, res
 
 server.get '/users/:rfid/authurl/untappd', (req, res, next) ->
     authurl = untappd.getAuthenticationURL(req.headers.host, req.params.rfid)

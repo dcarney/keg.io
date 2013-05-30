@@ -103,7 +103,23 @@ class DbRebuild
         twitter_handle:  '@punkassrookie'
         tokens:{"untappd":""}
         coasters: [])
-
+        
+    usercredits = []
+    i = 0
+    while i < users.length
+      j = 0
+    
+      while j < kegerators.length
+        usercredits.push 
+          rfid: users[i].rfid
+          kegerator_id:kegerators[j].kegerator_id
+          ounces:0
+          expiration_date:'2020-01-01T01:23:45Z'
+          created_date: new Date()
+        j++
+      i++
+    
+    
     pours = []
     pours.push(
         rfid: dc.rfid
@@ -216,6 +232,7 @@ class DbRebuild
           (cb) -> insertObjects 'kegerators', db, kegerators, cb
           (cb) -> insertObjects 'kegs', db, kegs, cb
           (cb) -> insertObjects 'users', db, users, cb
+          (cb) -> insertObjects 'usercredits', db, usercredits, cb
           (cb) -> insertObjects 'temperatures', db, temps, cb
           (cb) -> insertObjects 'pours', db, pours, cb
           (cb) -> insertObjects 'coasters', db, coasters, cb]

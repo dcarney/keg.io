@@ -279,7 +279,7 @@ void loop() {
   // Serial.println( freeMemory() );
 
   // If it's time to send a temperature update...
-  if ((millis() - lastTemperatureMs) > TEMPERATURE_SEND_INTERVAL_MS) {
+  if ((millis() - lastTemperatureMs) > TEMPERATURE_SEND_INTERVAL_MS && solenoidOpenMs == 0) {
     float temperature = (getTemp()*1.8)+32;
     if ((temperature >= 0.0) && (temperature <= 120.0)) {
       // Anything outside this range is garbage, plus we're only allocating

@@ -13,6 +13,11 @@ html lang: "en", ->
               padding-top: 60px;
               padding-bottom: 40px;
             }
+            
+            .datepicker.dropdown-menu {
+              z-index: 9999;
+              
+            }
 
             .sidebar-nav {
               padding: 9px 0;
@@ -60,6 +65,7 @@ html lang: "en", ->
     link href: "/css/jquery.dataTables.css", rel:"stylesheet", type:"text/css"
     link href:"/css/DT_bootstrap.css", rel:"stylesheet",type:"text/css"
     link href: "/css/bootstrapSwitch.css", rel:"stylesheet",type:"text/css"
+    link href: '/css/datepicker.css', rel:"stylesheet", type:"text/css"
     comment "Le fav and touch icons"
     link rel: "shortcut icon", href: "favicon.ico"
     link rel: "apple-touch-icon-precomposed", sizes: "144x144", href: "../ico/apple-touch-icon-144-precomposed.png"
@@ -73,11 +79,13 @@ html lang: "en", ->
 #    script src: '/js/bootstrap-typeahead.js'
     script src: '../js/bootbox.min.js'
     script src: '/js/bootstrapSwitch.js'
+    script src: '/js/bootstrap-datepicker.js'
     script src: '../js/underscore-min.js'
     script src: '../js/moment.min.js'
     script src: '../js/jquery.color.js'
     script src: '../js/jquery.quicksand.js'
     script src: '../js/jquery.dataTables.min.js'
+    script src: '../js/jquery.dataTables.fnReloadAjax.js'
     script src: '/js/DT_bootstrap.js'
    # script src: '/socket.io/socket.io.js'
    # script src: '../js/keg.io.js'
@@ -109,7 +117,34 @@ html lang: "en", ->
               a href:'#kegs', 'kegs'
             li ->
               a href:'#users', 'users'  
-        
+            li ->
+              a href:'#credits', 'credits'
+              
+        div id:'credits_admin', class:"span8 well", ->
+          text 'this is credits admin'
+          select id:'credits_users', ->
+            option value:0, selected:'selected', '-- select user --'
+          select id:'credits_kegerators', ->
+            option value:0, selected:'seleted', '-- kegerators --'
+          table id:'credits_table', class:"table table-striped table-bordered",->
+            thead ->
+              tr ->
+                th 'kegerator_id'
+                th 'rfid'
+                th 'ounces'
+                th 'expiration_date'
+                th 'created_date'
+                th 'expire'
+            tbody class:'dataTable' , ->
+              tr ->
+                td ''
+                td ''
+                td ''
+                td ''
+                td ''
+                td ''
+
+
         div id:'keg_admin', class:"span8 well",->
           text 'this is keg admin'
           select id:'kegerators', ->
@@ -242,7 +277,93 @@ html lang: "en", ->
                 #     div class: 'controls', ->
                  #      button id:'signup', type: 'button', class:'btn btn-success', 'Sign up!'
                        
+      div id:'credits_form', class:'modal hide', role:'dialog',->
+        div class:'modal-header',->
+          button type:'button',class:'close','data-dismiss':'modal', 'aria-hidden':'true',->'x'
+          h3 ->'Add User-Credits'
+        div class:'modal-body',->
+          form class: 'form-horizontal', ->
+            fieldset ->
+   
+              div class: "control-group", ->
+                label class: "control-label", for:"ounces", 'Ounces'
+                div class: "controls", ->
+                  input id:'ounces',name:'ounces', type:"text", placeholder:"first name", class: "input-xlarge"
+                  p class: "help-block"
+    
+              div class: "control-group", ->
+                label class: "control-label", for: "input01", 'Last Name'
+                div class: "controls", ->
+                  div class:"input-append date", id:"expires_date", 'data-date':'01/01/2014','data-date-format':"dd-mm-yyyy", ->
+                    input class:'span2', size:'16', value:'01/01/2014', type:'text', readonly:''
+                    span class:"add-on", ->
+                      i class:'icon-calendar'
+                    
+    
+        div class:'modal-footer', ->
+          button class:'btn', 'data-dismiss':'modal', 'aria-hidden':'true', -> 'Cancel'
+          button id:'update_user_btn', class:'btn btn-success', -> 'Update User'
+               # div class: "control-group", ->
+                #     label class: 'control-label'
+                #     div class: 'controls', ->
+                 #      button id:'signup', type: 'button', class:'btn btn-success', 'Sign up!'
+                     
+                       
     coffeescript ->
+      loadCreditsUsers = ->
+        $('#credits_admin').show()
+        $.get '/kegerators',(data) ->
+          i = 0
+          while i < data.length
+            $('#credits_kegerators').append('<option value="'+data[i].kegerator_id+'">'+data[i].name+'</option>')
+            i++
+        
+        $.get '/users', (data) ->
+          i = 0
+          while i < data.length
+            $('#credits_users').append('<option value="'+data[i].rfid + '"> '+ data[i].first_name + ' ' + data[i].last_name + '</option>');
+            i++
+          
+        loadCreditsTable('/credits')
+          
+        $('#credits_admin').change ->
+          creditsurl = '/credits/' + $('#credits_admin :selected').val()
+          $('#credits_table').dataTable().fnReloadAjax creditsurl
+     
+        $('#credits_kegerators').change ->
+          kegerator_id = $('#credits_kegerators :selected').val()
+          creditsurl = '/credits/' + $('#credits_admin :selected').val()
+          creditsurl += '?kegerator_id=' + kegerator_id if kegerator_id > 0?
+          $('#credits_table').dataTable().fnReloadAjax creditsurl
+          #loadCreditsTable creditsurl
+            
+      loadCreditsTable = (url) ->
+        $('#credits_table').dataTable
+          bProcessing:true
+          #sAjaxSource: url
+          sAjaxDataProp:''
+          aoColumns:[
+            'mData':'rfid'
+          ,
+            'mData':'kegerator_id'
+          ,
+            'mData':'ounces'
+          ,
+            'mData':'expiration_date'
+          ,
+            'mData':'created_date'
+                       ,
+          mRender:()->
+            '<button class="btn" rel="expire"><i class="icon-ban-circle"></i></button>'
+          fnCreatedCell:(td,d,oData) ->
+            $(td).find('button').click () ->
+              $('#credits_form').modal()
+              $('#expires_date').datepicker
+                  onRender: (date) ->
+                    (if date.valueOf() < (new Date()).valueOf() then 'disabled' else '')
+              #modalEdit oData
+          ]
+      
       $(document).ready ->
            $('#update_user_btn').click updateUser
            $('#untappd-modal').on 'hidden', ()->
@@ -288,6 +409,8 @@ html lang: "en", ->
           if $(this).attr('href')== '#users'
             loadUserTable()
             $(this).parent().addClass('active')
+          if $(this).attr('href')=='#credits'
+            loadCreditsUsers()
           
              
         $('#btn_addkeg').click () ->
@@ -358,6 +481,7 @@ html lang: "en", ->
       loadKegAdmin = ->
         $('#user_admin').hide();
         $('#keg_admin').show();
+        $('#credits_admin').hide();
         if $('#kegerators option').length > 1
           return false
         $.get '/kegerators', (kegerators)->
@@ -399,10 +523,14 @@ html lang: "en", ->
             $('#keg_form')[0].reset()
             $('#keg_add_buttons').show();
             $('#keg_update_buttons').hide();
+      
+      
+
                 
       loadUserTable = ->
            $('#keg_admin').hide()
            $('#user_admin').show()
+           $('#credits_admin').hide()
            $('#user_table').dataTable
              #aaData:users
              bProcessing:true

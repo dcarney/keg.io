@@ -163,6 +163,13 @@ class KegDb
       , (err, results) =>
         console.log results
         cb err, results
+  
+  findCredits: (criteria, cb) =>
+    console.log 'findCredits'+ criteria
+    @getCollection 'usercredits',(err, collection) =>
+      return cb error, null if err?
+      collection.find criteria, (err, cursor) =>
+        @handleFind cb, err, cursor
      
   # cb = (err, user)
   findUser: (rfid, cb) =>
