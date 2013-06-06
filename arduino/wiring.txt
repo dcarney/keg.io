@@ -25,7 +25,7 @@ D0 (RX)
 RESET -----> push button (left)
 
 Vin  ------> diode (stripe) -----> solenoid + (requires arduino plugged in to 12v)
-A0   ------> TEMP Vout (mid)
+A0   ------> Keyswitch -
 A1
 A2
 A3
@@ -34,6 +34,7 @@ A5
 5V   --------> RFID 11
      |-------> flow Vss (red)
      |-------> temp (red)
+     |-------> keyswitch +
      |-------> override button ------> MOSFET G (left)
                                  |---> pour LED+
 
