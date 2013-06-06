@@ -297,6 +297,11 @@ class Keg extends events.EventEmitter
         return cb err, false if err?
         cb null, newkeg
   
+  addCredit: (req, credit, cb) ->
+    @db.insertObjects 'usercredits', credit, (err, result) =>
+      return cb err, false if err?
+      cb null, credit
+  
   addUser: (req, user, cb) ->
     validHex = /^(?:[A-F]|[0-9]){6,12}$/;
     return cb 'invalid RFID', null unless user?.rfid? and validHex.test user.rfid

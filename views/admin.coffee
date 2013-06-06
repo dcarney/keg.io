@@ -126,6 +126,9 @@ html lang: "en", ->
             option value:0, selected:'selected', '-- select user --'
           select id:'credits_kegerators', ->
             option value:0, selected:'seleted', '-- kegerators --'
+          button id:'add_credits', rel:'Add Credits', class:'btn', ->
+            i class:'icon-plus'
+          
           table id:'credits_table', class:"table table-striped table-bordered",->
             thead ->
               tr ->
@@ -278,31 +281,38 @@ html lang: "en", ->
                  #      button id:'signup', type: 'button', class:'btn btn-success', 'Sign up!'
                        
       div id:'credits_form', class:'modal hide', role:'dialog',->
-        div class:'modal-header',->
-          button type:'button',class:'close','data-dismiss':'modal', 'aria-hidden':'true',->'x'
-          h3 ->'Add User-Credits'
-        div class:'modal-body',->
-          form class: 'form-horizontal', ->
+        form class: 'form-horizontal', name:'credits_add', id:'credits_add', ->
+          div class:'modal-header',->
+            button type:'button',class:'close','data-dismiss':'modal', 'aria-hidden':'true',->'x'
+            h3 ->'Add User-Credits'
+          div class:'modal-body',->
+          
             fieldset ->
-   
+              input type:'hidden', name:'rfid', id:"credits_rfid"
+              h3 class:'credits-user'
               div class: "control-group", ->
                 label class: "control-label", for:"ounces", 'Ounces'
                 div class: "controls", ->
-                  input id:'ounces',name:'ounces', type:"text", placeholder:"first name", class: "input-xlarge"
+                  input id:'ounces',name:'ounces', type:"text", placeholder:"Ounces", class: "input-xlarge"
                   p class: "help-block"
     
               div class: "control-group", ->
-                label class: "control-label", for: "input01", 'Last Name'
+                label class: "control-label", for: "input01", 'Expires'
                 div class: "controls", ->
-                  div class:"input-append date", id:"expires_date", 'data-date':'01/01/2014','data-date-format':"dd-mm-yyyy", ->
-                    input class:'span2', size:'16', value:'01/01/2014', type:'text', readonly:''
+                  div class:"input-append date", id:"expires_date", 'data-date':'','data-date-format':"mm/dd/yyyy", ->
+                    input class:'span2', size:'16', value:'', type:'text', readonly:'', name:'expires_date'
                     span class:"add-on", ->
                       i class:'icon-calendar'
-                    
+                        
+              div class: 'control-group', ->
+                label class:"control-label", "Kegerator"
+                div class: "controls", ->
+                  select id:'credits_kegerators_modal', name:"kegerator_id", ->
+                    option value:0, selected:'seleted', '-- kegerators --'      
     
-        div class:'modal-footer', ->
-          button class:'btn', 'data-dismiss':'modal', 'aria-hidden':'true', -> 'Cancel'
-          button id:'update_user_btn', class:'btn btn-success', -> 'Update User'
+          div class:'modal-footer', ->
+            input type:'reset', class:'btn', 'data-dismiss':'modal', 'aria-hidden':'true', value:'Cancel'
+            input type:'submit', id:'add_credit', class:'btn btn-success', value:'Add Credit'
                # div class: "control-group", ->
                 #     label class: 'control-label'
                 #     div class: 'controls', ->
@@ -315,7 +325,9 @@ html lang: "en", ->
         $.get '/kegerators',(data) ->
           i = 0
           while i < data.length
-            $('#credits_kegerators').append('<option value="'+data[i].kegerator_id+'">'+data[i].name+'</option>')
+            option = '<option value="'+data[i].kegerator_id+'">'+data[i].name+'</option>'
+            $('#credits_kegerators').append(option)
+            $('#credits_kegerators_modal').append(option)
             i++
         
         $.get '/users', (data) ->
@@ -325,22 +337,35 @@ html lang: "en", ->
             i++
           
         loadCreditsTable('/credits')
-          
-        $('#credits_admin').change ->
-          creditsurl = '/credits/' + $('#credits_admin :selected').val()
+        #        datatable.fnSettings().sAjaxSource='sample2.txt';
+        #datatable.fnDraw()
+
+        #return false;  
+        $('#credits_users').change ->
+          creditsurl = '/credits/' + $('#credits_users :selected').val()
           $('#credits_table').dataTable().fnReloadAjax creditsurl
-     
+          #dt= $('#credits_table').dataTable()
+          #dt.fnSettings().sAjaxSource = creditsurl
+          #dt.fnDraw()
+          false
+          
         $('#credits_kegerators').change ->
           kegerator_id = $('#credits_kegerators :selected').val()
-          creditsurl = '/credits/' + $('#credits_admin :selected').val()
+          creditsurl = '/credits/' + $('#credits_users :selected').val()
           creditsurl += '?kegerator_id=' + kegerator_id if kegerator_id > 0?
           $('#credits_table').dataTable().fnReloadAjax creditsurl
+          #dt= $('#credits_table').dataTable()
+          #dt.fnSettings().sAjaxSource = creditsurl
+          #dt.fnDraw()
+          false
           #loadCreditsTable creditsurl
             
       loadCreditsTable = (url) ->
         $('#credits_table').dataTable
           bProcessing:true
+          bServerSide:false
           #sAjaxSource: url
+          bRetrieve:true
           sAjaxDataProp:''
           aoColumns:[
             'mData':'rfid'
@@ -357,10 +382,7 @@ html lang: "en", ->
             '<button class="btn" rel="expire"><i class="icon-ban-circle"></i></button>'
           fnCreatedCell:(td,d,oData) ->
             $(td).find('button').click () ->
-              $('#credits_form').modal()
-              $('#expires_date').datepicker
-                  onRender: (date) ->
-                    (if date.valueOf() < (new Date()).valueOf() then 'disabled' else '')
+
               #modalEdit oData
           ]
       
@@ -376,6 +398,34 @@ html lang: "en", ->
              loadKegAdmin()
            $('.nav.admin a[href="#'+anchor+'"]').parent().addClass('active')
            
+           $('#credits_add').submit ->
+             credit = $(this).serialize()
+             rfid = $('#credits_users :selected').val()
+             kegerator_id = $('#credits_kegerators :selected').val()
+             $.ajax
+                type:'POST'
+                url: '/credits/'+rfid + '/' + kegerator_id
+                data: credit
+             false
+             
+           $('#add_credits').click ->   
+              
+              rfid = $('#credits_users :selected').val()
+              username = $('#credits_users :selected').text()
+              kegerator_id = $('#credits_kegerators :selected').val()
+              unless rfid is 0 or rfid is "0"
+                $('#credits_form').modal()
+                $('#credits_rfid').val(rfid)
+                $('#credits_form .credits-user').text('Add credits for:' + username)
+                unless kegerator_id is 0
+                  $('#credits_kegerators_modal').val(kegerator_id)
+                now = new Date()
+                $('#expires_date').datepicker #'setStartDate', now.toString() 
+                    onRender: (date) ->
+                      now = new Date()
+                      (if date.valueOf() <  now.valueOf() then 'disabled' else '')
+              false
+              
            $('#beer_untappd_switch').on 'switch-change', (e,data)->
              $('#untappd_beer_fields').toggle(data.value)
              $('#kegio_beer_fields').toggle(!data.value)

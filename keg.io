@@ -396,6 +396,14 @@ server.get '/users/:rfid/untappd', (req,res,next) ->
 	
 	)
 	
+server.post '/credits/:rfid/:kegerator', (req, res, next) ->
+  return handleResponse 'invalid request', '', req, res unless req.body?
+  credit = req.body
+  #credit['rfid'] = req.params.rfid
+  #credit['kegerator_id'] = req.params.kegerator
+  keg.addCredit req, credit, (err, valid) ->
+    handleResponse err, valid, req, res
+
 
 server.post '/kegs/:kegerator', (req, res, next)->
   return handleResponse 'No keg to add','',req,res unless req.body?

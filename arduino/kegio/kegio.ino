@@ -256,7 +256,10 @@ void loop() {
     //interrupts();   // Enable interrupts
     delay (1000);   // Wait 1 second
     //noInterrupts(); // Disable interrupts
-
+    
+    Serial.print("flowInterrupts:");
+    Serial.print(numFlowInterrupts);
+    Serial.println("");
     // flow rate in L/hr
     float flowRate = ((float) numFlowInterrupts * 60) / 7.5;
 

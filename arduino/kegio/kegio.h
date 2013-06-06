@@ -31,7 +31,7 @@
 
   // correction factor to compensate for various
   // flow meter setups/calibrations
-  #define FLOW_METER_COEFFICIENT 8
+  #define FLOW_METER_COEFFICIENT 1
 
   // Set to 1 to enable verbose debugging on the serial port
   //
