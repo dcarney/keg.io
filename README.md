@@ -82,3 +82,14 @@ per the server's config.
 ##### Misc. Info:
 HTML documentation for the 'important' keg.io code can be found in the doc/
 directory.
+
+##### Testing
+Automated keg.io testing uses mocha. To make use of the test suite, first
+install mocha globally.
+
+      sudo npm install -g mocha
+
+Once mocha is installed, just run mocha from the root source directory.
+
+      mocha
+
